@@ -1,0 +1,15 @@
+# Ignorar todas as pastas e arquivos, exceto o src e o pom.xml
+/*
+!/src/
+!pom.xml
+
+# Ignorar arquivos JAR no diretório target
+target/*.jar
+
+# Ignorar outras pastas e arquivos específicos
+/Documentation/html/
+/Documentation/man1/
+/t/test-results
+/t/trash directory*
+/__pycache__/
+

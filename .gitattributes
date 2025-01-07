@@ -1,0 +1,9 @@
+<<<<<<< HEAD
+*.jar filter=lfs diff=lfs merge=lfs -text
+=======
+*.sh eol=lf
+*.py eol=lf
+/git-filter-repo eol=lf
+/contrib/filter-repo-demos/[a-z]* eol=lf
+/t/t9*/* eol=lf
+>>>>>>> 7cf2b3a6e1aebec243eed41c24af2976a85dce66
