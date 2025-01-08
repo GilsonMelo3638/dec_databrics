@@ -43,7 +43,7 @@ object InfNFCeProcessor {
     import spark.implicits._
 
     // Definindo intervalo de dias: diasAntesInicio (10 dias atrás) até diasAntesFim (ontem)
-    val diasAntesInicio = LocalDate.now.minusDays(11)
+    val diasAntesInicio = LocalDate.now.minusDays(15)
     val diasAntesFim = LocalDate.now.minusDays(1)
 
     // Formatação para ano, mês e dia
@@ -731,4 +731,4 @@ object InfNFCeProcessor {
       )
   }
 }
-//InfNFeProcessor.main(Array())
+//InfNFCeProcessor.main(Array())
