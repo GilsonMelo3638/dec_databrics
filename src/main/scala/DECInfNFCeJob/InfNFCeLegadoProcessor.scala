@@ -31,7 +31,7 @@ import java.time.LocalDateTime
 object InfNFCeLegadoProcessor {
     // Variáveis externas para o intervalo de meses e ano de processamento
     val ano = 2024
-    val mesInicio = 12
+    val mesInicio = 1
     val mesFim = 12
     val tipoDocumento = "nfce"
 
@@ -393,6 +393,10 @@ object InfNFCeLegadoProcessor {
               )
             )
           )
+          .add("infNFeSupl", new StructType() // Adicionando a estrutura infNFeSupl
+            .add("qrCode", StringType, nullable = true)
+            .add("urlChave", StringType, nullable = true)
+          )
         )
     }
 
@@ -634,7 +638,9 @@ object InfNFCeLegadoProcessor {
           $"parsed.NFe.infNFe.infRespTec.hashCSRT".as("infresptec_hashcsrt"),
           $"parsed.NFe.infNFe.infRespTec.idCSRT".as("infresptec_idcsrt"),
           $"parsed.NFe.infNFe.infRespTec.xContato".as("infresptec_xcontato"),
-          $"parsed.NFe.infNFe.infSolicNFF.xSolic".as("infsolicnff_xsolic")
+          $"parsed.NFe.infNFe.infSolicNFF.xSolic".as("infsolicnff_xsolic"),
+          $"parsed.NFe.infNFeSupl.qrCode".as("qrCode"),
+          $"parsed.NFe.infNFeSupl.urlChave".as("urlChave")
         )
         // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
         val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
@@ -660,7 +666,7 @@ object InfNFCeLegadoProcessor {
           .option("compression", "lz4")
           .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
           .partitionBy("chave_particao") // Garante a separação por partição
-          .save("/datalake/prata/sources/dbms/dec/nfce/infNFCe")
+          .save("/datalake/prata/sources/dbms/dec/nfce/infNFCeSupl")
 
         // Registrar o horário de término da gravação
         val saveEndTime = LocalDateTime.now()
