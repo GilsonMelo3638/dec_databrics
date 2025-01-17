@@ -30,9 +30,9 @@ import java.time.LocalDateTime
 
 object InfNFCeLegadoProcessor {
     // Variáveis externas para o intervalo de meses e ano de processamento
-    val ano = 2024
-    val mesInicio = 1
-    val mesFim = 12
+    val ano = 2021
+    val mesInicio = 10
+    val mesFim = 10
     val tipoDocumento = "nfce"
 
     // Função para criar o esquema de forma modular

@@ -5,19 +5,20 @@ import com.databricks.spark.xml.functions.from_xml  // Import necessário
 import org.apache.spark.sql.SparkSession
 
 // Defina o schema XML para as tags que você deseja extrair
-val schema = new StructType()
-  .add("infNFe", new StructType()
-    .add("ide", StringType)
-    .add("emit", StringType)
-    .add("dest", StringType)
-    .add("det", StringType)
-    .add("total", StringType)
-    .add("transp", StringType)
-    .add("cobr", StringType)
-    .add("pag", StringType)
-    .add("infAdic", StringType)
-  )
+
 class SchemaNFe {
+  val schema = new StructType()
+    .add("infNFe", new StructType()
+      .add("ide", StringType)
+      .add("emit", StringType)
+      .add("dest", StringType)
+      .add("det", StringType)
+      .add("total", StringType)
+      .add("transp", StringType)
+      .add("cobr", StringType)
+      .add("pag", StringType)
+      .add("infAdic", StringType)
+    )
 def main(args: Array[String]): Unit = {
   // Criação da sessão Spark com suporte ao Hive
   val spark = SparkSession.builder.appName("ExtractInfNFe").enableHiveSupport().getOrCreate()
@@ -45,4 +46,4 @@ def main(args: Array[String]): Unit = {
 }
 }
 
-SchemaNFe.main(Array())
+//SchemaNFe.main(Array())

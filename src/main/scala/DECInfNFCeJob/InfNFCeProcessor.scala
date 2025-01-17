@@ -303,9 +303,10 @@ object InfNFCeProcessor {
           $"parsed.NFe.infNFe.infRespTec.hashCSRT".as("infresptec_hashcsrt"),
           $"parsed.NFe.infNFe.infRespTec.idCSRT".as("infresptec_idcsrt"),
           $"parsed.NFe.infNFe.infRespTec.xContato".as("infresptec_xcontato"),
-          $"parsed.NFe.infNFe.infSolicNFF.xSolic".as("infsolicnff_xsolic")
+          $"parsed.NFe.infNFe.infSolicNFF.xSolic".as("infsolicnff_xsolic"),
+          $"parsed.NFe.infNFeSupl.qrCode".as("qrCode"),
+          $"parsed.NFe.infNFeSupl.urlChave".as("urlChave")
         )
-
         // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'chave'
         val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
@@ -371,7 +372,6 @@ object InfNFCeProcessor {
   }
 
   def createSchema(): StructType = {
-    // Insira o esquema aqui
     new StructType()
       .add("protNFe", new StructType()
         .add("infProt", new StructType()
@@ -727,6 +727,10 @@ object InfNFCeProcessor {
               .add("vRetPIS", DoubleType, nullable = true)
             )
           )
+        )
+        .add("infNFeSupl", new StructType() // Adicionando a estrutura infNFeSupl
+          .add("qrCode", StringType, nullable = true)
+          .add("urlChave", StringType, nullable = true)
         )
       )
   }
