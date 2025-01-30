@@ -20,360 +20,390 @@
 //  --conf "spark.dynamicAllocation.maxExecutors=40" \
 //  --packages com.databricks:spark-xml_2.12:0.13.0 \
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
-package DECInfNFCeJob
+package DECInfNFeJob
 
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.hadoop.fs.{FileSystem, Path}
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.types.{DoubleType, _}
+
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-object InfNFCeProcessor {
+
+object InfNFeProcessorV2 {
   def main(args: Array[String]): Unit = {
-    val tipoDocumento = "nfce"
+    val tipoDocumento = "nfe"
     val spark = SparkSession.builder()
       .appName("ExtractInfNFe")
-      .config("spark.sql.broadcastTimeout", "600") // Configuração do broadcast
-      .config("spark.executor.memory", "8g") // Memória do executor
-      .config("spark.driver.memory", "8g") // Memória do driver
-      .config("spark.sql.autoBroadcastJoinThreshold", "-1") // Desabilita broadcast automático
+      .config("spark.sql.broadcastTimeout", "600")
+      .config("spark.executor.memory", "8g")
+      .config("spark.driver.memory", "8g")
+      .config("spark.sql.autoBroadcastJoinThreshold", "-1")
       .getOrCreate()
 
-    import spark.implicits._
+    try {
+      processData(spark, tipoDocumento)
+    } finally {
+      spark.stop()
+    }
+  }
 
-    // Definindo intervalo de dias: diasAntesInicio (10 dias atrás) até diasAntesFim (ontem)
-    val diasAntesInicio = LocalDate.now.minusDays(15)
-    val diasAntesFim = LocalDate.now.minusDays(1)
+  def processData(spark: SparkSession, tipoDocumento: String): Unit = {
 
-    // Formatação para ano, mês e dia
+    val (diasAntesInicio, diasAntesFim) = getDateRange()
     val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
 
-    // Iterando pelas datas no intervalo
     (0 to diasAntesInicio.until(diasAntesFim).getDays).foreach { dayOffset =>
       val currentDate = diasAntesInicio.plusDays(dayOffset)
-
-      val ano = currentDate.getYear
-      val mes = f"${currentDate.getMonthValue}%02d"
-      val dia = f"${currentDate.getDayOfMonth}%02d"
-      val anoMesDia = s"$ano$mes$dia"
+      val (ano, mes, dia, anoMesDia) = getFormattedDate(currentDate, dateFormatter)
 
       val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar/$anoMesDia"
       val parquetPathProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_det/$anoMesDia"
-      val destino = s"/datalake/prata/sources/dbms/dec/$tipoDocumento/infNFCe/"
+      val destino = s"/datalake/prata/sources/dbms/dec/$tipoDocumento/infNFe/"
 
       println(s"Processando para: Ano: $ano, Mês: $mes, Dia: $dia")
       println(s"Caminho de origem: $parquetPath")
       println(s"Caminho de destino: $parquetPathProcessado")
 
-      // Verificar se o diretório existe antes de processar
-      val hadoopConf = spark.sparkContext.hadoopConfiguration
-      val fs = FileSystem.get(hadoopConf)
-      val parquetPathExists = fs.exists(new Path(parquetPath))
+      val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
-      val parquetPathContentExists = fs.exists(new Path(parquetPath))
-
-      if (parquetPathContentExists) {
-        val parquetPathContent = fs.listStatus(new Path(parquetPath))
-        val parquetFiles = parquetPathContent.filter(_.getPath.getName.endsWith(".parquet"))
-
-        if (parquetFiles.nonEmpty) {
-          val parquetDF = spark.read.parquet(parquetFiles.map(_.getPath.toString): _*)
-
-        // Verificação de quantidade total e distinta
-        val totalCount = parquetDF.count()
-        val distinctCount = parquetDF.select("chave").distinct().count()
-
-        if (totalCount != distinctCount) {
-          println(s"Erro: Total de registros ($totalCount) é diferente do total de registros distintos ($distinctCount) no caminho: $parquetPath")
-          throw new IllegalStateException("Inconsistência nos dados: total e distinto não coincidem.")
-        } else {
-          println(s"Verificação bem-sucedida: Total ($totalCount) e distintos ($distinctCount) são iguais no caminho: $parquetPath")
-        }
-        // 2. Selecionar a coluna que contém o XML (ex: "XML_DOCUMENTO_CLOB")
-        val xmlDF = parquetDF.select(
-          $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
-          $"NSU",
-          $"DHPROC",
-          $"DHEMI",
-          $"IP_TRANSMISSOR"
-        )
-        // 3. Usar `from_xml` para ler o XML da coluna usando o esquema definido
-        val schema = createSchema() // Assumindo que a função `createSchema` foi declarada
-        val parsedDF = xmlDF.withColumn("parsed", from_xml($"xml", schema))
-
-        // 4. Selecionar os campos desejados
-        val selectedDF = parsedDF.select(
-          $"NSU",
-          date_format(to_timestamp($"DHPROC", "dd/MM/yyyy HH:mm:ss"), "yyyyMMddHH").as("DHPROC_FORMATADO"),
-          $"DHEMI",
-          $"IP_TRANSMISSOR",
-          $"parsed.protNFe.infProt._Id".as("infprot_Id"),
-          $"parsed.protNFe.infProt.chNFe".as("chave"),
-          $"parsed.protNFe.infProt.cStat".as("infprot_cstat"),
-          $"parsed.protNFe.infProt.dhRecbto".as("infprot_dhrecbto"),
-          $"parsed.protNFe.infProt.digVal".as("infprot_digVal"),
-          $"parsed.protNFe.infProt.nProt".as("infprot_nProt"),
-          $"parsed.protNFe.infProt.tpAmb".as("infprot_tpAmb"),
-          $"parsed.protNFe.infProt.verAplic".as("infprot_verAplic"),
-          $"parsed.protNFe.infProt.xMotivo".as("infprot_xMotivo"),
-          $"parsed.NFe.infNFe.avulsa.CNPJ".as("avulsa_cnpj"),
-          $"parsed.NFe.infNFe.avulsa.UF".as("avulsa_uf"),
-          $"parsed.NFe.infNFe.avulsa.dEmi".as("avulsa_demi"),
-          $"parsed.NFe.infNFe.avulsa.dPag".as("avulsa_dpag"),
-          $"parsed.NFe.infNFe.avulsa.fone".as("avulsa_fone"),
-          $"parsed.NFe.infNFe.avulsa.matr".as("avulsa_matr"),
-          $"parsed.NFe.infNFe.avulsa.nDAR".as("avulsa_ndar"),
-          $"parsed.NFe.infNFe.avulsa.repEmi".as("avulsa_repemi"),
-          $"parsed.NFe.infNFe.avulsa.vDAR".as("avulsa_vdar"),
-          $"parsed.NFe.infNFe.avulsa.xAgente".as("avulsa_xagente"),
-          $"parsed.NFe.infNFe.avulsa.xOrgao".as("avulsa_xorgao"),
-          $"parsed.NFe.infNFe.cobr.dup".as("cobr_dup"),
-          $"parsed.NFe.infNFe.cobr.fat.nFat".as("cobr_fat_nfat"),
-          $"parsed.NFe.infNFe.cobr.fat.vDesc".as("cobr_fat_vdesc"),
-          $"parsed.NFe.infNFe.cobr.fat.vLiq".as("cobr_fat_vliq"),
-          $"parsed.NFe.infNFe.cobr.fat.vOrig".as("cobr_fat_vorig"),
-          $"parsed.NFe.infNFe.compra.xCont".as("compra_xcont"),
-          $"parsed.NFe.infNFe.compra.xNEmp".as("compra_xnemp"),
-          $"parsed.NFe.infNFe.compra.xPed".as("compra_xped"),
-          $"parsed.NFe.infNFe.dest.CNPJ".as("dest_cnpj"),
-          $"parsed.NFe.infNFe.dest.CPF".as("dest_cpf"),
-          $"parsed.NFe.infNFe.dest.IE".as("dest_ie"),
-          $"parsed.NFe.infNFe.dest.IM".as("dest_im"),
-          $"parsed.NFe.infNFe.dest.ISUF".as("dest_isuf"),
-          $"parsed.NFe.infNFe.dest.email".as("dest_email"),
-          $"parsed.NFe.infNFe.dest.enderDest.CEP".as("enderdest_cep"),
-          $"parsed.NFe.infNFe.dest.enderDest.UF".as("enderdest_uf"),
-          $"parsed.NFe.infNFe.dest.enderDest.cMun".as("enderdest_cmun"),
-          $"parsed.NFe.infNFe.dest.enderDest.cPais".as("enderdest_cpais"),
-          $"parsed.NFe.infNFe.dest.enderDest.fone".as("enderdest_fone"),
-          $"parsed.NFe.infNFe.dest.enderDest.nro".as("enderdest_nro"),
-          $"parsed.NFe.infNFe.dest.enderDest.xBairro".as("enderdest_xbairro"),
-          $"parsed.NFe.infNFe.dest.enderDest.xCpl".as("enderdest_xcpl"),
-          $"parsed.NFe.infNFe.dest.enderDest.xLgr".as("enderdest_xlgr"),
-          $"parsed.NFe.infNFe.dest.enderDest.xMun".as("enderdest_xmun"),
-          $"parsed.NFe.infNFe.dest.enderDest.xPais".as("enderdest_xpais"),
-          $"parsed.NFe.infNFe.dest.xNome".as("dest_xnome"),
-          $"parsed.NFe.infNFe.dest.idEstrangeiro".as("idEstrangeiro"),
-          $"parsed.NFe.infNFe.dest.indIEDest".as("indIEDest"),
-          $"parsed.NFe.infNFe.emit.CNPJ".as("cnpj_emitente"),
-          $"parsed.NFe.infNFe.emit.CPF".as("cpf_emitente"),
-          $"parsed.NFe.infNFe.emit.CNPJ".as("emit_cnpj"),
-          $"parsed.NFe.infNFe.emit.CPF".as("emit_cpf"),
-          $"parsed.NFe.infNFe.emit.CNAE".as("emit_cnae"),
-          $"parsed.NFe.infNFe.emit.CRT".as("emit_crt"),
-          $"parsed.NFe.infNFe.emit.IE".as("emit_ie"),
-          $"parsed.NFe.infNFe.emit.IEST".as("emit_iest"),
-          $"parsed.NFe.infNFe.emit.IM".as("emit_im"),
-          $"parsed.NFe.infNFe.emit.enderEmit.CEP".as("enderemit_cep"),
-          $"parsed.NFe.infNFe.emit.enderEmit.UF".as("enderemit_uf"),
-          $"parsed.NFe.infNFe.emit.enderEmit.cMun".as("enderemit_cmun"),
-          $"parsed.NFe.infNFe.emit.enderEmit.cPais".as("enderemit_cpais"),
-          $"parsed.NFe.infNFe.emit.enderEmit.fone".as("enderemit_fone"),
-          $"parsed.NFe.infNFe.emit.enderEmit.nro".as("enderemit_nro"),
-          $"parsed.NFe.infNFe.emit.enderEmit.xBairro".as("enderemit_xbairro"),
-          $"parsed.NFe.infNFe.emit.enderEmit.xCpl".as("enderemit_xcpl"),
-          $"parsed.NFe.infNFe.emit.enderEmit.xLgr".as("enderemit_xlgr"),
-          $"parsed.NFe.infNFe.emit.enderEmit.xMun".as("enderemit_xmun"),
-          $"parsed.NFe.infNFe.emit.enderEmit.xPais".as("enderemit_xpais"),
-          $"parsed.NFe.infNFe.emit.xFant".as("emit_xfant"),
-          $"parsed.NFe.infNFe.emit.xNome".as("emit_xnome"),
-          $"parsed.NFe.infNFe.entrega.CEP".as("entrega_cep"),
-          $"parsed.NFe.infNFe.entrega.CNPJ".as("entrega_cnpj"),
-          $"parsed.NFe.infNFe.entrega.IE".as("entrega_ie"),
-          $"parsed.NFe.infNFe.entrega.CPF".as("entrega_cpf"),
-          $"parsed.NFe.infNFe.entrega.UF".as("entrega_uf"),
-          $"parsed.NFe.infNFe.entrega.cMun".as("entrega_cmun"),
-          $"parsed.NFe.infNFe.entrega.cPais".as("entrega_cpais"),
-          $"parsed.NFe.infNFe.entrega.email".as("entrega_email"),
-          $"parsed.NFe.infNFe.entrega.fone".as("entrega_fone"),
-          $"parsed.NFe.infNFe.entrega.nro".as("entrega_nro"),
-          $"parsed.NFe.infNFe.entrega.xBairro".as("entrega_xbairro"),
-          $"parsed.NFe.infNFe.entrega.xCpl".as("entrega_xcpl"),
-          $"parsed.NFe.infNFe.entrega.xLgr".as("entrega_xlgr"),
-          $"parsed.NFe.infNFe.entrega.xMun".as("entrega_xmun"),
-          $"parsed.NFe.infNFe.entrega.xNome".as("entrega_xnome"),
-          $"parsed.NFe.infNFe.entrega.xPais".as("entrega_xpais"),
-          $"parsed.NFe.infNFe.exporta.UFSaidaPais".as("exporta_ufsaidapais"),
-          $"parsed.NFe.infNFe.exporta.xLocDespacho".as("exporta_xlocdespacho"),
-          $"parsed.NFe.infNFe.exporta.xLocExporta".as("exporta_xlocexporta"),
-          $"parsed.NFe.infNFe.ide.dhEmi".as("ide_dhemi"),
-          $"parsed.NFe.infNFe.ide.cDV".as("ide_cdv"),
-          $"parsed.NFe.infNFe.ide.cMunFG".as("ide_cmungfg"),
-          $"parsed.NFe.infNFe.ide.cNF".as("ide_cnf"),
-          $"parsed.NFe.infNFe.ide.cUF".as("ide_cuf"),
-          $"parsed.NFe.infNFe.ide.dhCont".as("ide_dhcont"),
-          $"parsed.NFe.infNFe.ide.dhSaiEnt".as("ide_dhsaient"),
-          $"parsed.NFe.infNFe.ide.finNFe".as("ide_finnfe"),
-          $"parsed.NFe.infNFe.ide.idDest".as("ide_iddest"),
-          $"parsed.NFe.infNFe.ide.indFinal".as("ide_indfinal"),
-          $"parsed.NFe.infNFe.ide.indIntermed".as("ide_indintermed"),
-          $"parsed.NFe.infNFe.ide.indPres".as("ide_indpres"),
-          $"parsed.NFe.infNFe.ide.mod".as("ide_mod"),
-          $"parsed.NFe.infNFe.ide.nNF".as("ide_nnfe"),
-          $"parsed.NFe.infNFe.ide.natOp".as("ide_natop"),
-          $"parsed.NFe.infNFe.ide.procEmi".as("ide_procemi"),
-          $"parsed.NFe.infNFe.ide.serie".as("ide_serie"),
-          $"parsed.NFe.infNFe.ide.tpAmb".as("ide_tpamb"),
-          $"parsed.NFe.infNFe.ide.tpEmis".as("ide_tpemis"),
-          $"parsed.NFe.infNFe.ide.tpImp".as("ide_tpimp"),
-          $"parsed.NFe.infNFe.ide.tpNF".as("ide_tpnf"),
-          $"parsed.NFe.infNFe.ide.verProc".as("ide_verproc"),
-          $"parsed.NFe.infNFe.ide.xJust".as("ide_xjust"),
-          $"parsed.NFe.infNFe.ide.NFref".as("ide_nfref"),
-          $"parsed.NFe.infNFe.retirada.CEP".as("retirada_cep"),
-          $"parsed.NFe.infNFe.retirada.CNPJ".as("retirada_cnpj"),
-          $"parsed.NFe.infNFe.retirada.CPF".as("retirada_cpf"),
-          $"parsed.NFe.infNFe.retirada.IE".as("retirada_ie"),
-          $"parsed.NFe.infNFe.retirada.UF".as("retirada_uf"),
-          $"parsed.NFe.infNFe.retirada.cMun".as("retirada_cmun"),
-          $"parsed.NFe.infNFe.retirada.cPais".as("retirada_cpais"),
-          $"parsed.NFe.infNFe.retirada.email".as("retirada_email"),
-          $"parsed.NFe.infNFe.retirada.fone".as("retirada_fone"),
-          $"parsed.NFe.infNFe.retirada.nro".as("retirada_nro"),
-          $"parsed.NFe.infNFe.retirada.xBairro".as("retirada_xbairro"),
-          $"parsed.NFe.infNFe.retirada.xCpl".as("retirada_xcpl"),
-          $"parsed.NFe.infNFe.retirada.xLgr".as("retirada_xlgr"),
-          $"parsed.NFe.infNFe.retirada.xMun".as("retirada_xmun"),
-          $"parsed.NFe.infNFe.retirada.xNome".as("retirada_xnome"),
-          $"parsed.NFe.infNFe.retirada.xPais".as("retirada_xpais"),
-          $"parsed.NFe.infNFe.retirada.modFrete".as("retirada_modfrete"),
-          $"parsed.NFe.infNFe.retTransp.cfop".as("rettransp_cfop"),
-          $"parsed.NFe.infNFe.retTransp.cmunfg".as("rettransp_cmunfg"),
-          $"parsed.NFe.infNFe.retTransp.picmsret".as("rettransp_picmsret"),
-          $"parsed.NFe.infNFe.retTransp.vbcret".as("rettransp_vbcret"),
-          $"parsed.NFe.infNFe.retTransp.vicmsret".as("rettransp_vicmsret"),
-          $"parsed.NFe.infNFe.retTransp.vserv".as("rettransp_vserv"),
-          $"parsed.NFe.infNFe.total.icmstot.qbcmono".as("icmstot_qbcmono"),
-          $"parsed.NFe.infNFe.total.icmstot.qbcmonoret".as("icmstot_qbcmonoret"),
-          $"parsed.NFe.infNFe.total.icmstot.qbcmonoreten".as("icmstot_qbcmonoreten"),
-          $"parsed.NFe.infNFe.total.icmstot.vbc".as("icmstot_vbc"),
-          $"parsed.NFe.infNFe.total.icmstot.vbcst".as("icmstot_vbcst"),
-          $"parsed.NFe.infNFe.total.icmstot.vcofins".as("icmstot_vcofins"),
-          $"parsed.NFe.infNFe.total.icmstot.vdesc".as("icmstot_vdesc"),
-          $"parsed.NFe.infNFe.total.icmstot.vfcp".as("icmstot_vfcp"),
-          $"parsed.NFe.infNFe.total.icmstot.vfcpst".as("icmstot_vfcpst"),
-          $"parsed.NFe.infNFe.total.icmstot.vfcpstret".as("icmstot_vfcpstret"),
-          $"parsed.NFe.infNFe.total.icmstot.vfcpufdest".as("icmstot_vfcpufdest"),
-          $"parsed.NFe.infNFe.total.icmstot.vfrete".as("icmstot_vfrete"),
-          $"parsed.NFe.infNFe.total.icmstot.vicms".as("icmstot_vicms"),
-          $"parsed.NFe.infNFe.total.icmstot.vicmsdeson".as("icmstot_vicmsdeson"),
-          $"parsed.NFe.infNFe.total.icmstot.vicmsmono".as("icmstot_vicmsmono"),
-          $"parsed.NFe.infNFe.total.icmstot.vicmsmonoret".as("icmstot_vicmsmonoret"),
-          $"parsed.NFe.infNFe.total.icmstot.vicmsmonoreten".as("icmstot_vicmsmonoreten"),
-          $"parsed.NFe.infNFe.total.icmstot.vicmsufdest".as("icmstot_vicmsufdest"),
-          $"parsed.NFe.infNFe.total.icmstot.vicmsufremet".as("icmstot_vicmsufremet"),
-          $"parsed.NFe.infNFe.total.icmstot.vii".as("icmstot_vii"),
-          $"parsed.NFe.infNFe.total.icmstot.vipi".as("icmstot_vipi"),
-          $"parsed.NFe.infNFe.total.icmstot.vipidevol".as("icmstot_vipidevol"),
-          $"parsed.NFe.infNFe.total.icmstot.vnf".as("icmstot_vnf"),
-          $"parsed.NFe.infNFe.total.icmstot.voutro".as("icmstot_voutro"),
-          $"parsed.NFe.infNFe.total.icmstot.vpis".as("icmstot_vpis"),
-          $"parsed.NFe.infNFe.total.icmstot.vprod".as("icmstot_vprod"),
-          $"parsed.NFe.infNFe.total.icmstot.vst".as("icmstot_vst"),
-          $"parsed.NFe.infNFe.total.icmstot.vseg".as("icmstot_vseg"),
-          $"parsed.NFe.infNFe.total.icmstot.vtottrib".as("icmstot_vtottrib"),
-          $"parsed.NFe.infNFe.pag.detPag".as("pag_detPag"),
-          $"parsed.NFe.infNFe.pag.vTroco".as("pag_vtroco"),
-          $"parsed.NFe.infNFe.transp.modFrete".as("transp_modFrete"),
-          $"parsed.NFe.infNFe.transp.reboque".as("transp_reboque"),
-          $"parsed.NFe.infNFe.transp.retTransp.CFOP".as("transp_retTransp_CFOP"),
-          $"parsed.NFe.infNFe.transp.retTransp.cMunFG".as("transp_retTransp_cMunFG"),
-          $"parsed.NFe.infNFe.transp.retTransp.pICMSRet".as("transp_retTransp_pICMSRet"),
-          $"parsed.NFe.infNFe.transp.retTransp.vBCRet".as("transp_retTransp_vBCRet"),
-          $"parsed.NFe.infNFe.transp.retTransp.vICMSRet".as("transp_retTransp_vICMSRet"),
-          $"parsed.NFe.infNFe.transp.retTransp.vServ".as("transp_retTransp_vServ"),
-          $"parsed.NFe.infNFe.transp.transporta.CNPJ".as("transp_transporta_CNPJ"),
-          $"parsed.NFe.infNFe.transp.transporta.CPF".as("transp_transporta_CPF"),
-          $"parsed.NFe.infNFe.transp.transporta.IE".as("transp_transporta_IE"),
-          $"parsed.NFe.infNFe.transp.transporta.UF".as("transp_transporta_UF"),
-          $"parsed.NFe.infNFe.transp.transporta.xEnder".as("transp_transporta_xEnder"),
-          $"parsed.NFe.infNFe.transp.transporta.xMun".as("transp_transporta_xMunJ"),
-          $"parsed.NFe.infNFe.transp.transporta.xNome".as("transp_transporta_xNome"),
-          $"parsed.NFe.infNFe.transp.transporta".as("transp_transporta"),
-          $"parsed.NFe.infNFe.transp.vagao".as("transp_vagao"),
-          $"parsed.NFe.infNFe.transp.veicTransp.RNTC".as("transp_veicTransp_RNTC"),
-          $"parsed.NFe.infNFe.transp.veicTransp.UF".as("transp_veicTransp_UF"),
-          $"parsed.NFe.infNFe.transp.veicTransp.placa".as("transp_veicTransp_placa"),
-          $"parsed.NFe.infNFe.transp.vol".as("transp_vol"),
-          $"parsed.NFe.infNFe.infAdic.infAdFisco".as("infadic_infadfisco"),
-          $"parsed.NFe.infNFe.infAdic.infCpl".as("infadic_infcpl"),
-          $"parsed.NFe.infNFe.infAdic.obsCont".as("infadic_obscont"), // Array de structs
-          $"parsed.NFe.infNFe.infAdic.obsFisco".as("infadic_obsfisco"), // Array de structs
-          $"parsed.NFe.infNFe.infAdic.procRef".as("infadic_procref"), // Array de structs
-          $"parsed.NFe.infNFe.infIntermed.CNPJ".as("infintermed_cnpj"),
-          $"parsed.NFe.infNFe.infIntermed.idCadIntTran".as("infintermed_idcadinttran"),
-          $"parsed.NFe.infNFe.infRespTec.CNPJ".as("infresptec_cnpj"),
-          $"parsed.NFe.infNFe.infRespTec.email".as("infresptec_email"),
-          $"parsed.NFe.infNFe.infRespTec.fone".as("infresptec_fone"),
-          $"parsed.NFe.infNFe.infRespTec.hashCSRT".as("infresptec_hashcsrt"),
-          $"parsed.NFe.infNFe.infRespTec.idCSRT".as("infresptec_idcsrt"),
-          $"parsed.NFe.infNFe.infRespTec.xContato".as("infresptec_xcontato"),
-          $"parsed.NFe.infNFe.infSolicNFF.xSolic".as("infsolicnff_xsolic"),
-          $"parsed.NFe.infNFeSupl.qrCode".as("qrCode"),
-          $"parsed.NFe.infNFeSupl.urlChave".as("urlChave")
-        )
-        // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'chave'
-        val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
-
-        // Obtendo as variações únicas de 'chave_particao'
-        val chaveParticoesUnicas = selectedDFComParticao
-          .select("chave_particao")
-          .distinct()
-          .collect()
-          .map(_.getString(0))
-
-        // Iterando sobre as variações únicas de chave_particao
-        val dadosParaSalvar = chaveParticoesUnicas.map { chaveParticao =>
-          val caminhoParticao = s"$destino/chave_particao=$chaveParticao"
-
-          val particaoExiste = try {
-            val particaoDF = spark.read.parquet(caminhoParticao).select("chave")
-            !particaoDF.isEmpty
-          } catch {
-            case _: Exception => false
-          }
-
-          if (particaoExiste) {
-            val particaoDF = spark.read.parquet(caminhoParticao).select("chave").distinct()
-            selectedDFComParticao
-              .filter(col("chave_particao") === chaveParticao)
-              .join(particaoDF, Seq("chave"), "left_anti")
-          } else {
-            selectedDFComParticao.filter(col("chave_particao") === chaveParticao)
-          }
-        }.reduce(_ union _)
-
-        // Salvando o DataFrame final filtrado em partições
-        dadosParaSalvar
-          .write
-          .mode("append")
-          .format("parquet")
-          .option("compression", "lz4")
-          .option("parquet.block.size", 500 * 1024 * 1024)
-          .partitionBy("chave_particao")
-          .save(destino)
-
-        println(s"Gravação concluída para $anoMesDia")
-
-        // Mover os arquivos para a pasta processada
-        val srcPath = new Path(parquetPath)
-        if (fs.exists(srcPath)) {
-          val destPath = new Path(parquetPathProcessado)
-          if (!fs.exists(destPath)) {
-            fs.mkdirs(destPath)
-          }
-          fs.listStatus(srcPath).foreach { fileStatus =>
-            val srcFile = fileStatus.getPath
-            val destFile = new Path(destPath, srcFile.getName)
-            fs.rename(srcFile, destFile)
-          }
-          fs.delete(srcPath, true)
-          println(s"Arquivos movidos de $parquetPath para $parquetPathProcessado com sucesso.")
-        }
+      if (fs.exists(new Path(parquetPath))) {
+        processParquetFiles(spark, fs, parquetPath, parquetPathProcessado, destino, anoMesDia)
       } else {
         println(s"Diretório de origem $parquetPath não encontrado.")
       }
+    }
+  }
+
+  def getDateRange(): (LocalDate, LocalDate) = {
+    val diasAntesInicio = LocalDate.now.minusDays(11)
+    val diasAntesFim = LocalDate.now.minusDays(1)
+    (diasAntesInicio, diasAntesFim)
+  }
+
+  def getFormattedDate(currentDate: LocalDate, dateFormatter: DateTimeFormatter): (Int, String, String, String) = {
+    val ano = currentDate.getYear
+    val mes = f"${currentDate.getMonthValue}%02d"
+    val dia = f"${currentDate.getDayOfMonth}%02d"
+    val anoMesDia = s"$ano$mes$dia"
+    (ano, mes, dia, anoMesDia)
+  }
+
+  def processParquetFiles(spark: SparkSession, fs: FileSystem, parquetPath: String, parquetPathProcessado: String, destino: String, anoMesDia: String): Unit = {
+    val parquetFiles = fs.listStatus(new Path(parquetPath)).filter(_.getPath.getName.endsWith(".parquet"))
+
+    if (parquetFiles.nonEmpty) {
+      import spark.implicits._
+      val parquetDF = spark.read.parquet(parquetFiles.map(_.getPath.toString): _*)
+
+      if (isDataConsistent(parquetDF)) {
+        val xmlDF = extractXmlData(parquetDF, spark)
+        val schema = createSchema()
+        val parsedDF = xmlDF.withColumn("parsed", from_xml($"xml", schema))
+        val selectedDF = selectFields(parsedDF, spark) // Passando o spark como parâmetro
+        val selectedDFComParticao = addPartitionColumn(selectedDF)
+
+        val chaveParticoesUnicas = getUniquePartitions(selectedDFComParticao)
+        val dadosParaSalvar = filterAndUnionData(spark, selectedDFComParticao, chaveParticoesUnicas, destino)
+
+        saveData(dadosParaSalvar, destino)
+        moveProcessedFiles(fs, parquetPath, parquetPathProcessado)
+      }
+    }
+  }
+
+  def isDataConsistent(df: DataFrame): Boolean = {
+    val totalCount = df.count()
+    val distinctCount = df.select("chave").distinct().count()
+
+    if (totalCount != distinctCount) {
+      println(s"Erro: Total de registros ($totalCount) é diferente do total de registros distintos ($distinctCount)")
+      throw new IllegalStateException("Inconsistência nos dados: total e distinto não coincidem.")
+    } else {
+      println(s"Verificação bem-sucedida: Total ($totalCount) e distintos ($distinctCount) são iguais")
+      true
+    }
+  }
+
+  def extractXmlData(df: DataFrame, spark: SparkSession): DataFrame = {
+    import spark.implicits._
+    df.select(
+      $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
+      $"NSUDF",
+      $"DHPROC",
+      $"DHEMI",
+      $"IP_TRANSMISSOR"
+    )
+  }
+
+  def selectFields(df: DataFrame, spark: SparkSession): DataFrame = {
+    import spark.implicits._
+    df.select(
+      $"NSUDF",
+      date_format(to_timestamp($"DHPROC", "dd/MM/yyyy HH:mm:ss"), "yyyyMMddHH").as("DHPROC_FORMATADO"),
+      $"DHEMI",
+      $"IP_TRANSMISSOR",
+      $"parsed.protNFe.infProt._Id".as("infprot_Id"),
+      $"parsed.protNFe.infProt.chNFe".as("chave"),
+      $"parsed.protNFe.infProt.cStat".as("infprot_cstat"),
+      $"parsed.protNFe.infProt.dhRecbto".as("infprot_dhrecbto"),
+      $"parsed.protNFe.infProt.digVal".as("infprot_digVal"),
+      $"parsed.protNFe.infProt.nProt".as("infprot_nProt"),
+      $"parsed.protNFe.infProt.tpAmb".as("infprot_tpAmb"),
+      $"parsed.protNFe.infProt.verAplic".as("infprot_verAplic"),
+      $"parsed.protNFe.infProt.xMotivo".as("infprot_xMotivo"),
+      $"parsed.NFe.infNFe.avulsa.CNPJ".as("avulsa_cnpj"),
+      $"parsed.NFe.infNFe.avulsa.UF".as("avulsa_uf"),
+      $"parsed.NFe.infNFe.avulsa.dEmi".as("avulsa_demi"),
+      $"parsed.NFe.infNFe.avulsa.dPag".as("avulsa_dpag"),
+      $"parsed.NFe.infNFe.avulsa.fone".as("avulsa_fone"),
+      $"parsed.NFe.infNFe.avulsa.matr".as("avulsa_matr"),
+      $"parsed.NFe.infNFe.avulsa.nDAR".as("avulsa_ndar"),
+      $"parsed.NFe.infNFe.avulsa.repEmi".as("avulsa_repemi"),
+      $"parsed.NFe.infNFe.avulsa.vDAR".as("avulsa_vdar"),
+      $"parsed.NFe.infNFe.avulsa.xAgente".as("avulsa_xagente"),
+      $"parsed.NFe.infNFe.avulsa.xOrgao".as("avulsa_xorgao"),
+      $"parsed.NFe.infNFe.cobr.dup".as("cobr_dup"),
+      $"parsed.NFe.infNFe.cobr.fat.nFat".as("cobr_fat_nfat"),
+      $"parsed.NFe.infNFe.cobr.fat.vDesc".as("cobr_fat_vdesc"),
+      $"parsed.NFe.infNFe.cobr.fat.vLiq".as("cobr_fat_vliq"),
+      $"parsed.NFe.infNFe.cobr.fat.vOrig".as("cobr_fat_vorig"),
+      $"parsed.NFe.infNFe.compra.xCont".as("compra_xcont"),
+      $"parsed.NFe.infNFe.compra.xNEmp".as("compra_xnemp"),
+      $"parsed.NFe.infNFe.compra.xPed".as("compra_xped"),
+      $"parsed.NFe.infNFe.dest.CNPJ".as("dest_cnpj"),
+      $"parsed.NFe.infNFe.dest.CPF".as("dest_cpf"),
+      $"parsed.NFe.infNFe.dest.IE".as("dest_ie"),
+      $"parsed.NFe.infNFe.dest.IM".as("dest_im"),
+      $"parsed.NFe.infNFe.dest.ISUF".as("dest_isuf"),
+      $"parsed.NFe.infNFe.dest.email".as("dest_email"),
+      $"parsed.NFe.infNFe.dest.enderDest.CEP".as("enderdest_cep"),
+      $"parsed.NFe.infNFe.dest.enderDest.UF".as("enderdest_uf"),
+      $"parsed.NFe.infNFe.dest.enderDest.cMun".as("enderdest_cmun"),
+      $"parsed.NFe.infNFe.dest.enderDest.cPais".as("enderdest_cpais"),
+      $"parsed.NFe.infNFe.dest.enderDest.fone".as("enderdest_fone"),
+      $"parsed.NFe.infNFe.dest.enderDest.nro".as("enderdest_nro"),
+      $"parsed.NFe.infNFe.dest.enderDest.xBairro".as("enderdest_xbairro"),
+      $"parsed.NFe.infNFe.dest.enderDest.xCpl".as("enderdest_xcpl"),
+      $"parsed.NFe.infNFe.dest.enderDest.xLgr".as("enderdest_xlgr"),
+      $"parsed.NFe.infNFe.dest.enderDest.xMun".as("enderdest_xmun"),
+      $"parsed.NFe.infNFe.dest.enderDest.xPais".as("enderdest_xpais"),
+      $"parsed.NFe.infNFe.dest.xNome".as("dest_xnome"),
+      $"parsed.NFe.infNFe.dest.idEstrangeiro".as("idEstrangeiro"),
+      $"parsed.NFe.infNFe.dest.indIEDest".as("indIEDest"),
+      $"parsed.NFe.infNFe.emit.CNPJ".as("cnpj_emitente"),
+      $"parsed.NFe.infNFe.emit.CPF".as("cpf_emitente"),
+      $"parsed.NFe.infNFe.emit.CNPJ".as("emit_cnpj"),
+      $"parsed.NFe.infNFe.emit.CPF".as("emit_cpf"),
+      $"parsed.NFe.infNFe.emit.CNAE".as("emit_cnae"),
+      $"parsed.NFe.infNFe.emit.CRT".as("emit_crt"),
+      $"parsed.NFe.infNFe.emit.IE".as("emit_ie"),
+      $"parsed.NFe.infNFe.emit.IEST".as("emit_iest"),
+      $"parsed.NFe.infNFe.emit.IM".as("emit_im"),
+      $"parsed.NFe.infNFe.emit.enderEmit.CEP".as("enderemit_cep"),
+      $"parsed.NFe.infNFe.emit.enderEmit.UF".as("enderemit_uf"),
+      $"parsed.NFe.infNFe.emit.enderEmit.cMun".as("enderemit_cmun"),
+      $"parsed.NFe.infNFe.emit.enderEmit.cPais".as("enderemit_cpais"),
+      $"parsed.NFe.infNFe.emit.enderEmit.fone".as("enderemit_fone"),
+      $"parsed.NFe.infNFe.emit.enderEmit.nro".as("enderemit_nro"),
+      $"parsed.NFe.infNFe.emit.enderEmit.xBairro".as("enderemit_xbairro"),
+      $"parsed.NFe.infNFe.emit.enderEmit.xCpl".as("enderemit_xcpl"),
+      $"parsed.NFe.infNFe.emit.enderEmit.xLgr".as("enderemit_xlgr"),
+      $"parsed.NFe.infNFe.emit.enderEmit.xMun".as("enderemit_xmun"),
+      $"parsed.NFe.infNFe.emit.enderEmit.xPais".as("enderemit_xpais"),
+      $"parsed.NFe.infNFe.emit.xFant".as("emit_xfant"),
+      $"parsed.NFe.infNFe.emit.xNome".as("emit_xnome"),
+      $"parsed.NFe.infNFe.entrega.CEP".as("entrega_cep"),
+      $"parsed.NFe.infNFe.entrega.CNPJ".as("entrega_cnpj"),
+      $"parsed.NFe.infNFe.entrega.IE".as("entrega_ie"),
+      $"parsed.NFe.infNFe.entrega.CPF".as("entrega_cpf"),
+      $"parsed.NFe.infNFe.entrega.UF".as("entrega_uf"),
+      $"parsed.NFe.infNFe.entrega.cMun".as("entrega_cmun"),
+      $"parsed.NFe.infNFe.entrega.cPais".as("entrega_cpais"),
+      $"parsed.NFe.infNFe.entrega.email".as("entrega_email"),
+      $"parsed.NFe.infNFe.entrega.fone".as("entrega_fone"),
+      $"parsed.NFe.infNFe.entrega.nro".as("entrega_nro"),
+      $"parsed.NFe.infNFe.entrega.xBairro".as("entrega_xbairro"),
+      $"parsed.NFe.infNFe.entrega.xCpl".as("entrega_xcpl"),
+      $"parsed.NFe.infNFe.entrega.xLgr".as("entrega_xlgr"),
+      $"parsed.NFe.infNFe.entrega.xMun".as("entrega_xmun"),
+      $"parsed.NFe.infNFe.entrega.xNome".as("entrega_xnome"),
+      $"parsed.NFe.infNFe.entrega.xPais".as("entrega_xpais"),
+      $"parsed.NFe.infNFe.exporta.UFSaidaPais".as("exporta_ufsaidapais"),
+      $"parsed.NFe.infNFe.exporta.xLocDespacho".as("exporta_xlocdespacho"),
+      $"parsed.NFe.infNFe.exporta.xLocExporta".as("exporta_xlocexporta"),
+      $"parsed.NFe.infNFe.ide.dhEmi".as("ide_dhemi"),
+      $"parsed.NFe.infNFe.ide.cDV".as("ide_cdv"),
+      $"parsed.NFe.infNFe.ide.cMunFG".as("ide_cmungfg"),
+      $"parsed.NFe.infNFe.ide.cNF".as("ide_cnf"),
+      $"parsed.NFe.infNFe.ide.cUF".as("ide_cuf"),
+      $"parsed.NFe.infNFe.ide.dhCont".as("ide_dhcont"),
+      $"parsed.NFe.infNFe.ide.dhSaiEnt".as("ide_dhsaient"),
+      $"parsed.NFe.infNFe.ide.finNFe".as("ide_finnfe"),
+      $"parsed.NFe.infNFe.ide.idDest".as("ide_iddest"),
+      $"parsed.NFe.infNFe.ide.indFinal".as("ide_indfinal"),
+      $"parsed.NFe.infNFe.ide.indIntermed".as("ide_indintermed"),
+      $"parsed.NFe.infNFe.ide.indPres".as("ide_indpres"),
+      $"parsed.NFe.infNFe.ide.mod".as("ide_mod"),
+      $"parsed.NFe.infNFe.ide.nNF".as("ide_nnfe"),
+      $"parsed.NFe.infNFe.ide.natOp".as("ide_natop"),
+      $"parsed.NFe.infNFe.ide.procEmi".as("ide_procemi"),
+      $"parsed.NFe.infNFe.ide.serie".as("ide_serie"),
+      $"parsed.NFe.infNFe.ide.tpAmb".as("ide_tpamb"),
+      $"parsed.NFe.infNFe.ide.tpEmis".as("ide_tpemis"),
+      $"parsed.NFe.infNFe.ide.tpImp".as("ide_tpimp"),
+      $"parsed.NFe.infNFe.ide.tpNF".as("ide_tpnf"),
+      $"parsed.NFe.infNFe.ide.verProc".as("ide_verproc"),
+      $"parsed.NFe.infNFe.ide.xJust".as("ide_xjust"),
+      $"parsed.NFe.infNFe.ide.NFref".as("ide_nfref"),
+      $"parsed.NFe.infNFe.retirada.CEP".as("retirada_cep"),
+      $"parsed.NFe.infNFe.retirada.CNPJ".as("retirada_cnpj"),
+      $"parsed.NFe.infNFe.retirada.CPF".as("retirada_cpf"),
+      $"parsed.NFe.infNFe.retirada.IE".as("retirada_ie"),
+      $"parsed.NFe.infNFe.retirada.UF".as("retirada_uf"),
+      $"parsed.NFe.infNFe.retirada.cMun".as("retirada_cmun"),
+      $"parsed.NFe.infNFe.retirada.cPais".as("retirada_cpais"),
+      $"parsed.NFe.infNFe.retirada.email".as("retirada_email"),
+      $"parsed.NFe.infNFe.retirada.fone".as("retirada_fone"),
+      $"parsed.NFe.infNFe.retirada.nro".as("retirada_nro"),
+      $"parsed.NFe.infNFe.retirada.xBairro".as("retirada_xbairro"),
+      $"parsed.NFe.infNFe.retirada.xCpl".as("retirada_xcpl"),
+      $"parsed.NFe.infNFe.retirada.xLgr".as("retirada_xlgr"),
+      $"parsed.NFe.infNFe.retirada.xMun".as("retirada_xmun"),
+      $"parsed.NFe.infNFe.retirada.xNome".as("retirada_xnome"),
+      $"parsed.NFe.infNFe.retirada.xPais".as("retirada_xpais"),
+      $"parsed.NFe.infNFe.retirada.modFrete".as("retirada_modfrete"),
+      $"parsed.NFe.infNFe.retTransp.cfop".as("rettransp_cfop"),
+      $"parsed.NFe.infNFe.retTransp.cmunfg".as("rettransp_cmunfg"),
+      $"parsed.NFe.infNFe.retTransp.picmsret".as("rettransp_picmsret"),
+      $"parsed.NFe.infNFe.retTransp.vbcret".as("rettransp_vbcret"),
+      $"parsed.NFe.infNFe.retTransp.vicmsret".as("rettransp_vicmsret"),
+      $"parsed.NFe.infNFe.retTransp.vserv".as("rettransp_vserv"),
+      $"parsed.NFe.infNFe.total.icmstot.qbcmono".as("icmstot_qbcmono"),
+      $"parsed.NFe.infNFe.total.icmstot.qbcmonoret".as("icmstot_qbcmonoret"),
+      $"parsed.NFe.infNFe.total.icmstot.qbcmonoreten".as("icmstot_qbcmonoreten"),
+      $"parsed.NFe.infNFe.total.icmstot.vbc".as("icmstot_vbc"),
+      $"parsed.NFe.infNFe.total.icmstot.vbcst".as("icmstot_vbcst"),
+      $"parsed.NFe.infNFe.total.icmstot.vcofins".as("icmstot_vcofins"),
+      $"parsed.NFe.infNFe.total.icmstot.vdesc".as("icmstot_vdesc"),
+      $"parsed.NFe.infNFe.total.icmstot.vfcp".as("icmstot_vfcp"),
+      $"parsed.NFe.infNFe.total.icmstot.vfcpst".as("icmstot_vfcpst"),
+      $"parsed.NFe.infNFe.total.icmstot.vfcpstret".as("icmstot_vfcpstret"),
+      $"parsed.NFe.infNFe.total.icmstot.vfcpufdest".as("icmstot_vfcpufdest"),
+      $"parsed.NFe.infNFe.total.icmstot.vfrete".as("icmstot_vfrete"),
+      $"parsed.NFe.infNFe.total.icmstot.vicms".as("icmstot_vicms"),
+      $"parsed.NFe.infNFe.total.icmstot.vicmsdeson".as("icmstot_vicmsdeson"),
+      $"parsed.NFe.infNFe.total.icmstot.vicmsmono".as("icmstot_vicmsmono"),
+      $"parsed.NFe.infNFe.total.icmstot.vicmsmonoret".as("icmstot_vicmsmonoret"),
+      $"parsed.NFe.infNFe.total.icmstot.vicmsmonoreten".as("icmstot_vicmsmonoreten"),
+      $"parsed.NFe.infNFe.total.icmstot.vicmsufdest".as("icmstot_vicmsufdest"),
+      $"parsed.NFe.infNFe.total.icmstot.vicmsufremet".as("icmstot_vicmsufremet"),
+      $"parsed.NFe.infNFe.total.icmstot.vii".as("icmstot_vii"),
+      $"parsed.NFe.infNFe.total.icmstot.vipi".as("icmstot_vipi"),
+      $"parsed.NFe.infNFe.total.icmstot.vipidevol".as("icmstot_vipidevol"),
+      $"parsed.NFe.infNFe.total.icmstot.vnf".as("icmstot_vnf"),
+      $"parsed.NFe.infNFe.total.icmstot.voutro".as("icmstot_voutro"),
+      $"parsed.NFe.infNFe.total.icmstot.vpis".as("icmstot_vpis"),
+      $"parsed.NFe.infNFe.total.icmstot.vprod".as("icmstot_vprod"),
+      $"parsed.NFe.infNFe.total.icmstot.vst".as("icmstot_vst"),
+      $"parsed.NFe.infNFe.total.icmstot.vseg".as("icmstot_vseg"),
+      $"parsed.NFe.infNFe.total.icmstot.vtottrib".as("icmstot_vtottrib"),
+      $"parsed.NFe.infNFe.pag.detPag".as("pag_detPag"),
+      $"parsed.NFe.infNFe.pag.vTroco".as("pag_vtroco"),
+      $"parsed.NFe.infNFe.transp.modFrete".as("transp_modFrete"),
+      $"parsed.NFe.infNFe.transp.reboque".as("transp_reboque"),
+      $"parsed.NFe.infNFe.transp.retTransp.CFOP".as("transp_retTransp_CFOP"),
+      $"parsed.NFe.infNFe.transp.retTransp.cMunFG".as("transp_retTransp_cMunFG"),
+      $"parsed.NFe.infNFe.transp.retTransp.pICMSRet".as("transp_retTransp_pICMSRet"),
+      $"parsed.NFe.infNFe.transp.retTransp.vBCRet".as("transp_retTransp_vBCRet"),
+      $"parsed.NFe.infNFe.transp.retTransp.vICMSRet".as("transp_retTransp_vICMSRet"),
+      $"parsed.NFe.infNFe.transp.retTransp.vServ".as("transp_retTransp_vServ"),
+      $"parsed.NFe.infNFe.transp.transporta.CNPJ".as("transp_transporta_CNPJ"),
+      $"parsed.NFe.infNFe.transp.transporta.CPF".as("transp_transporta_CPF"),
+      $"parsed.NFe.infNFe.transp.transporta.IE".as("transp_transporta_IE"),
+      $"parsed.NFe.infNFe.transp.transporta.UF".as("transp_transporta_UF"),
+      $"parsed.NFe.infNFe.transp.transporta.xEnder".as("transp_transporta_xEnder"),
+      $"parsed.NFe.infNFe.transp.transporta.xMun".as("transp_transporta_xMunJ"),
+      $"parsed.NFe.infNFe.transp.transporta.xNome".as("transp_transporta_xNome"),
+      $"parsed.NFe.infNFe.transp.transporta".as("transp_transporta"),
+      $"parsed.NFe.infNFe.transp.vagao".as("transp_vagao"),
+      $"parsed.NFe.infNFe.transp.veicTransp.RNTC".as("transp_veicTransp_RNTC"),
+      $"parsed.NFe.infNFe.transp.veicTransp.UF".as("transp_veicTransp_UF"),
+      $"parsed.NFe.infNFe.transp.veicTransp.placa".as("transp_veicTransp_placa"),
+      $"parsed.NFe.infNFe.transp.vol".as("transp_vol"),
+      $"parsed.NFe.infNFe.infAdic.infAdFisco".as("infadic_infadfisco"),
+      $"parsed.NFe.infNFe.infAdic.infCpl".as("infadic_infcpl"),
+      $"parsed.NFe.infNFe.infAdic.obsCont".as("infadic_obscont"), // Array de structs
+      $"parsed.NFe.infNFe.infAdic.obsFisco".as("infadic_obsfisco"), // Array de structs
+      $"parsed.NFe.infNFe.infAdic.procRef".as("infadic_procref"), // Array de structs
+      $"parsed.NFe.infNFe.infIntermed.CNPJ".as("infintermed_cnpj"),
+      $"parsed.NFe.infNFe.infIntermed.idCadIntTran".as("infintermed_idcadinttran"),
+      $"parsed.NFe.infNFe.infRespTec.CNPJ".as("infresptec_cnpj"),
+      $"parsed.NFe.infNFe.infRespTec.email".as("infresptec_email"),
+      $"parsed.NFe.infNFe.infRespTec.fone".as("infresptec_fone"),
+      $"parsed.NFe.infNFe.infRespTec.hashCSRT".as("infresptec_hashcsrt"),
+      $"parsed.NFe.infNFe.infRespTec.idCSRT".as("infresptec_idcsrt"),
+      $"parsed.NFe.infNFe.infRespTec.xContato".as("infresptec_xcontato"),
+      $"parsed.NFe.infNFe.infSolicNFF.xSolic".as("infsolicnff_xsolic")
+    )
+  }
+
+  def addPartitionColumn(df: DataFrame): DataFrame = {
+    df.withColumn("chave_particao", substring(col("chave"), 3, 4))
+  }
+
+  def getUniquePartitions(df: DataFrame): Array[String] = {
+    df.select("chave_particao").distinct().collect().map(_.getString(0))
+  }
+
+  def filterAndUnionData(spark: SparkSession, df: DataFrame, partitions: Array[String], destino: String): DataFrame = {
+    partitions.map { partition =>
+      val caminhoParticao = s"$destino/chave_particao=$partition"
+
+      val particaoExiste = try {
+        val particaoDF = spark.read.parquet(caminhoParticao).select("chave")
+        !particaoDF.isEmpty
+      } catch {
+        case _: Exception => false
+      }
+
+      if (particaoExiste) {
+        val particaoDF = spark.read.parquet(caminhoParticao).select("chave").distinct()
+        df.filter(col("chave_particao") === partition)
+          .join(particaoDF, Seq("chave"), "left_anti")
+      } else {
+        df.filter(col("chave_particao") === partition)
+      }
+    }.reduce(_ union _)
+  }
+
+  def saveData(df: DataFrame, destino: String): Unit = {
+    df.write
+      .mode("append")
+      .format("parquet")
+      .option("compression", "lz4")
+      .option("parquet.block.size", 500 * 1024 * 1024)
+      .partitionBy("chave_particao")
+      .save(destino)
+    println(s"Gravação concluída para $destino")
+  }
+
+  def moveProcessedFiles(fs: FileSystem, srcPath: String, destPath: String): Unit = {
+    val src = new Path(srcPath)
+    val dest = new Path(destPath)
+
+    if (fs.exists(src)) {
+      if (!fs.exists(dest)) {
+        fs.mkdirs(dest)
+      }
+      fs.listStatus(src).foreach { fileStatus =>
+        val srcFile = fileStatus.getPath
+        val destFile = new Path(dest, srcFile.getName)
+        fs.rename(srcFile, destFile)
+      }
+      fs.delete(src, true)
+      println(s"Arquivos movidos de $srcPath para $destPath com sucesso.")
     }
   }
 
@@ -734,11 +764,8 @@ object InfNFCeProcessor {
             )
           )
         )
-        .add("infNFeSupl", new StructType() // Adicionando a estrutura infNFeSupl
-          .add("qrCode", StringType, nullable = true)
-          .add("urlChave", StringType, nullable = true)
-        )
       )
   }
-}}
-//InfNFCeProcessor.main(Array())
+}
+
+//InfNFeProcessorV2.main(Array())
