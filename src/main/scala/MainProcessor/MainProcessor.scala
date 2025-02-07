@@ -42,6 +42,13 @@ object MainProcessor {
                 args = args
             )
 
+            // Executando o NFCeDetProcessor
+            executarProcessador(
+                nome = "RapartitionProcesso",
+                processador = RepartitionJob.RepartitionProcessor,
+                args = args
+            )
+
             println("=== Processamento concluído com sucesso ===")
         } catch {
             case e: Exception =>
