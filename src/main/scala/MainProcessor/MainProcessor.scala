@@ -12,7 +12,21 @@ object MainProcessor {
           .getOrCreate()
 
         try {
-            println("=== Iniciando o processamento ===")
+            println("=== Iniciando o SqoopNFCeProcessor ===")
+
+            // Executando o InfNFCeProcessor
+            executarProcessador(
+                nome = "SqoopNFCeProcessor",
+                processador = Sqoop.SqoopNFCeProcessor,
+                args = args
+            )
+
+            // Executando o InfNFCeProcessor
+            executarProcessador(
+                nome = "SqoopNFeProcessor",
+                processador = Sqoop.SqoopNFeProcessor,
+                args = args
+            )
 
             // Executando o InfNFeProcessor
             executarProcessador(
