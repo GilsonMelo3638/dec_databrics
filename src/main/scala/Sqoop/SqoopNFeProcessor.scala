@@ -69,7 +69,7 @@ object SqoopNFeProcessor {
     val splitByColumn = "NSUDF"
 
     // Número de partições (equivalente ao --num-mappers do Sqoop)
-    val numPartitions = 100
+    val numPartitions = 200
 
     // Query SQL base
     val baseQuery =
@@ -108,15 +108,13 @@ object SqoopNFeProcessor {
     )
 
     // Define o caminho de destino no HDFS
-    val targetDir = s"/datalake/bronze/sources/dbms/dec/processamento/nfce/processar/$anoMesDia"
+    val targetDir = s"/datalake/bronze/sources/dbms/dec/processamento/nfe/processar/$anoMesDia"
 
     // Salva os dados no HDFS no formato Parquet com compressão LZ4
     df.write
       .option("compression", "lz4")
       .parquet(targetDir)
+  }
+}
 
-    // Encerra a sessão do Spark
-    spark.stop()
-  }  }
-
-//SqoopNFCeProcessor.main(Array())
+//SqoopNFeProcessor.main(Array())

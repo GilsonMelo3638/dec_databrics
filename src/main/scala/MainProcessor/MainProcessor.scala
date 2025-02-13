@@ -16,15 +16,15 @@ object MainProcessor {
 
             // Executando o InfNFCeProcessor
             executarProcessador(
-                nome = "SqoopNFCeProcessor",
-                processador = Sqoop.SqoopNFCeProcessor,
+                nome = "SqoopNFeProcessor",
+                processador = Sqoop.SqoopNFeProcessor,
                 args = args
             )
 
             // Executando o InfNFCeProcessor
             executarProcessador(
-                nome = "SqoopNFeProcessor",
-                processador = Sqoop.SqoopNFeProcessor,
+                nome = "SqoopNFCeProcessor",
+                processador = Sqoop.SqoopNFCeProcessor,
                 args = args
             )
 

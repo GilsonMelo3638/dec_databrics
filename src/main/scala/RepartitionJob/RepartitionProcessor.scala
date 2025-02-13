@@ -24,9 +24,6 @@ package RepartitionJob
 
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
-
-
-
 object RepartitionProcessor {
   val spark = SparkSession.builder().getOrCreate()
   val hadoopConf = spark.sparkContext.hadoopConfiguration
