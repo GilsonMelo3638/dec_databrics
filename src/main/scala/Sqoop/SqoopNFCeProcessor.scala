@@ -109,8 +109,10 @@ object SqoopNFCeProcessor {
     val targetDir = s"/datalake/bronze/sources/dbms/dec/processamento/nfce/processar/$anoMesDia"
 
     // Salva os dados no HDFS no formato Parquet com compressão LZ4
-    df.write
+    df.repartition(23)
+      .write
       .option("compression", "lz4")
+      .option("parquet.block.size", "536870912") // 512 MB
       .parquet(targetDir)
  }
 }

@@ -34,30 +34,19 @@ object NFCeDetProcessor {
     val tipoDocumento = "nfce"
       val spark = SparkSession.builder()
         .appName("ExtractInfNFe")
-        .config("spark.sql.broadcastTimeout", "600") // Timeout para operações de broadcast
+        .config("spark.sql.broadcastTimeout", "600") // Configuração do broadcast
         .config("spark.executor.memory", "16g") // Memória do executor
         .config("spark.driver.memory", "8g") // Memória do driver
-        .config("spark.executor.memoryOverhead", "4096") // Overhead de memória do executor
-        .config("spark.yarn.executor.memoryOverhead", "4096") // Overhead de memória no YARN
-        .config("spark.network.timeout", "600s") // Tempo de timeout da rede
-        .config("spark.executor.heartbeatInterval", "30s") // Evita perda de executores
         .config("spark.sql.autoBroadcastJoinThreshold", "-1") // Desabilita broadcast automático
-        .config("spark.sql.shuffle.partitions", "800") // Aumenta partições no shuffle
-        .config("spark.default.parallelism", "800") // Melhora paralelismo
-        .config("spark.shuffle.service.enabled", "true") // Ativa serviço de shuffle
-        .config("spark.shuffle.file.buffer", "1m") // Buffer maior para reduzir I/O
-        .config("spark.reducer.maxSizeInFlight", "96m") // Reduz pressão no shuffle
-        .config("spark.memory.fraction", "0.6") // Ajusta a fração de memória para execução
-        .config("spark.memory.storageFraction", "0.5") // Ajusta fração de memória para armazenamento
-        .config("spark.dynamicAllocation.enabled", "true") // Ativa alocação dinâmica
-        .config("spark.dynamicAllocation.minExecutors", "10") // Mínimo de executores
-        .config("spark.dynamicAllocation.maxExecutors", "40") // Máximo de executores
-        .config("spark.dynamicAllocation.initialExecutors", "20") // Melhor distribuição inicial
-        .config("spark.sql.hive.filesourcePartitionFileCacheSize", "524288000") // Cache de partições Hive
-        .config("spark.storage.replication", "2") // Mantém duas réplicas
-        .enableHiveSupport() // Ativa suporte ao Hive
+        .config("spark.executor.memoryOverhead", "1024") // Overhead de memória do executor
+        .config("spark.network.timeout", "800s") // Tempo de timeout da rede
+        .config("spark.yarn.executor.memoryOverhead", "4096") // Overhead de memória no YARN
+        .config("spark.shuffle.service.enabled", "true") // Ativa o serviço de shuffle
+        .config("spark.dynamicAllocation.enabled", "true") // Ativa alocação dinâmica de executores
+        .config("spark.dynamicAllocation.minExecutors", "10") // Número mínimo de executores dinâmicos
+        .config("spark.dynamicAllocation.maxExecutors", "40") // Número máximo de executores dinâmicos
+        .config("spark.sql.hive.filesourcePartitionFileCacheSize", "524288000") // Tamanho do cache de arquivos de partição do Hive
         .getOrCreate()
-
     import spark.implicits._
     // Definindo intervalo de dias: diasAntesInicio (10 dias atrás) até diasAntesFim (ontem)
     val diasAntesInicio = LocalDate.now.minusDays(15)
@@ -609,8 +598,8 @@ object NFCeDetProcessor {
                   selectedDFComParticao.filter(col("chave_particao") === chaveParticao)
               }
 
-//              val qtdRegistros = dfFiltrado.count()
-//              println(s"[INFO] Partição $chaveParticao - Quantidade de registros a serem salvos: $qtdRegistros")
+              val qtdRegistros = dfFiltrado.count()
+              println(s"[INFO] Partição $chaveParticao - Quantidade de registros a serem salvos: $qtdRegistros")
 
               dfFiltrado.write
                 .mode("append")
