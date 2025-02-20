@@ -221,12 +221,12 @@ val schema = new StructType()
     .add("_versao", DoubleType, true)
     .add("infProt", new StructType()
       .add("_Id", StringType, true)
-      .add("cStat", LongType, true)
-      .add("chCTe", DoubleType, true)
-      .add("dhRecbto", TimestampType, true)
+      .add("cStat", StringType, true)
+      .add("chCTe", StringType, true)
+      .add("dhRecbto", StringType, true)
       .add("digVal", StringType, true)
-      .add("nProt", LongType, true)
-      .add("tpAmb", LongType, true)
+      .add("nProt", StringType, true)
+      .add("tpAmb", StringType, true)
       .add("verAplic", StringType, true)
       .add("xMotivo", StringType, true)))
 object ExtractCTeOS {
@@ -255,13 +255,10 @@ object ExtractCTeOS {
     // Exibir os primeiros registros (XML completo)
     xmlDF.show(truncate = false)
     // Inferir o schema do XML
-    val inferredSchema = spark.read
-      .option("rowTag", "GTVeProc") // Tag raiz do XML
-      .xml(xmlDF)
+    val inferredSchema = spark.read.option("rowTag", "GTVeProc").xml(xmlDF)
     // Exibir o schema inferido
     inferredSchema.printSchema()
-
-    val dfSelect = inferredSchema.select(
+     val dfSelect = inferredSchema.select(
       $"CTeOS.infCte.emit.CNPJ".as("emit_cnpj"),
       $"CTeOS.infCte.emit.CRT".as("emit_crt"),
       $"CTeOS.infCte.emit.IE".as("emit_ie"),
@@ -342,6 +339,7 @@ object ExtractCTeOS {
       $"CTeOS.infCte.toma.enderToma.xMun".as("toma_xmun"),
       $"CTeOS.infCte.toma.xNome".as("toma_xnome"),
       $"CTeOS.infCte.vPrest.vTPrest".as("vprest_vtprest"),
+      $"protCTe.infProt.chCTe".as("chave"),
       $"protCTe.infProt.cStat".as("protcte_cstat"),
       $"protCTe.infProt.dhRecbto".as("protcte_dhrecbto"),
       $"protCTe.infProt.nProt".as("protcte_nprot"),

@@ -169,21 +169,26 @@ object ExtractCTeOS {
     import spark.implicits._
     // Carregar o DataFrame do Parquet
     val parquetDF: DataFrame = spark.read.parquet("/datalake/bronze/sources/dbms/dec/cte/2024")
+
     // Filtrar a coluna 'modelo' para incluir apenas registros onde modelo == 67
     val filteredDF: DataFrame = parquetDF.filter($"modelo" === 64)
+
     // Selecionar apenas a coluna 'XML_DOCUMENTO_CLOB' e converter para Dataset[String]
     val xmlDF = filteredDF.select($"XML_DOCUMENTO_CLOB".as[String]).cache()
+
     // Exibir os primeiros registros (XML completo)
     xmlDF.show(truncate = false)
+
     // Inferir o schema do XML
     val inferredSchema = spark.read
       .option("rowTag", "GTVeProc") // Tag raiz do XML
       .xml(xmlDF)
+
     // Exibir o schema inferido
     inferredSchema.printSchema()
 
     val dfSelect = inferredSchema.select(
-      $"GTVe._versao".as("gtve_versao"),
+//      $"GTVe._versao".as("gtve_versao"),
       $"GTVe.infCTeSupl.qrCodCTe".as("gtve_infctesupl_qrcodcte"),
       $"GTVe.infCte._Id".as("gtve_infcte_id"),
       $"GTVe.infCte._versao".as("gtve_infcte_versao"),
