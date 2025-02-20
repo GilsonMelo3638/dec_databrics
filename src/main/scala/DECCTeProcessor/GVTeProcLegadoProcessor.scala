@@ -234,6 +234,15 @@ object GVTeProcLegadoProcessor {
           $"IP_TRANSMISSOR",
           $"MODELO",
           $"TPEMIS",
+          $"parsed.protCTe._versao".as("protcte_versao"),
+          $"parsed.protCTe.infProt._Id".as("infprot_id"),
+          $"parsed.protCTe.infProt.cStat".as("infprot_cstat"),
+          $"parsed.protCTe.infProt.chCTe".as("chave"),
+          $"parsed.protCTe.infProt.dhRecbto".as("infprot_dhrecbto"),
+          $"parsed.protCTe.infProt.digVal".as("infprot_digval"),
+          $"parsed.protCTe.infProt.nProt".as("infprot_nprot"),
+          $"parsed.protCTe.infProt.tpAmb".as("infprot_tpamb"),
+          $"parsed.protCTe.infProt.verAplic".as("infprot_veraplic"),
           $"parsed.GTVe._versao".as("gtve_versao"),
           $"parsed.GTVe.infCTeSupl.qrCodCTe".as("gtve_infctesupl_qrcodcte"),
           $"parsed.GTVe.infCte._Id".as("gtve_infcte_id"),
@@ -281,16 +290,7 @@ object GVTeProcLegadoProcessor {
           $"parsed._ipTransmissor".as("iptransmissor"),
           $"parsed._nPortaCon".as("nportacon"),
           $"parsed._versao".as("versao"),
-          $"parsed._xmlns".as("xmlns"),
-          $"parsed.protCTe._versao".as("protcte_versao"),
-          $"parsed.protCTe.infProt._Id".as("protcte_infprot_id"),
-          $"parsed.protCTe.infProt.cStat".as("protcte_infprot_cstat"),
-          $"parsed.protCTe.infProt.chCTe".as("chave"),
-          $"parsed.protCTe.infProt.dhRecbto".as("protcte_infprot_dhrecbto"),
-          $"parsed.protCTe.infProt.digVal".as("protcte_infprot_digval"),
-          $"parsed.protCTe.infProt.nProt".as("protcte_infprot_nprot"),
-          $"parsed.protCTe.infProt.tpAmb".as("protcte_infprot_tpamb"),
-          $"parsed.protCTe.infProt.verAplic".as("protcte_infprot_veraplic")
+          $"parsed._xmlns".as("xmlns")
         )
         // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
         val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
