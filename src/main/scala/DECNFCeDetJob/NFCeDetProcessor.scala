@@ -29,24 +29,25 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+
 object NFCeDetProcessor {
   def main(args: Array[String]): Unit = {
     val tipoDocumento = "nfce"
-      val spark = SparkSession.builder()
-        .appName("ExtractInfNFe")
-        .config("spark.sql.broadcastTimeout", "600") // Configuração do broadcast
-        .config("spark.executor.memory", "16g") // Memória do executor
-        .config("spark.driver.memory", "8g") // Memória do driver
-        .config("spark.sql.autoBroadcastJoinThreshold", "-1") // Desabilita broadcast automático
-        .config("spark.executor.memoryOverhead", "1024") // Overhead de memória do executor
-        .config("spark.network.timeout", "800s") // Tempo de timeout da rede
-        .config("spark.yarn.executor.memoryOverhead", "4096") // Overhead de memória no YARN
-        .config("spark.shuffle.service.enabled", "true") // Ativa o serviço de shuffle
-        .config("spark.dynamicAllocation.enabled", "true") // Ativa alocação dinâmica de executores
-        .config("spark.dynamicAllocation.minExecutors", "10") // Número mínimo de executores dinâmicos
-        .config("spark.dynamicAllocation.maxExecutors", "40") // Número máximo de executores dinâmicos
-        .config("spark.sql.hive.filesourcePartitionFileCacheSize", "524288000") // Tamanho do cache de arquivos de partição do Hive
-        .getOrCreate()
+    val spark = SparkSession.builder()
+      .appName("ExtractInfNFe")
+      .config("spark.sql.broadcastTimeout", "600") // Configuração do broadcast
+      .config("spark.executor.memory", "16g") // Memória do executor
+      .config("spark.driver.memory", "8g") // Memória do driver
+      .config("spark.sql.autoBroadcastJoinThreshold", "-1") // Desabilita broadcast automático
+      .config("spark.executor.memoryOverhead", "1024") // Overhead de memória do executor
+      .config("spark.network.timeout", "800s") // Tempo de timeout da rede
+      .config("spark.yarn.executor.memoryOverhead", "4096") // Overhead de memória no YARN
+      .config("spark.shuffle.service.enabled", "true") // Ativa o serviço de shuffle
+      .config("spark.dynamicAllocation.enabled", "true") // Ativa alocação dinâmica de executores
+      .config("spark.dynamicAllocation.minExecutors", "10") // Número mínimo de executores dinâmicos
+      .config("spark.dynamicAllocation.maxExecutors", "40") // Número máximo de executores dinâmicos
+      .config("spark.sql.hive.filesourcePartitionFileCacheSize", "524288000") // Tamanho do cache de arquivos de partição do Hive
+      .getOrCreate()
     import spark.implicits._
     // Definindo intervalo de dias: diasAntesInicio (10 dias atrás) até diasAntesFim (ontem)
     val diasAntesInicio = LocalDate.now.minusDays(15)
@@ -94,7 +95,7 @@ object NFCeDetProcessor {
         // 2. Selecionar a coluna que contém o XML (ex: "XML_DOCUMENTO_CLOB")
         val xmlDF = parquetDF.select(
           $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
-          $"NSU",
+          $"NSU".cast("string").as("NSU"),
           $"DHPROC",
           $"EMITENTE",
           $"DESTINATARIO",
@@ -568,50 +569,50 @@ object NFCeDetProcessor {
             $"det.obsItem.obsFisco.xTexto".as("obsItem_obsFisco_xTexto")
           )
 
-          val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
+        val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
-          // Obtendo as variações únicas de 'chave_particao' e coletando para uma lista
-          val chaveParticoesUnicas = selectedDFComParticao
-            .select("chave_particao")
-            .distinct()
-            .as[String]
-            .collect()
+        // Obtendo as variações únicas de 'chave_particao' e coletando para uma lista
+        val chaveParticoesUnicas = selectedDFComParticao
+          .select("chave_particao")
+          .distinct()
+          .as[String]
+          .collect()
 
-          // Criando uma função para processar cada partição separadamente
-          def processarParticao(chaveParticao: String): Unit = {
-              val caminhoParticao = s"$destino/chave_particao=$chaveParticao"
+        // Criando uma função para processar cada partição separadamente
+        def processarParticao(chaveParticao: String): Unit = {
+          val caminhoParticao = s"$destino/chave_particao=$chaveParticao"
 
-              val particaoExiste = try {
-                  val particaoDF = spark.read.parquet(caminhoParticao).select("chave")
-                  !particaoDF.isEmpty
-              } catch {
-                  case _: Exception => false
-              }
-              val dfFiltrado = if (particaoExiste) {
-                  println(s"[INFO] Partição $chaveParticao já existe. Filtrando novas chaves...")
-                  val particaoDF = spark.read.parquet(caminhoParticao).select("chave").distinct()
-                  selectedDFComParticao
-                    .filter(col("chave_particao") === chaveParticao)
-                    .join(particaoDF, Seq("chave"), "left_anti")
-              } else {
-                  println(s"[INFO] Partição $chaveParticao não existe. Criando nova partição...")
-                  selectedDFComParticao.filter(col("chave_particao") === chaveParticao)
-              }
-
-              val qtdRegistros = dfFiltrado.count()
-              println(s"[INFO] Partição $chaveParticao - Quantidade de registros a serem salvos: $qtdRegistros")
-
-              dfFiltrado.write
-                .mode("append")
-                .format("parquet")
-                .option("compression", "lz4")
-                .option("parquet.block.size", 500 * 1024 * 1024)
-                .save(caminhoParticao)
-
-              println(s"[INFO] Finalizado processamento da partição: $chaveParticao")
+          val particaoExiste = try {
+            val particaoDF = spark.read.parquet(caminhoParticao).select("chave")
+            !particaoDF.isEmpty
+          } catch {
+            case _: Exception => false
           }
-          // Iterando sobre cada partição e processando
-          chaveParticoesUnicas.foreach(processarParticao)
+          val dfFiltrado = if (particaoExiste) {
+            println(s"[INFO] Partição $chaveParticao já existe. Filtrando novas chaves...")
+            val particaoDF = spark.read.parquet(caminhoParticao).select("chave").distinct()
+            selectedDFComParticao
+              .filter(col("chave_particao") === chaveParticao)
+              .join(particaoDF, Seq("chave"), "left_anti")
+          } else {
+            println(s"[INFO] Partição $chaveParticao não existe. Criando nova partição...")
+            selectedDFComParticao.filter(col("chave_particao") === chaveParticao)
+          }
+
+          val qtdRegistros = dfFiltrado.count()
+          println(s"[INFO] Partição $chaveParticao - Quantidade de registros a serem salvos: $qtdRegistros")
+
+          dfFiltrado.write
+            .mode("append")
+            .format("parquet")
+            .option("compression", "lz4")
+            .option("parquet.block.size", 500 * 1024 * 1024)
+            .save(caminhoParticao)
+
+          println(s"[INFO] Finalizado processamento da partição: $chaveParticao")
+        }
+        // Iterando sobre cada partição e processando
+        chaveParticoesUnicas.foreach(processarParticao)
         println(s"Gravação concluída para $anoMesDia")
 
         // Mover os arquivos para a pasta processada

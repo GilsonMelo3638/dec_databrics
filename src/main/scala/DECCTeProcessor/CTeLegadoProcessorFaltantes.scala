@@ -1,25 +1,4 @@
-//scp "C:\dec\target\DecInfNFePrata-0.0.1-SNAPSHOT.jar"  gamelo@10.69.22.71:src/main/scala/DecInfNFePrata-0.0.1-SNAPSHOT.jar
-//hdfs dfs -put -f /export/home/gamelo/src/main/scala/DecInfNFePrata-0.0.1-SNAPSHOT.jar /app/dec
-//hdfs dfs -ls /app/dec
-// hdfs dfs -rm -skipTrash /app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
-// spark-submit \
-//  --class DECJob.InfNFeProcessor \
-//  --master yarn \
-//  --deploy-mode cluster \
-//  --num-executors 20 \
-//  --executor-memory 4G \
-//  --executor-cores 2 \
-//  --conf "spark.sql.parquet.writeLegacyFormat=true" \
-//  --conf "spark.sql.debug.maxToStringFields=100" \
-//  --conf "spark.executor.memoryOverhead=1024" \
-//  --conf "spark.network.timeout=800s" \
-//  --conf "spark.yarn.executor.memoryOverhead=4096" \
-//  --conf "spark.shuffle.service.enabled=true" \
-//  --conf "spark.dynamicAllocation.enabled=true" \
-//  --conf "spark.dynamicAllocation.minExecutors=10" \
-//  --conf "spark.dynamicAllocation.maxExecutors=40" \
-//  --packages com.databricks:spark-xml_2.12:0.13.0 \
-//  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
+
 package DECCTeProcessor
 
 import com.databricks.spark.xml.functions.from_xml
@@ -28,10 +7,10 @@ import org.apache.spark.sql.functions._
 
 import java.time.LocalDateTime
 
-object CTeLegadoProcessor {
+object CTeLegadoProcessorFaltantes {
   // Variáveis externas para o intervalo de meses e ano de processamento
-  val anoInicio = 2023
-  val anoFim = 2023
+  val anoInicio = 2020
+  val anoFim = 2020
   val tipoDocumento = "cte"
 
   // Função para criar o esquema de forma modular
@@ -517,7 +496,7 @@ object CTeLegadoProcessor {
     val anoList = (anoInicio to anoFim).map(_.toString).toList
 
     anoList.foreach { ano =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/$tipoDocumento/$ano"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/cte/faltantes/"
 
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
@@ -868,4 +847,4 @@ object CTeLegadoProcessor {
   }
 }
 
-//CTeLegadoProcessor.main(Array())
+//CTeLegadoProcessorFaltantes.main(Array())

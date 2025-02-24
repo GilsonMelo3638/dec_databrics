@@ -28,13 +28,15 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+
 object NFeDetProcessor {
-  def main(args: Array[String]): Unit = {
-    val tipoDocumento = "nfe"
-    val spark = SparkSession.builder()
-      .appName("ExtractNFeDet")
-      .config("spark.sql.broadcastTimeout", "600") // Configuração do broadcast
-      .config("spark.executor.memory", "8g") // Memória do executor
+    def main(args: Array[String]): Unit = {
+        val tipoDocumento = "nfe"
+        val spark = SparkSession.builder()
+          .appName("ExtractNFeDet")
+          .config("spark.sql.broadcastTimeout", "600") // Configuração do broadcast
+
+          .config("spark.executor.memory", "8g") // Memória do executor
       .config("spark.driver.memory", "8g") // Memória do driver
       .config("spark.sql.autoBroadcastJoinThreshold", "-1") // Desabilita broadcast automático
       .getOrCreate()
@@ -85,7 +87,7 @@ object NFeDetProcessor {
         // 2. Selecionar a coluna que contém o XML (ex: "XML_DOCUMENTO_CLOB")
         val xmlDF = parquetDF.select(
           $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
-          $"NSUDF",
+          $"NSUDF".cast("string").as("NSUDF"),
           $"DHPROC",
           $"EMITENTE",
           $"DESTINATARIO",

@@ -214,7 +214,7 @@ object GVTeProcLegadoProcessor {
           .filter($"MODELO" === 64) // Filtra onde MODELO é igual a 64
           .select(
             $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
-            $"NSUSVD",
+            $"NSUSVD".cast("string").as("NSUSVD"),
             $"DHPROC",
             $"DHEMI",
             $"IP_TRANSMISSOR",

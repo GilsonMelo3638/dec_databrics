@@ -420,7 +420,7 @@ object InfNFeLegadoProcessor {
         // 2. Seleciona as colunas XML_DOCUMENTO_CLOB e NSUDF
         val xmlDF = parquetDF.select(
           $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
-          $"NSUDF",
+          $"NSUDF".cast("string").as("NSUDF"),
           $"DHPROC",
           $"DHEMI",
           $"IP_TRANSMISSOR"
@@ -663,7 +663,7 @@ object InfNFeLegadoProcessor {
           .option("compression", "lz4")
           .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
           .partitionBy("chave_particao") // Garante a separação por partição
-          .save("/datalake/prata/sources/dbms/dec/nfe/infNFe2")
+          .save("/datalake/prata/sources/dbms/dec/nfe/infNFe")
 
         // Registrar o horário de término da gravação
         val saveEndTime = LocalDateTime.now()

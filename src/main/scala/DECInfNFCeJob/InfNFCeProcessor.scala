@@ -112,7 +112,7 @@ object InfNFCeProcessor {
         // 2. Selecionar a coluna que contém o XML (ex: "XML_DOCUMENTO_CLOB")
         val xmlDF = parquetDF.select(
           $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
-          $"NSU",
+          $"NSU".cast("string").as("NSU"),
           $"DHPROC",
           $"DHEMI",
           $"IP_TRANSMISSOR"
