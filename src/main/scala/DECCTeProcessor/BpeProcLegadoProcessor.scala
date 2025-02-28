@@ -206,7 +206,6 @@ object BpeProcLegadoProcessor {
         .add("infBPeSupl", new StructType()
           .add("boardPassBPe", StringType, true)
           .add("qrCodBPe", StringType, true)))
-      .add("_corrupt_record", StringType, true)
       .add("_dhConexao", StringType, true)
       .add("_ipTransmissor", StringType, true)
       .add("_nPortaCon", StringType, true)
@@ -389,6 +388,11 @@ object BpeProcLegadoProcessor {
         $"parsed.BPe.infBPe.pag".as("infbpe_pag"), // Array intacto
         $"parsed.BPe.infBPeSupl.boardPassBPe".as("infbpesupl_boardpassbpe"),
         $"parsed.BPe.infBPeSupl.qrCodBPe".as("infbpesupl_qrcodbpe"),
+        $"parsed._dhConexao".as("dhconexao"),
+        $"parsed._ipTransmissor".as("iptransmissor"),
+        $"parsed._nPortaCon".as("nportacon"),
+        $"parsed._versao".as("versao"),
+        $"parsed._xmlns".as("xmlns"),
         $"parsed.protBPe._versao".as("protbpe_versao"),
         $"parsed.protBPe.infProt._Id".as("infprot_id"),
         $"parsed.protBPe.infProt.cStat".as("infprot_cstat"),
@@ -415,7 +419,7 @@ object BpeProcLegadoProcessor {
       }
 
       // Redistribuir os dados para 40 partições
-      val repartitionedDF = selectedDFComParticao.repartition(40)
+      val repartitionedDF = selectedDFComParticao.repartition(1)
 
       // Escrever os dados particionados
       repartitionedDF
@@ -424,7 +428,7 @@ object BpeProcLegadoProcessor {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/bpe/bpe")
+        .save("/datalake/prata/sources/dbms/dec/bpe/BPe")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()
