@@ -323,9 +323,9 @@ object CTeOSLegadoProcessor {
         $"parsed.CTeOS.infCTeSupl.qrCodCTe".as("qrCodCTe"),
         $"parsed.CTeOS.infCte._Id".as("idCTe"),
         $"parsed.CTeOS.infCte._versao".as("versaoInfCte"),
-        $"parsed.CTeOS.infCte.autXML".as("autXML"), // ArrayType, não explodido
-        $"parsed.CTeOS.infCte.compl.ObsCont".as("compl_obsCont"), // ArrayType, não explodido
-        $"parsed.CTeOS.infCte.compl.ObsFisco".as("compl_obsFisco"), // ArrayType, não explodido
+        $"parsed.CTeOS.infCte.autXML".as("autXML"),
+        $"parsed.CTeOS.infCte.compl.ObsCont".as("compl_obsCont"),
+        $"parsed.CTeOS.infCte.compl.ObsFisco".as("compl_obsFisco"),
         $"parsed.CTeOS.infCte.compl.xCaracAd".as("compl_xCaracAd"),
         $"parsed.CTeOS.infCte.compl.xCaracSer".as("compl_xCaracSer"),
         $"parsed.CTeOS.infCte.compl.xEmi".as("compl_xEmi"),
@@ -354,7 +354,7 @@ object CTeOSLegadoProcessor {
         $"parsed.CTeOS.infCte.ide.cUF".as("ide_CUF"),
         $"parsed.CTeOS.infCte.ide.dhEmi".as("ide_DhEmi"),
         $"parsed.CTeOS.infCte.ide.indIEToma".as("ide_IndIEToma"),
-        $"parsed.CTeOS.infCte.ide.infPercurso".as("ide_InfPercurso"), // ArrayType, não explodido
+        $"parsed.CTeOS.infCte.ide.infPercurso".as("ide_InfPercurso"),
         $"parsed.CTeOS.infCte.ide.mod".as("ide_Mod"),
         $"parsed.CTeOS.infCte.ide.modal".as("ide_Modal"),
         $"parsed.CTeOS.infCte.ide.nCT".as("ide_NCT"),
@@ -413,14 +413,14 @@ object CTeOSLegadoProcessor {
         $"parsed.CTeOS.infCte.imp.infTribFed.vIR".as("infTrib_FedVIR"),
         $"parsed.CTeOS.infCte.imp.infTribFed.vPIS".as("infTrib_FedVPIS"),
         $"parsed.CTeOS.infCte.imp.vTotTrib".as("vTotTrib"),
-        $"parsed.CTeOS.infCte.infCTeNorm.cobr.dup".as("cobrDup"), // ArrayType, não explodido
+        $"parsed.CTeOS.infCte.infCTeNorm.cobr.dup".as("cobrDup"),
         $"parsed.CTeOS.infCte.infCTeNorm.cobr.fat.nFat".as("Fat_NFat"),
         $"parsed.CTeOS.infCte.infCTeNorm.cobr.fat.vDesc".as("Fat_VDesc"),
         $"parsed.CTeOS.infCte.infCTeNorm.cobr.fat.vLiq".as("Fat_VLiq"),
         $"parsed.CTeOS.infCte.infCTeNorm.cobr.fat.vOrig".as("Fat_VOrig"),
         $"parsed.CTeOS.infCte.infCTeNorm.infCteSub.chCte".as("infCteSub_ChCte"),
-        $"parsed.CTeOS.infCte.infCTeNorm.infDocRef".as("infDocRef"), // ArrayType, não explodido
-        $"parsed.CTeOS.infCte.infCTeNorm.infGTVe".as("infGTVe"), // ArrayType, não explodido
+        $"parsed.CTeOS.infCte.infCTeNorm.infDocRef".as("infDocRef"),
+        $"parsed.CTeOS.infCte.infCTeNorm.infGTVe".as("infGTVe"),
         $"parsed.CTeOS.infCte.infCTeNorm.infModal._versaoModal".as("infModalVersao"),
         $"parsed.CTeOS.infCte.infCTeNorm.infModal.rodoOS.NroRegEstadual".as("rodoOS_NroRegEstadual"),
         $"parsed.CTeOS.infCte.infCTeNorm.infModal.rodoOS.TAF".as("rodoOS_TAF"),
@@ -439,7 +439,7 @@ object CTeOSLegadoProcessor {
         $"parsed.CTeOS.infCte.infCTeNorm.infModal.rodoOS.veic.prop.xNome".as("Veic_Prop_XNome"),
         $"parsed.CTeOS.infCte.infCTeNorm.infServico.infQ.qCarga".as("infQ_oQCarga"),
         $"parsed.CTeOS.infCte.infCTeNorm.infServico.xDescServ".as("infServico_XDescServ"),
-        $"parsed.CTeOS.infCte.infCTeNorm.seg".as("seg"), // ArrayType, não explodido
+        $"parsed.CTeOS.infCte.infCTeNorm.seg".as("seg"),
         $"parsed.CTeOS.infCte.infCteComp.chCTe".as("infCteComp_ChCTe"),
         $"parsed.CTeOS.infCte.infRespTec.CNPJ".as("infRespTec_CNPJ"),
         $"parsed.CTeOS.infCte.infRespTec.email".as("infRespTec_Email"),
@@ -464,7 +464,7 @@ object CTeOSLegadoProcessor {
         $"parsed.CTeOS.infCte.toma.fone".as("toma_Fone"),
         $"parsed.CTeOS.infCte.toma.xFant".as("toma_XFant"),
         $"parsed.CTeOS.infCte.toma.xNome".as("toma_XNome"),
-        $"parsed.CTeOS.infCte.vPrest.Comp".as("vPrest_Comp"), // ArrayType, não explodido
+        $"parsed.CTeOS.infCte.vPrest.Comp".as("vPrest_Comp"),
         $"parsed.CTeOS.infCte.vPrest.vRec".as("vPrest_VRec"),
         $"parsed.CTeOS.infCte.vPrest.vTPrest".as("vPrest_VTPrest")
       )
