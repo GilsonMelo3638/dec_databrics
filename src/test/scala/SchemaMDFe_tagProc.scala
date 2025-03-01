@@ -17,5 +17,5 @@ object SchemaMDFe_tagProc {
 }
 
 
-SchemaMDFe_tagProc.main(Array())
+//SchemaMDFe_tagProc.main(Array())
 
