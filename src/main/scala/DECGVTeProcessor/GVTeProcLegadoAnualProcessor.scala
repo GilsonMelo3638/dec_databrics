@@ -20,182 +20,27 @@
 //  --conf "spark.dynamicAllocation.maxExecutors=40" \
 //  --packages com.databricks:spark-xml_2.12:0.13.0 \
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
-package DECCTeProcessor
+package DECGVTeProcessor
 
+import Schemas.GVTeSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{StringType, StructType}
 
 import java.time.LocalDateTime
 
-object GVTeProcLegadoProcessor {
+object GVTeProcLegadoAnualProcessor {
     // Variáveis externas para o intervalo de meses e ano de processamento
-    val anoInicio = 2024
+    val anoInicio = 2020
     val anoFim = 2024
     val tipoDocumento = "cte"
 
-    // Função para criar o esquema de forma modular
+  def main(args: Array[String]): Unit = {
+    val spark = SparkSession.builder().appName("ExtractGTVe").enableHiveSupport().getOrCreate()
+    import spark.implicits._
 
-  import org.apache.spark.sql.types._
-
-  import org.apache.spark.sql.types._
-
-  def createSchema(): StructType = {
-    new StructType()
-      .add("GTVe", new StructType()
-        .add("_versao", StringType, true)
-        .add("infCTeSupl", new StructType()
-          .add("qrCodCTe", StringType, true))
-        .add("infCte", new StructType()
-          .add("_Id", StringType, true)
-          .add("_versao", StringType, true)
-          .add("compl", new StructType()
-            .add("xEmi", StringType, true)
-            .add("xObs", StringType, true))
-          .add("dest", new StructType()
-            .add("CNPJ", StringType, true)
-            .add("IE", StringType, true)
-            .add("enderDest", new StructType()
-              .add("CEP", StringType, true)
-              .add("UF", StringType, true)
-              .add("cMun", StringType, true)
-              .add("cPais", StringType, true)
-              .add("nro", StringType, true)
-              .add("xBairro", StringType, true)
-              .add("xCpl", StringType, true)
-              .add("xLgr", StringType, true)
-              .add("xMun", StringType, true)
-              .add("xPais", StringType, true))
-            .add("xNome", StringType, true))
-          .add("destino", new StructType()
-            .add("CEP", StringType, true)
-            .add("UF", StringType, true)
-            .add("cMun", StringType, true)
-            .add("nro", StringType, true)
-            .add("xBairro", StringType, true)
-            .add("xCpl", StringType, true)
-            .add("xLgr", StringType, true)
-            .add("xMun", StringType, true))
-          .add("detGTV", new StructType()
-            .add("infEspecie", ArrayType(new StructType()
-              .add("tpEspecie", StringType, true)
-              .add("tpNumerario", StringType, true)
-              .add("vEspecie", DoubleType, true)
-              .add("xMoedaEstr", StringType, true)), true)
-            .add("infVeiculo", new StructType()
-              .add("RNTRC", StringType, true)
-              .add("UF", StringType, true)
-              .add("placa", StringType, true))
-            .add("qCarga", DoubleType, true))
-          .add("emit", new StructType()
-            .add("CNPJ", StringType, true)
-            .add("IE", StringType, true)
-            .add("enderEmit", new StructType()
-              .add("CEP", StringType, true)
-              .add("UF", StringType, true)
-              .add("cMun", StringType, true)
-              .add("fone", StringType, true)
-              .add("nro", StringType, true)
-              .add("xBairro", StringType, true)
-              .add("xCpl", StringType, true)
-              .add("xLgr", StringType, true)
-              .add("xMun", StringType, true))
-            .add("xFant", StringType, true)
-            .add("xNome", StringType, true))
-          .add("ide", new StructType()
-            .add("CFOP", StringType, true)
-            .add("UFEnv", StringType, true)
-            .add("cCT", StringType, true)
-            .add("cDV", StringType, true)
-            .add("cMunEnv", StringType, true)
-            .add("cUF", StringType, true)
-            .add("dhChegadaDest", StringType, true)
-            .add("dhEmi", StringType, true)
-            .add("dhSaidaOrig", StringType, true)
-            .add("indIEToma", StringType, true)
-            .add("mod", StringType, true)
-            .add("modal", StringType, true)
-            .add("nCT", StringType, true)
-            .add("natOp", StringType, true)
-            .add("serie", StringType, true)
-            .add("toma", new StructType()
-              .add("toma", StringType, true))
-            .add("tomaTerceiro", new StructType()
-              .add("CNPJ", StringType, true)
-              .add("IE", StringType, true)
-              .add("enderToma", new StructType()
-                .add("CEP", StringType, true)
-                .add("UF", StringType, true)
-                .add("cMun", StringType, true)
-                .add("nro", StringType, true)
-                .add("xBairro", StringType, true)
-                .add("xCpl", StringType, true)
-                .add("xLgr", StringType, true)
-                .add("xMun", StringType, true))
-              .add("toma", StringType, true)
-              .add("xNome", StringType, true))
-            .add("tpAmb", StringType, true)
-            .add("tpCTe", StringType, true)
-            .add("tpEmis", StringType, true)
-            .add("tpImp", StringType, true)
-            .add("tpServ", StringType, true)
-            .add("verProc", StringType, true)
-            .add("xMunEnv", StringType, true))
-          .add("infRespTec", new StructType()
-            .add("CNPJ", StringType, true)
-            .add("email", StringType, true)
-            .add("fone", StringType, true)
-            .add("xContato", StringType, true))
-          .add("origem", new StructType()
-            .add("CEP", StringType, true)
-            .add("UF", StringType, true)
-            .add("cMun", StringType, true)
-            .add("nro", StringType, true)
-            .add("xBairro", StringType, true)
-            .add("xCpl", StringType, true)
-            .add("xLgr", StringType, true)
-            .add("xMun", StringType, true))
-          .add("rem", new StructType()
-            .add("CNPJ", StringType, true)
-            .add("IE", StringType, true)
-            .add("email", StringType, true)
-            .add("enderReme", new StructType()
-              .add("CEP", StringType, true)
-              .add("UF", StringType, true)
-              .add("cMun", StringType, true)
-              .add("cPais", StringType, true)
-              .add("nro", StringType, true)
-              .add("xBairro", StringType, true)
-              .add("xCpl", StringType, true)
-              .add("xLgr", StringType, true)
-              .add("xMun", StringType, true)
-              .add("xPais", StringType, true))
-            .add("fone", StringType, true)
-            .add("xFant", StringType, true)
-            .add("xNome", StringType, true))))
-      .add("_dhConexao", StringType, true)
-      .add("_ipTransmissor", StringType, true)
-      .add("_nPortaCon", StringType, true)
-      .add("_versao", StringType, true)
-      .add("_xmlns", StringType, true)
-      .add("protCTe", new StructType()
-        .add("_versao", StringType, true)
-        .add("infProt", new StructType()
-          .add("_Id", StringType, true)
-          .add("cStat", StringType, true)
-          .add("chCTe", StringType, true)
-          .add("dhRecbto", StringType, true)
-          .add("digVal", StringType, true)
-          .add("nProt", StringType, true)
-          .add("tpAmb", StringType, true)
-          .add("verAplic", StringType, true)
-          .add("xMotivo", StringType, true)))
-  }
-    def main(args: Array[String]): Unit = {
-      val spark = SparkSession.builder().appName("ExtractInfNFe").enableHiveSupport().getOrCreate()
-      import spark.implicits._
-      val schema = createSchema()
+    // Obter o esquema da classe CTeOSSchema
+    val schema = GVTeSchema.createSchema()
       // Lista de anos com base nas variáveis externas
       val anoList = (anoInicio to anoFim).map(_.toString).toList
 
@@ -367,7 +212,7 @@ object GVTeProcLegadoProcessor {
         }
 
         // Redistribuir os dados para 40 partições
-        val repartitionedDF = selectedDFComParticao.repartition(40)
+        val repartitionedDF = selectedDFComParticao.repartition(1)
 
         // Escrever os dados particionados
         repartitionedDF
@@ -384,4 +229,4 @@ object GVTeProcLegadoProcessor {
     }
   }
 
-//GVTeProcLegadoProcessor.main(Array())
+//GVTeProcLegadoAnualProcessor.main(Array())
