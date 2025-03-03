@@ -100,7 +100,7 @@ object NF3eProcLegadoMensalProcessor {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/nf3e/nf3e")
+        .save("/datalake/prata/sources/dbms/dec/nf3e/NF3e")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()

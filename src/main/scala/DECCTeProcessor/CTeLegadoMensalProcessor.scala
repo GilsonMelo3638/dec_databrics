@@ -23,10 +23,11 @@
 package DECCTeProcessor
 
 import Processors.CTeProcessor
+import Schemas.CTeSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-import Schemas.CTeSchema
+
 
 import java.time.LocalDateTime
 

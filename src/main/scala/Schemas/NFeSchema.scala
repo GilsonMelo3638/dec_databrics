@@ -1,6 +1,6 @@
 package Schemas
 
-import org.apache.spark.sql.types.{StringType, StructType, _}
+import org.apache.spark.sql.types.{DateType, StringType, StructType, _}
 
 object NFeSchema {
   def createSchema(): StructType = {

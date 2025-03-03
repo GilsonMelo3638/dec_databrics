@@ -21,13 +21,14 @@
 //  --packages com.databricks:spark-xml_2.12:0.13.0 \
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
 package DECNF3eProcessor
-
 import Schemas.NF3eSchema
+import Processors.NF3eProcessor
+
+
+
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-import Processors.NF3eProcessor
-
 import java.time.LocalDateTime
 
 object NF3eProcLegadoAnualProcessor {
@@ -98,7 +99,7 @@ object NF3eProcLegadoAnualProcessor {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/nf3e/nf3e")
+        .save("/datalake/prata/sources/dbms/dec/nf3e/NF3e")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()

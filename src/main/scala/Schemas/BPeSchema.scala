@@ -179,7 +179,7 @@ object BPeSchema {
         .add("infProt", new StructType()
           .add("_Id", StringType, true)
           .add("cStat", StringType, true)
-          .add("chBPe", StringType, true)
+          .add("chBPe", StringType, false)
           .add("dhRecbto", StringType, true)
           .add("digVal", StringType, true)
           .add("nProt", StringType, true)

@@ -3,7 +3,7 @@ package Processors
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object MFDeProcessor {
+object MDFeProcessor {
   def generateSelectedDF(parsedDF: DataFrame)(implicit spark: SparkSession): DataFrame = {
     import spark.implicits._ // Habilita o uso de $"coluna"
 
