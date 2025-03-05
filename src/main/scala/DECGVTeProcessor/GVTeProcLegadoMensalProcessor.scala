@@ -67,8 +67,8 @@ object GVTeProcLegadoMensalProcessor {
             $"DHPROC",
             $"DHEMI",
             $"IP_TRANSMISSOR",
-            $"MODELO",
-            $"TPEMIS"
+            $"MODELO".cast("string").as("MODELO"),
+            $"TPEMIS".cast("string").as("TPEMIS")
           )
         xmlDF.show()
         // 3. Usa `from_xml` para ler o XML da coluna usando o esquema

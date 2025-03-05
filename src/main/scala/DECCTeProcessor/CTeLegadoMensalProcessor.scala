@@ -34,8 +34,8 @@ import java.time.LocalDateTime
 object CTeLegadoMensalProcessor {
   // Variáveis externas para o intervalo de meses e ano de processamento
   val ano = 2025
-  val mesInicio = 2
-  val mesFim = 2
+  val mesInicio = 3
+  val mesFim = 3
   val tipoDocumento = "cte"
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder().appName("ExtractCTe").enableHiveSupport().getOrCreate()
@@ -67,8 +67,8 @@ object CTeLegadoMensalProcessor {
           $"DHPROC",
           $"DHEMI",
           $"IP_TRANSMISSOR",
-          $"MODELO",
-          $"TPEMIS"
+          $"MODELO".cast("string").as("MODELO"),
+          $"TPEMIS".cast("string").as("TPEMIS")
         )
       xmlDF.show()
       // 3. Usa `from_xml` para ler o XML da coluna usando o esquema

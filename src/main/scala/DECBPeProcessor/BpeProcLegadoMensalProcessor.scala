@@ -89,8 +89,8 @@ object BpeProcLegadoMensalProcessor {
         println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
       }
 
-      // Redistribuir os dados para 40 partições
-      val repartitionedDF = selectedDFComParticao.repartition(1)
+      // Redistribuir os dados para 5 partições
+      val repartitionedDF = selectedDFComParticao.repartition(5)
 
       // Escrever os dados particionados
       repartitionedDF

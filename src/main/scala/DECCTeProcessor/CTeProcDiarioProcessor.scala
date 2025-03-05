@@ -1,12 +1,11 @@
 package DECCTeProcessor
-
 import Processors.CTeProcessor
 import Schemas.CTeSchema
+
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -34,7 +33,7 @@ object CTeProcDiarioProcessor {
     val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
     ultimos10Dias.foreach { dia =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar/$dia"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$prataDocumento/processar/$dia"
       val parquetPrataPath = s"/datalake/prata/sources/dbms/dec/$tipoDocumento/$prataDocumento"
       val parquetPathProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_CTeOS/$dia"
 
@@ -70,8 +69,8 @@ object CTeProcDiarioProcessor {
               $"DHPROC",
               $"DHEMI",
               $"IP_TRANSMISSOR",
-              $"MODELO",
-              $"TPEMIS"
+              $"MODELO".cast("string").as("MODELO"),
+              $"TPEMIS".cast("string").as("TPEMIS")
             )
           xmlDF.show()
 

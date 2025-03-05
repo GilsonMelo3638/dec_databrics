@@ -34,7 +34,7 @@ object BpeProcDiarioProcessor {
     val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
     ultimos10Dias.foreach { dia =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar/$dia"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$prataDocumento/processar/$dia"
       val parquetPrataPath = s"/datalake/prata/sources/dbms/dec/$tipoDocumento/$prataDocumento"
       val parquetPathProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processado/$dia"
 
@@ -91,8 +91,8 @@ object BpeProcDiarioProcessor {
             println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
           }
 
-          // Redistribuir os dados para 40 partições
-          val repartitionedDF = selectedDFComParticao.repartition(1)
+          // Redistribuir os dados para 5 partições
+          val repartitionedDF = selectedDFComParticao.repartition(5)
 
           // Escrever os dados particionados
           repartitionedDF

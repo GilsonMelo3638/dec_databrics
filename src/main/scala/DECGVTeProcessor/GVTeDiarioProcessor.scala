@@ -1,12 +1,11 @@
 package DECGVTeProcessor
-
 import Processors.GVTeProcessor
 import Schemas.GVTeSchema
+
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -70,8 +69,8 @@ object GVTeDiarioProcessor {
               $"DHPROC",
               $"DHEMI",
               $"IP_TRANSMISSOR",
-              $"MODELO",
-              $"TPEMIS"
+              $"MODELO".cast("string").as("MODELO"),
+              $"TPEMIS".cast("string").as("TPEMIS")
             )
           xmlDF.show()
 
