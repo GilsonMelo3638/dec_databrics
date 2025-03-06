@@ -1,6 +1,4 @@
 package MainProcessor
-
-
 import Sqoop.SqoopProcessor
 import DECBPeProcessor.BpeProcDiarioProcessor
 import DECMDFeProcessor.MDFeProcDiarioProcessor
@@ -57,60 +55,60 @@ object SqoopProcessorApp {
         }
       }
 
-//      // Executa as classes de processamento diário após as queries
-//      try {
-//        println("=== Executando BpeProcDiarioProcessor ===")
-//        BpeProcDiarioProcessor.main(Array())
-//      } catch {
-//        case e: Exception =>
-//          println(s"Erro ao executar BpeProcDiarioProcessor: ${e.getMessage}")
-//          e.printStackTrace()
-//      }
-//
-//      try {
-//        println("=== Executando MDFeProcDiarioProcessor ===")
-//        MDFeProcDiarioProcessor.main(Array())
-//      } catch {
-//        case e: Exception =>
-//          println(s"Erro ao executar MDFeProcDiarioProcessor: ${e.getMessage}")
-//          e.printStackTrace()
-//      }
-//
-//      try {
-//        println("=== Executando NF3eProcDiarioProcessor ===")
-//        NF3eProcDiarioProcessor.main(Array())
-//      } catch {
-//        case e: Exception =>
-//          println(s"Erro ao executar NF3eProcDiarioProcessor: ${e.getMessage}")
-//          e.printStackTrace()
-//      }
-//
-//      try {
-//        println("=== Executando CTeProcDiarioProcessor ===")
-//        CTeProcDiarioProcessor.main(Array())
-//      } catch {
-//        case e: Exception =>
-//          println(s"Erro ao executar CTeProcDiarioProcessor: ${e.getMessage}")
-//          e.printStackTrace()
-//      }
-//
-//      try {
-//        println("=== Executando CTeOSDiarioProcessor ===")
-//        CTeOSDiarioProcessor.main(Array())
-//      } catch {
-//        case e: Exception =>
-//          println(s"Erro ao executar CTeOSDiarioProcessor: ${e.getMessage}")
-//          e.printStackTrace()
-//      }
-//
-//      try {
-//        println("=== Executando GVTeDiarioProcessor ===")
-//        GVTeDiarioProcessor.main(Array())
-//      } catch {
-//        case e: Exception =>
-//          println(s"Erro ao executar GVTeDiarioProcessor: ${e.getMessage}")
-//          e.printStackTrace()
-//      }
+      // Executa as classes de processamento diário após as queries
+      try {
+        println("=== Executando BpeProcDiarioProcessor ===")
+        BpeProcDiarioProcessor.main(Array())
+      } catch {
+        case e: Exception =>
+          println(s"Erro ao executar BpeProcDiarioProcessor: ${e.getMessage}")
+          e.printStackTrace()
+      }
+
+      try {
+        println("=== Executando MDFeProcDiarioProcessor ===")
+        MDFeProcDiarioProcessor.main(Array())
+      } catch {
+        case e: Exception =>
+          println(s"Erro ao executar MDFeProcDiarioProcessor: ${e.getMessage}")
+          e.printStackTrace()
+      }
+
+      try {
+        println("=== Executando NF3eProcDiarioProcessor ===")
+        NF3eProcDiarioProcessor.main(Array())
+      } catch {
+        case e: Exception =>
+          println(s"Erro ao executar NF3eProcDiarioProcessor: ${e.getMessage}")
+          e.printStackTrace()
+      }
+
+      try {
+        println("=== Executando CTeProcDiarioProcessor ===")
+        CTeProcDiarioProcessor.main(Array())
+      } catch {
+        case e: Exception =>
+          println(s"Erro ao executar CTeProcDiarioProcessor: ${e.getMessage}")
+          e.printStackTrace()
+      }
+
+      try {
+        println("=== Executando CTeOSDiarioProcessor ===")
+        CTeOSDiarioProcessor.main(Array())
+      } catch {
+        case e: Exception =>
+          println(s"Erro ao executar CTeOSDiarioProcessor: ${e.getMessage}")
+          e.printStackTrace()
+      }
+
+      try {
+        println("=== Executando GVTeDiarioProcessor ===")
+        GVTeDiarioProcessor.main(Array())
+      } catch {
+        case e: Exception =>
+          println(s"Erro ao executar GVTeDiarioProcessor: ${e.getMessage}")
+          e.printStackTrace()
+      }
 
 
       println("=== SqoopProcessorApp concluído com sucesso ===")

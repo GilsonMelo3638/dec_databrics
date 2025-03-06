@@ -41,10 +41,26 @@ object SqoopProcessor {
       // Define o caminho de destino no HDFS
       val targetDir = s"$targetDirBase/$documentType/processar/$anoMesDia"
 
-      // Verifica se o diretório já existe no HDFS
+      // Define o diretório de processado com base no tipo de documento
+      val processedDir = documentType match {
+        case "BPe" => s"$targetDirBase/bpe/processado/$anoMesDia"
+        case "CTe" => s"$targetDirBase/cte/processado/$anoMesDia"
+        case "MDFe" => s"$targetDirBase/mdfe/processado/$anoMesDia"
+        case "NF3e" => s"$targetDirBase/nf3e/processado/$anoMesDia"
+        case _ => throw new IllegalArgumentException(s"Tipo de documento não suportado: $documentType")
+      }
+
+      // Verifica se o arquivo já existe no diretório de processado
       val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
-      val path = new Path(targetDir)
-      if (fs.exists(path)) {
+      val processedPath = new Path(processedDir)
+      if (fs.exists(processedPath)) {
+        println(s"Arquivo $anoMesDia já existe no diretório de processado: $processedDir. Nada a ser feito.")
+        return // Interrompe a execução
+      }
+
+      // Verifica se o diretório de destino já existe no HDFS
+      val targetPath = new Path(targetDir)
+      if (fs.exists(targetPath)) {
         println(s"Diretório $targetDir já existe. Dados para o período $anoMesDia já foram gravados.")
         return // Interrompe a execução
       }
@@ -146,6 +162,8 @@ object SqoopProcessor {
         .option("compression", "lz4")
         .parquet(targetDir)
 
+      // Marca o processamento como concluído criando o diretório de processado
+      fs.mkdirs(processedPath)
       println(s"=== Processamento de $documentType concluído com sucesso ===")
     } catch {
       case e: Exception =>
