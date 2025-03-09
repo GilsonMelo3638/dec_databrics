@@ -1,7 +1,10 @@
 package utils
 
+import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.functions.{col, lower}
 import org.apache.hadoop.fs.{FileSystem, Path}
-import org.apache.spark.sql.functions.col
+
+AgrupamentoParquetPorMes.main(Array())
 
 // Função genérica para processar os dados
 def processarDocumento(bronzeBasePath: String, prataPath: String, anoMesList: Seq[String], modelo: Option[Int] = None): Unit = {
@@ -37,7 +40,7 @@ def processarDocumento(bronzeBasePath: String, prataPath: String, anoMesList: Se
 }
 
 // Lista de AnoMes específicos
-val anoMesList = Seq("202501", "202502", "202503")
+val anoMesList = Seq("202503")
 
 // Chamar as funções para cada tipo de documento
 processarDocumento("/datalake/bronze/sources/dbms/dec/bpe/", "/datalake/prata/sources/dbms/dec/bpe/BPe/", anoMesList)
@@ -48,3 +51,17 @@ processarDocumento("/datalake/bronze/sources/dbms/dec/cte/", "/datalake/prata/so
 processarDocumento("/datalake/bronze/sources/dbms/dec/nf3e/", "/datalake/prata/sources/dbms/dec/nf3e/NF3e/", anoMesList)
 processarDocumento("/datalake/bronze/sources/dbms/dec/nfe/", "/datalake/prata/sources/dbms/dec/nfe/infNFe/", anoMesList)
 processarDocumento("/datalake/bronze/sources/dbms/dec/nfce/", "/datalake/prata/sources/dbms/dec/nfce/infNFCe/", anoMesList)
+
+val spark = SparkSession.builder.appName("AuditoriaDet").getOrCreate()
+
+// Para NFE
+val processorNFe = new AuditoriaDet(spark, "nfe")
+processorNFe.identificarChavesFaltantesNoPrata(2025, 1, 2025, 1)
+processorNFe.identificarAusencias()
+processorNFe.verificarDuplicidade()
+
+// Para NFCE
+val processorNFCe = new AuditoriaDet(spark, "nfce")
+processorNFCe.identificarChavesFaltantesNoPrata(2025, 1, 2025, 1)
+processorNFCe.identificarAusencias()
+processorNFCe.verificarDuplicidade()

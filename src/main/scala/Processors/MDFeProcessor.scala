@@ -9,7 +9,12 @@ object MDFeProcessor {
 
     parsedDF.select(
       $"NSU",
-      date_format(to_timestamp($"DHPROC", "dd/MM/yyyy HH:mm:ss"), "yyyyMMddHH").as("DHPROC_FORMATADO"),
+      concat(
+        substring($"DHPROC", 7, 4),
+        substring($"DHPROC", 4, 2),
+        substring($"DHPROC", 1, 2),
+        substring($"DHPROC", 12, 2)
+      ).as("DHPROC_FORMATADO"),
       $"DHEMI",
       $"IP_TRANSMISSOR",
       $"parsed.MDFe.infMDFe._Id".as("infmdfe_id"),

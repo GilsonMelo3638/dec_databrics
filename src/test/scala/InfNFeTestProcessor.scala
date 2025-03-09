@@ -20,20 +20,18 @@
 //  --conf "spark.dynamicAllocation.maxExecutors=40" \
 //  --packages com.databricks:spark-xml_2.12:0.13.0 \
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
-package DECInfNFeJob
-
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{StringType, _}
+import org.apache.spark.sql.types._
 
 import java.time.LocalDateTime
 
-object InfNFeLegadoProcessor {
+object InfNFeTestProcessor {
   // Variáveis externas para o intervalo de meses e ano de processamento
   val ano = 2025
-  val mesInicio = 2
-  val mesFim = 2
+  val mesInicio = 3
+  val mesFim = 3
   val tipoDocumento = "nfe"
 
   // Função para criar o esquema de forma modular
@@ -409,7 +407,7 @@ object InfNFeLegadoProcessor {
     }.toList
 
     anoMesList.foreach { anoMes =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/$tipoDocumento/$anoMes"
+      val parquetPath = s"/tmp/teste_xml/nfe/20250307"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $anoMes: $startTime")
@@ -432,13 +430,13 @@ object InfNFeLegadoProcessor {
 
       // 4. Seleciona os campos desejados
       val selectedDF = parsedDF.select(
-        $"NSUDF",
-        concat(
+        $"NSUDF", concat(
           substring($"DHPROC", 7, 4),
           substring($"DHPROC", 4, 2),
           substring($"DHPROC", 1, 2),
           substring($"DHPROC", 12, 2)
         ).as("DHPROC_FORMATADO"),
+
         $"DHEMI",
         $"IP_TRANSMISSOR",
         $"parsed.protNFe.infProt._Id".as("infprot_Id"),
@@ -668,7 +666,7 @@ object InfNFeLegadoProcessor {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/nfe/infNFe")
+        .save("/datalake/prata/sources/dbms/dec/nfe/infNFe2")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()
@@ -676,4 +674,4 @@ object InfNFeLegadoProcessor {
   }
 }
 
-//InfNFeLegadoProcessor.main(Array())
+//InfNFeTestProcessor.main(Array())

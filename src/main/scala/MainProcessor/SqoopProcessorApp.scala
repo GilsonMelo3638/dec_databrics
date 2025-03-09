@@ -1,4 +1,5 @@
 package MainProcessor
+import RepartitionJob.RepartitionXlmPequenosMediosProcessor
 import Sqoop.SqoopProcessor
 import DECBPeProcessor.BpeProcDiarioProcessor
 import DECMDFeProcessor.MDFeProcDiarioProcessor
@@ -29,11 +30,18 @@ object SqoopProcessorApp {
       println("=== Iniciando o SqoopProcessorApp ===")
 
       // Configurações de conexão com o banco de dados Oracle
-      val jdbcUrl = "jdbc:oracle:thin:@sefsrvprd704.fazenda.net:1521/ORAPRD21"
-      val connectionProperties = new Properties()
-      connectionProperties.put("user", "userdec")
-      connectionProperties.put("password", "userdec201811")
-      connectionProperties.put("driver", "oracle.jdbc.driver.OracleDriver")
+      val defaultJdbcUrl = "jdbc:oracle:thin:@sefsrvprd704.fazenda.net:1521/ORAPRD21"
+      val defaultConnectionProperties = new Properties()
+      defaultConnectionProperties.put("user", "userdec")
+      defaultConnectionProperties.put("password", "userdec201811")
+      defaultConnectionProperties.put("driver", "oracle.jdbc.driver.OracleDriver")
+
+      // Configurações de conexão específicas para BPe
+      val bpeJdbcUrl = "jdbc:oracle:thin:@codvm01-scan1.gdfnet.df:1521/ORAPRD23"
+      val bpeConnectionProperties = new Properties()
+      bpeConnectionProperties.put("user", "admhadoop")
+      bpeConnectionProperties.put("password", ".admhadoop#")
+      bpeConnectionProperties.put("driver", "oracle.jdbc.driver.OracleDriver")
 
       // Lista de tipos de documentos e suas colunas de particionamento
       val documentos = List(
@@ -47,6 +55,14 @@ object SqoopProcessorApp {
       documentos.foreach { case (documentType, splitByColumn) =>
         try {
           println(s"=== Processando $documentType ===")
+
+          // Escolhe as configurações de conexão com base no tipo de documento
+          val (jdbcUrl, connectionProperties) = if (documentType == "BPe") {
+            (bpeJdbcUrl, bpeConnectionProperties)
+          } else {
+            (defaultJdbcUrl, defaultConnectionProperties)
+          }
+
           SqoopProcessor.processDocument(spark, jdbcUrl, connectionProperties, documentType, splitByColumn, targetDirBase)
         } catch {
           case e: Exception =>
@@ -110,6 +126,32 @@ object SqoopProcessorApp {
           e.printStackTrace()
       }
 
+      // Executa o RepartitionXlmPequenosMediosProcessor como último processo
+      try {
+        println("=== Executando RepartitionXlmPequenosMediosProcessor ===")
+        val repartitionProcessor = new RepartitionXlmPequenosMediosProcessor(spark)
+
+        // Define os caminhos e configurações para cada tipo de documento
+        val configs = Map(
+          "CTe" -> ("/datalake/prata/sources/dbms/dec/cte/CTe", 10, 10),
+          "CTeOS" -> ("/datalake/prata/sources/dbms/dec/cte/CTeOS", 2, 2),
+          "GVTe" -> ("/datalake/prata/sources/dbms/dec/cte/GVTe", 2, 2),
+          "BPe" -> ("/datalake/prata/sources/dbms/dec/bpe/BPe", 5, 5),
+          "MDFe" -> ("/datalake/prata/sources/dbms/dec/mdfe/MDFe", 4, 4),
+          "NF3e" -> ("/datalake/prata/sources/dbms/dec/nf3e/nf3e", 4, 4)
+        )
+
+        // Processa cada tipo de documento
+        configs.foreach { case (docType, (basePath, maxFiles, targetRepartition)) =>
+          println(s"Processando $docType...")
+          repartitionProcessor.processPartitions(basePath, maxFiles, targetRepartition)
+          println(s"Concluído processamento de $docType.")
+        }
+      } catch {
+        case e: Exception =>
+          println(s"Erro ao executar RepartitionXlmPequenosMediosProcessor: ${e.getMessage}")
+          e.printStackTrace()
+      }
 
       println("=== SqoopProcessorApp concluído com sucesso ===")
     } catch {

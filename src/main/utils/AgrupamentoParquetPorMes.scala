@@ -62,9 +62,7 @@ object AgrupamentoParquetPorMes {
 
       println(s"Processamento de $tipoDoc concluído e salvo em $destino")
     }
-
-    spark.stop()
   }
 }
 
-AgrupamentoParquetPorMes.main(Array())
+//AgrupamentoParquetPorMes.main(Array())

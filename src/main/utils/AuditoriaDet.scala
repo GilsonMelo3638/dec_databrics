@@ -42,9 +42,10 @@ class AuditoriaDet(spark: SparkSession, documentType: String) {
   spark.conf.set("spark.sql.parquet.compression.codec", "lz4")
 
   /**
-   * PASSO 1: Gerar dados duplicados
+   * PASSO 1: Identificar chaves faltantes no Prata
    */
-  def gerarDadosDuplicados(anoInicio: Int, mesInicio: Int, anoFim: Int, mesFim: Int): Unit = {
+  def identificarChavesFaltantesNoPrata(anoInicio: Int, mesInicio: Int, anoFim: Int, mesFim: Int): Unit = {
+    println("Iniciando PASSO 1: Identificar chaves faltantes no Prata...")
     val prataDF = spark.read.parquet(prataPath).select(lower(col("chave")).alias("chave")).distinct()
 
     for (ano <- anoInicio to anoFim) {
@@ -55,10 +56,14 @@ class AuditoriaDet(spark: SparkSession, documentType: String) {
 
         val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
         if (fs.exists(new Path(bronzePath))) {
+          // Lê o DataFrame do Bronze e adiciona a coluna "chave" em minúsculas
           val bronzeDF = spark.read.parquet(bronzePath).withColumn("chave", lower(col("CHAVE")))
+
+          // Filtra as chaves que não existem no Prata
           val chavesNaoExistentes = bronzeDF.join(prataDF, Seq("chave"), "left_anti")
 
           if (!chavesNaoExistentes.isEmpty) {
+            // Salva todas as colunas do bronzeDF no caminho faltantesPath
             chavesNaoExistentes.repartition(10)
               .write.format("parquet")
               .mode("overwrite")
@@ -74,13 +79,14 @@ class AuditoriaDet(spark: SparkSession, documentType: String) {
         }
       }
     }
-    println("Processamento concluído!")
+    println("Processamento do PASSO 1 concluído!")
   }
 
   /**
    * PASSO 2: Identificar ausências em DET com base em INFNFE
    */
   def identificarAusencias(): Unit = {
+    println("Iniciando PASSO 2: Identificar ausências em DET com base em INFNFE...")
     val dfInf = spark.read.parquet(pathInf)
     val dfDet = spark.read.parquet(pathDet)
 
@@ -98,35 +104,43 @@ class AuditoriaDet(spark: SparkSession, documentType: String) {
     } else {
       println("Nenhuma chave faltante encontrada. Nada a ser exibido ou salvo.")
     }
+    println("Processamento do PASSO 2 concluído!")
   }
 
   /**
    * PASSO 3: Verificar se há duplicidade em DET
    */
   def verificarDuplicidade(): Unit = {
+    println("Iniciando PASSO 3: Verificar se há duplicidade em DET...")
     val df = spark.read.option("basePath", pathDet).parquet(pathDet)
     // df.printSchema()
 
     val duplicatesByKey = df.groupBy("CHAVE", "nitem").count().filter("count > 1")
     duplicatesByKey.show()
 
-    val duplicatesRecords = df.join(duplicatesByKey, Seq("CHAVE", "nitem"))
-    duplicatesRecords.write.mode("overwrite").parquet(duplicatesPath)
-    println(s"Duplicidades salvas em: $duplicatesPath")
+    if (!duplicatesByKey.isEmpty) {
+      val duplicatesRecords = df.join(duplicatesByKey, Seq("CHAVE", "nitem"))
+      duplicatesRecords.write.mode("overwrite").parquet(duplicatesPath)
+      println(s"Duplicidades salvas em: $duplicatesPath")
+    } else {
+      println("Nenhuma duplicidade encontrada.")
+    }
+
+    println("Processamento do PASSO 3 concluído!")
   }
 }
 
-// Exemplo de uso:
-val spark = SparkSession.builder.appName("AuditoriaDet").getOrCreate()
-
-// Para NFE
-val processorNFe = new AuditoriaDet(spark, "nfe")
-processorNFe.gerarDadosDuplicados(2025, 1, 2025, 3)
-processorNFe.identificarAusencias()
-processorNFe.verificarDuplicidade()
-
-// Para NFCE
-val processorNFCe = new AuditoriaDet(spark, "nfce")
-processorNFCe.gerarDadosDuplicados(2025, 1, 2025, 3)
-processorNFCe.identificarAusencias()
-processorNFCe.verificarDuplicidade()
+//// Exemplo de uso:
+//val spark = SparkSession.builder.appName("AuditoriaDet").getOrCreate()
+//
+//// Para NFE
+//val processorNFe = new AuditoriaDet(spark, "nfe")
+//processorNFe.identificarChavesFaltantesNoPrata(2025, 1, 2025, 1)
+//processorNFe.identificarAusencias()
+//processorNFe.verificarDuplicidade()
+//
+//// Para NFCE
+//val processorNFCe = new AuditoriaDet(spark, "nfce")
+////processorNFCe.identificarChavesFaltantesNoPrata(2025, 1, 2025, 1)
+//processorNFCe.identificarAusencias()
+//processorNFCe.verificarDuplicidade()
