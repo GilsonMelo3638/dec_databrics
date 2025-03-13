@@ -1,3 +1,4 @@
+package inferenciaSchema
 import com.databricks.spark.xml._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 object SchemaCTeProc {

@@ -26,11 +26,10 @@ import Schemas.NFCeDetSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types._
 
 import java.time.LocalDateTime
 
-object NFCeDetLegadoProcessor {
+object NFCeDetFaltanteProcessor {
 
   // Variáveis externas para o intervalo de meses e ano de processamento
   val ano = 2025
@@ -39,7 +38,6 @@ object NFCeDetLegadoProcessor {
   val tipoDocumento = "nfce"
 
   // Função para criar o esquema de forma modular
-
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder().appName("ExtractDetNFCe").enableHiveSupport().getOrCreate()

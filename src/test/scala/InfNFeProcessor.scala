@@ -20,10 +20,8 @@
 //  --conf "spark.dynamicAllocation.maxExecutors=40" \
 //  --packages com.databricks:spark-xml_2.12:0.13.0 \
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
-package DECInfNFeJob
 import Processors.NFeProcessor
 import Schemas.NFeSchema
-
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
@@ -46,7 +44,7 @@ object InfNFeProcessor {
     import spark.implicits._
 
     // Definindo intervalo de dias: diasAntesInicio (10 dias atrás) até diasAntesFim (ontem)
-    val diasAntesInicio = LocalDate.now.minusDays(11)
+    val diasAntesInicio = LocalDate.now.minusDays(1)
     val diasAntesFim = LocalDate.now.minusDays(1)
 
     // Formatação para ano, mês e dia
@@ -61,9 +59,9 @@ object InfNFeProcessor {
       val dia = f"${currentDate.getDayOfMonth}%02d"
       val anoMesDia = s"$ano$mes$dia"
 
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar/$anoMesDia"
-      val parquetPathProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_det/$anoMesDia"
-      val destino = s"/datalake/prata/sources/dbms/dec/$tipoDocumento/infNFe/"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/nfe/processado/20250310"
+      val parquetPathProcessado = s"/tmp/teste_xml/nfe/processamento/$tipoDocumento/processado/$anoMesDia"
+      val destino = s"/tmp/teste_xml/nfe/$tipoDocumento/infNFe/"
 
       println(s"Processando para: Ano: $ano, Mês: $mes, Dia: $dia")
       println(s"Caminho de origem: $parquetPath")

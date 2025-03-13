@@ -1,3 +1,4 @@
+package inferenciaSchema
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types._
@@ -20,4 +21,3 @@ object SchemaBPe {
 
 
 //SchemaBPe.main(Array())
-

@@ -118,13 +118,16 @@ class AuditoriaDet(spark: SparkSession, documentType: String) {
     val duplicatesByKey = df.groupBy("CHAVE", "nitem").count().filter("count > 1")
     duplicatesByKey.show()
 
-    if (!duplicatesByKey.isEmpty) {
-      val duplicatesRecords = df.join(duplicatesByKey, Seq("CHAVE", "nitem"))
-      duplicatesRecords.write.mode("overwrite").parquet(duplicatesPath)
-      println(s"Duplicidades salvas em: $duplicatesPath")
-    } else {
-      println("Nenhuma duplicidade encontrada.")
+    // Verificação explícita para encerrar o processo se não houver duplicidades
+    if (duplicatesByKey.isEmpty) {
+      println("Nenhuma duplicidade encontrada. Encerrando processo.")
+      return // Encerra o método aqui
     }
+
+    // Se houver duplicidades, continue com o processamento
+    val duplicatesRecords = df.join(duplicatesByKey, Seq("CHAVE", "nitem"))
+    duplicatesRecords.write.mode("overwrite").parquet(duplicatesPath)
+    println(s"Duplicidades salvas em: $duplicatesPath")
 
     println("Processamento do PASSO 3 concluído!")
   }

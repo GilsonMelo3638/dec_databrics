@@ -1,7 +1,10 @@
+package inferenciaSchema
+
 import com.databricks.spark.xml._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object SchemaGTVeProc {
+
+object SchemaCTeOS {
   def main(args: Array[String]): Unit = {
     // Criação da sessão Spark com suporte ao Hive
     // Criar sessão Spark otimizada
@@ -17,27 +20,18 @@ object SchemaGTVeProc {
       .getOrCreate()
 
     import spark.implicits._
+
     // Carregar o DataFrame do Parquet
     val parquetDF: DataFrame = spark.read.parquet("/datalake/bronze/sources/dbms/dec/cte/2024")
-
     // Filtrar a coluna 'modelo' para incluir apenas registros onde modelo == 67
-    val filteredDF: DataFrame = parquetDF.filter($"modelo" === 64)
-
+    val filteredDF: DataFrame = parquetDF.filter($"modelo" === 67)
     // Selecionar apenas a coluna 'XML_DOCUMENTO_CLOB' e converter para Dataset[String]
     val xmlDF = filteredDF.select($"XML_DOCUMENTO_CLOB".as[String]).cache()
-
     // Exibir os primeiros registros (XML completo)
     xmlDF.show(truncate = false)
-
     // Inferir o schema do XML
-    val inferredSchema = spark.read
-      .option("rowTag", "GTVeProc") // Tag raiz do XML
-      .xml(xmlDF)
-
-    // Exibir o schema inferido
-    inferredSchema.printSchema()
-    //  df.show(2, truncate = false)
+    val inferredSchema = spark.read.option("rowTag", "cteOSProc").xml(xmlDF)
     xmlDF.printSchema()
   }
 }
-//SchemaGTVeProc.main(Array())
+//SchemaCTeOS.main(Array())

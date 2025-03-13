@@ -37,8 +37,8 @@ object SqoopGenerico {
       .getOrCreate()
 
     // Coluna para particionamento (equivalente ao --split-by do Sqoop)
-    val splitByColumn = "NSUSVD"
-    val documento = "cte"
+    val splitByColumn = "NSU"
+    val documento = "nf3e"
 
     // Configurações de conexão com o banco de dados Oracle
     val jdbcUrl = "jdbc:oracle:thin:@sefsrvprd704.fazenda.net:1521/ORAPRD21"
@@ -51,7 +51,7 @@ object SqoopGenerico {
     val numPartitions = 200
 
     // Define o intervalo de dias (de -2 até -4)
-    val dias = List(-2, -3, -4)
+    val dias = List(-1, -2, -3)
 
     // Loop para processar cada dia
     dias.foreach { dia =>
@@ -91,29 +91,41 @@ object SqoopGenerico {
 //WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
 //"""
 
-        s"""
-    SELECT NSUSVD,
-      COALESCE(
-          REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//cteProc', 'xmlns=\"http://www.portalfiscal.inf.br/cte\"') AS CLOB), CHR(10), ' '), CHR(13), ' '),
-          REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//cteOSProc', 'xmlns=\"http://www.portalfiscal.inf.br/cte\"') AS CLOB), CHR(10), ' '), CHR(13), ' '),
-          REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//GTVeProc', 'xmlns=\"http://www.portalfiscal.inf.br/cte\"') AS CLOB), CHR(10), ' '), CHR(13), ' ')
-      ) AS XML_DOCUMENTO_CLOB,
-      f.NSUAUT,
-      f.CSTAT,
-      f.CHAVE,
-      f.IP_TRANSMISSOR,
-      TO_CHAR(f.DHRECBTO, 'DD/MM/YYYY HH24:MI:SS') AS DHRECBTO,
-      TO_CHAR(f.DHEMI, 'DD/MM/YYYY HH24:MI:SS') AS DHEMI,
-      TO_CHAR(f.DHPROC, 'DD/MM/YYYY HH24:MI:SS') AS DHPROC,
-      f.EMITENTE,
-      f.UF_EMITENTE,
-      f.DESTINATARIO,
-      f.UF_DESTINATARIO,
-      f.MODELO,
-      f.TPEMIS
-      FROM DEC_DFE_CTE_SVD f
-    WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
-  """
+//        s"""
+//    SELECT NSUSVD,
+//      COALESCE(
+//          REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//cteProc', 'xmlns=\"http://www.portalfiscal.inf.br/cte\"') AS CLOB), CHR(10), ' '), CHR(13), ' '),
+//          REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//cteOSProc', 'xmlns=\"http://www.portalfiscal.inf.br/cte\"') AS CLOB), CHR(10), ' '), CHR(13), ' '),
+//          REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//GTVeProc', 'xmlns=\"http://www.portalfiscal.inf.br/cte\"') AS CLOB), CHR(10), ' '), CHR(13), ' ')
+//      ) AS XML_DOCUMENTO_CLOB,
+//      f.NSUAUT,
+//      f.CSTAT,
+//      f.CHAVE,
+//      f.IP_TRANSMISSOR,
+//      TO_CHAR(f.DHRECBTO, 'DD/MM/YYYY HH24:MI:SS') AS DHRECBTO,
+//      TO_CHAR(f.DHEMI, 'DD/MM/YYYY HH24:MI:SS') AS DHEMI,
+//      TO_CHAR(f.DHPROC, 'DD/MM/YYYY HH24:MI:SS') AS DHPROC,
+//      f.EMITENTE,
+//      f.UF_EMITENTE,
+//      f.DESTINATARIO,
+//      f.UF_DESTINATARIO,
+//      f.MODELO,
+//      f.TPEMIS
+//      FROM DEC_DFE_CTE_SVD f
+//    WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
+//  """
+
+      s"""
+SELECT NSU,
+REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//nf3eProc', 'xmlns=\"http://www.portalfiscal.inf.br/nf3e\"') AS CLOB), CHR(10), ' '), CHR(13), ' ') AS XML_DOCUMENTO_CLOB,
+     f.CSTAT, f.CHAVE, f.IP_TRANSMISSOR,
+     TO_CHAR(f.DHRECBTO, 'DD/MM/YYYY HH24:MI:SS') AS DHRECBTO,
+     TO_CHAR(f.DHEMI, 'DD/MM/YYYY HH24:MI:SS') AS DHEMI,
+     TO_CHAR(f.DHPROC, 'DD/MM/YYYY HH24:MI:SS') AS DHPROC,
+     f.EMITENTE, f.UF_EMITENTE, f.DESTINATARIO, f.UF_DESTINATARIO
+FROM DEC_DFE_NF3E f
+WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
+"""
 
       // Obtém os valores mínimo e máximo da coluna de particionamento como java.math.BigDecimal
       val minMaxQuery = s"SELECT MIN($splitByColumn) AS min, MAX($splitByColumn) AS max FROM ($baseQuery)"

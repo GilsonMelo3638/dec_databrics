@@ -20,19 +20,16 @@
 //  --conf "spark.dynamicAllocation.maxExecutors=40" \
 //  --packages com.databricks:spark-xml_2.12:0.13.0 \
 //  hdfs://sepladbigdata/app/dec/NFeDetPrata-0.0.1-SNAPSHOT.jar
-package DECNFCeDetJob
-
 import Schemas.NFCeDetSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types._
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-object NFCeDetProcessor {
+object NFCeDetProcessorTeste {
       def main(args: Array[String]): Unit = {
             val tipoDocumento = "nfce"
             val spark = SparkSession.builder()
@@ -67,13 +64,13 @@ object NFCeDetProcessor {
                   val dia = f"${currentDate.getDayOfMonth}%02d"
                   val anoMesDia = s"$ano$mes$dia"
 
-                  val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_det/$anoMesDia"
-                  val parquetPathProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processado/$anoMesDia"
-                  val destino = s"/datalake/prata/sources/dbms/dec/$tipoDocumento/det/"
+                    val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/nfce/processado/20250309"
+                //    val parquetPathProcessado = s"/tmp/teste_xml/nfce/processamento/$tipoDocumento/processado/$anoMesDia"
+                    val destino = s"/tmp/teste_xml/nfce/$tipoDocumento/Det/"
 
                   println(s"Processando para: Ano: $ano, Mês: $mes, Dia: $dia")
                   println(s"Caminho de origem: $parquetPath")
-                  println(s"Caminho de destino: $parquetPathProcessado")
+      //            println(s"Caminho de destino: $parquetPathProcessado")
 
                   // Verificar se o diretório existe antes de processar
                   val hadoopConf = spark.sparkContext.hadoopConfiguration
@@ -625,17 +622,17 @@ object NFCeDetProcessor {
                         // Mover os arquivos para a pasta processada
                         val srcPath = new Path(parquetPath)
                         if (fs.exists(srcPath)) {
-                              val destPath = new Path(parquetPathProcessado)
-                              if (!fs.exists(destPath)) {
-                                    fs.mkdirs(destPath)
-                              }
+                         //     val destPath = new Path(parquetPathProcessado)
+//                              if (!fs.exists(destPath)) {
+//                                    fs.mkdirs(destPath)
+//                              }
                               fs.listStatus(srcPath).foreach { fileStatus =>
                                     val srcFile = fileStatus.getPath
-                                    val destFile = new Path(destPath, srcFile.getName)
-                                    fs.rename(srcFile, destFile)
+                                //    val destFile = new Path(destPath, srcFile.getName)
+                                 //   fs.rename(srcFile, destFile)
                               }
                               fs.delete(srcPath, true)
-                              println(s"Arquivos movidos de $parquetPath para $parquetPathProcessado com sucesso.")
+                     //         println(s"Arquivos movidos de $parquetPath para $parquetPathProcessado com sucesso.")
                         }
                   } else {
                         println(s"Diretório de origem $parquetPath não encontrado.")
@@ -644,4 +641,4 @@ object NFCeDetProcessor {
       }
 }
 
-//NFCeDetProcessor.main(Array())
+//NFCeDetProcessorTeste.main(Array())

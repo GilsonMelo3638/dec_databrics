@@ -1,3 +1,4 @@
+package inferenciaSchema
 
 import org.apache.spark.sql.SparkSession
 // Defina o schema XML para as tags que você deseja extrair
@@ -18,4 +19,3 @@ object SchemaMDFe {
 
 
 //SchemaMDFe.main(Array())
-

@@ -20,9 +20,7 @@
 //  --conf "spark.dynamicAllocation.maxExecutors=40" \
 //  --packages com.databricks:spark-xml_2.12:0.13.0 \
 //  hdfs://sepladbigdata/app/dec/NFeDetPrata-0.0.1-SNAPSHOT.jar
-package DECNFeDetJob
 import Schemas.NFeDetSchema
-
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
@@ -31,7 +29,7 @@ import org.apache.spark.sql.functions._
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-object NFeDetProcessor {
+object NFeDetProcessorTeste {
     def main(args: Array[String]): Unit = {
         val tipoDocumento = "nfe"
         val spark = SparkSession.builder()
@@ -59,9 +57,9 @@ object NFeDetProcessor {
             val dia = f"${currentDate.getDayOfMonth}%02d"
             val anoMesDia = s"$ano$mes$dia"
 
-            val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_det/$anoMesDia"
-            val parquetPathProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processado/$anoMesDia"
-            val destino = s"/datalake/prata/sources/dbms/dec/$tipoDocumento/det/"
+              val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/nfe/processado/20250310"
+              val parquetPathProcessado = s"/tmp/teste_xml/nfe/processamento/$tipoDocumento/processado/$anoMesDia"
+              val destino = s"/tmp/teste_xml/nfe/$tipoDocumento/Det/"
 
             println(s"Processando para: Ano: $ano, Mês: $mes, Dia: $dia")
             println(s"Caminho de origem: $parquetPath")
@@ -98,6 +96,7 @@ object NFeDetProcessor {
                     $"DHEMI",
                     $"IP_TRANSMISSOR"
                 )
+                // 3. Usar `from_xml` para ler o XML da coluna usando o esquema definido
                 // 3. Usar `from_xml` para ler o XML da coluna usando o esquema definido
                 val schema = NFeDetSchema.createSchema()
                 val parsedDF = xmlDF.withColumn("parsed", from_xml($"xml", schema))
@@ -633,4 +632,4 @@ object NFeDetProcessor {
     }
 }
 
-//NFeDetProcessor.main(Array())
+//NFeDetProcessorTeste.main(Array())

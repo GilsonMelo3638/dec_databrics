@@ -1,4 +1,5 @@
 package MainProcessor
+
 import RepartitionJob.RepartitionXlmPequenosMediosProcessor
 import Sqoop.SqoopProcessor
 import DECBPeProcessor.BpeProcDiarioProcessor
@@ -37,11 +38,11 @@ object SqoopProcessorApp {
       defaultConnectionProperties.put("driver", "oracle.jdbc.driver.OracleDriver")
 
       // Configurações de conexão específicas para BPe
-      val bpeJdbcUrl = "jdbc:oracle:thin:@codvm01-scan1.gdfnet.df:1521/ORAPRD23"
-      val bpeConnectionProperties = new Properties()
-      bpeConnectionProperties.put("user", "admhadoop")
-      bpeConnectionProperties.put("password", ".admhadoop#")
-      bpeConnectionProperties.put("driver", "oracle.jdbc.driver.OracleDriver")
+      val oraprd23JdbcUrl = "jdbc:oracle:thin:@codvm01-scan1.gdfnet.df:1521/ORAPRD23"
+      val oraprd23ConnectionProperties = new Properties()
+      oraprd23ConnectionProperties.put("user", "admhadoop")
+      oraprd23ConnectionProperties.put("password", ".admhadoop#")
+      oraprd23ConnectionProperties.put("driver", "oracle.jdbc.driver.OracleDriver")
 
       // Lista de tipos de documentos e suas colunas de particionamento
       val documentos = List(
@@ -57,10 +58,10 @@ object SqoopProcessorApp {
           println(s"=== Processando $documentType ===")
 
           // Escolhe as configurações de conexão com base no tipo de documento
-          val (jdbcUrl, connectionProperties) = if (documentType == "BPe") {
-            (bpeJdbcUrl, bpeConnectionProperties)
-          } else {
+          val (jdbcUrl, connectionProperties) = if (documentType == "CTe") {
             (defaultJdbcUrl, defaultConnectionProperties)
+          } else {
+            (oraprd23JdbcUrl, oraprd23ConnectionProperties)
           }
 
           SqoopProcessor.processDocument(spark, jdbcUrl, connectionProperties, documentType, splitByColumn, targetDirBase)

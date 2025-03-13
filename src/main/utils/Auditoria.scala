@@ -56,12 +56,13 @@ val spark = SparkSession.builder.appName("AuditoriaDet").getOrCreate()
 
 // Para NFE
 val processorNFe = new AuditoriaDet(spark, "nfe")
-processorNFe.identificarChavesFaltantesNoPrata(2025, 1, 2025, 1)
+processorNFe.identificarChavesFaltantesNoPrata(2025, 3, 2025, 3)
 processorNFe.identificarAusencias()
 processorNFe.verificarDuplicidade()
 
 // Para NFCE
 val processorNFCe = new AuditoriaDet(spark, "nfce")
-processorNFCe.identificarChavesFaltantesNoPrata(2025, 1, 2025, 1)
+processorNFCe.identificarChavesFaltantesNoPrata(2025, 3, 2025, 3)
 processorNFCe.identificarAusencias()
 processorNFCe.verificarDuplicidade()
+spark.close()

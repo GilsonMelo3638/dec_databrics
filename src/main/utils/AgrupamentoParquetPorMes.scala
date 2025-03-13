@@ -5,7 +5,6 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.DataFrame
 
 object AgrupamentoParquetPorMes {
-
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder()
       .appName("Agrupamento Parquet por Mês")
@@ -50,6 +49,10 @@ object AgrupamentoParquetPorMes {
       // Leitura dos arquivos Parquet
       val df = spark.read.parquet(origem)
 
+      // Imprime a quantidade de linhas na base de origem
+      val quantidadeLinhas = df.count()
+      println(s"Quantidade de linhas para $tipoDoc: $quantidadeLinhas")
+
       // Calcula o número de partições com base no tamanho dos dados
       val numParticoes = calcularNumParticoes(df)
 
@@ -64,5 +67,4 @@ object AgrupamentoParquetPorMes {
     }
   }
 }
-
 //AgrupamentoParquetPorMes.main(Array())
