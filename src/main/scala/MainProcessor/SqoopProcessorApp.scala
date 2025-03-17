@@ -30,14 +30,7 @@ object SqoopProcessorApp {
     try {
       println("=== Iniciando o SqoopProcessorApp ===")
 
-      // Configurações de conexão com o banco de dados Oracle
-      val defaultJdbcUrl = "jdbc:oracle:thin:@sefsrvprd704.fazenda.net:1521/ORAPRD21"
-      val defaultConnectionProperties = new Properties()
-      defaultConnectionProperties.put("user", "userdec")
-      defaultConnectionProperties.put("password", "userdec201811")
-      defaultConnectionProperties.put("driver", "oracle.jdbc.driver.OracleDriver")
-
-      // Configurações de conexão específicas para BPe
+      // Configurações de conexão com o banco de dados Oracle para ORAPRD23
       val oraprd23JdbcUrl = "jdbc:oracle:thin:@codvm01-scan1.gdfnet.df:1521/ORAPRD23"
       val oraprd23ConnectionProperties = new Properties()
       oraprd23ConnectionProperties.put("user", "admhadoop")
@@ -57,14 +50,8 @@ object SqoopProcessorApp {
         try {
           println(s"=== Processando $documentType ===")
 
-          // Escolhe as configurações de conexão com base no tipo de documento
-          val (jdbcUrl, connectionProperties) = if (documentType == "CTe") {
-            (defaultJdbcUrl, defaultConnectionProperties)
-          } else {
-            (oraprd23JdbcUrl, oraprd23ConnectionProperties)
-          }
-
-          SqoopProcessor.processDocument(spark, jdbcUrl, connectionProperties, documentType, splitByColumn, targetDirBase)
+          // Usa sempre a conexão com ORAPRD23
+          SqoopProcessor.processDocument(spark, oraprd23JdbcUrl, oraprd23ConnectionProperties, documentType, splitByColumn, targetDirBase)
         } catch {
           case e: Exception =>
             println(s"Erro ao processar $documentType: ${e.getMessage}")

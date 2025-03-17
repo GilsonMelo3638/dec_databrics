@@ -82,16 +82,16 @@ object GVTeDiarioProcessor {
           val selectedDF = GVTeProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
           val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
-          // Imprimir no console as variações e a contagem de 'chave_particao'
-          val chaveParticaoContagem = selectedDFComParticao
-            .groupBy("chave_particao")
-            .agg(count("chave").alias("contagem_chaves"))
-            .orderBy("chave_particao")
-
-          // Coletar os dados para exibição no console
-          chaveParticaoContagem.collect().foreach { row =>
-            println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
-          }
+//          // Imprimir no console as variações e a contagem de 'chave_particao'
+//          val chaveParticaoContagem = selectedDFComParticao
+//            .groupBy("chave_particao")
+//            .agg(count("chave").alias("contagem_chaves"))
+//            .orderBy("chave_particao")
+//
+//          // Coletar os dados para exibição no console
+//          chaveParticaoContagem.collect().foreach { row =>
+//            println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
+//          }
 
           // Redistribuir os dados para 40 partições
           val repartitionedDF = selectedDFComParticao.repartition(1)

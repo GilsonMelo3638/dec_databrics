@@ -1,8 +1,6 @@
-package utils
+package Utils
 
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object AgrupamentoParquetPorMes {
   def main(args: Array[String]): Unit = {
@@ -11,7 +9,7 @@ object AgrupamentoParquetPorMes {
       .getOrCreate()
 
     // Definir os tipos de documentos e seus diretórios
-    val tiposDocumentos = Seq("bpe", "cte", "mdfe", "nf3e", "nfe", "nfce")
+    val tiposDocumentos = Seq("bpe", "cte", "mdfe", "nf3e", "nfe_cancelamento", "nfce_cancelamento" , "nf3e_cancelamento", "bpe_cancelamento", "nfe",  "nfce"  )
 
     // Diretório base de origem e destino
     val baseOrigem = "/datalake/bronze/sources/dbms/dec/processamento/"

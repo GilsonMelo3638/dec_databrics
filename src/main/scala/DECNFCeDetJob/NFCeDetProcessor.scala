@@ -606,8 +606,8 @@ object NFCeDetProcessor {
                                     selectedDFComParticao.filter(col("chave_particao") === chaveParticao)
                               }
 
-                              val qtdRegistros = dfFiltrado.count()
-                              println(s"[INFO] Partição $chaveParticao - Quantidade de registros a serem salvos: $qtdRegistros")
+//                              val qtdRegistros = dfFiltrado.count()
+//                              println(s"[INFO] Partição $chaveParticao - Quantidade de registros a serem salvos: $qtdRegistros")
 
                               dfFiltrado.write
                                 .mode("append")

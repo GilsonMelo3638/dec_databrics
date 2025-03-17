@@ -1,8 +1,8 @@
-package utils
+package Utils
 
-import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.apache.spark.sql.functions.{col, lower}
 import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions.{col, lower}
 
 class AuditoriaDet(spark: SparkSession, documentType: String) {
   // Define os caminhos base com base no tipo de documento

@@ -22,6 +22,7 @@
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
 package Sqoop
 
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
 
 import java.time.format.DateTimeFormatter
@@ -45,7 +46,7 @@ object SqoopNFeProcessor {
     val formatterAnoMesDia = DateTimeFormatter.ofPattern("yyyyMMdd")
     val formatterDataHora = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
-    val anoMes = ontem.format(formatterAnoMes)       // Formato: "202502"
+    val anoMes = ontem.format(formatterAnoMes) // Formato: "202502"
     val anoMesDia = ontem.format(formatterAnoMesDia) // Formato: "20250201"
     val dataFormatada = ontem.format(formatterDataHora)
 
@@ -58,11 +59,24 @@ object SqoopNFeProcessor {
     println(s"dataInicial: $dataInicial")
     println(s"dataFinal: $dataFinal")
 
+    // Caminhos de destino no HDFS
+    val targetDirProcessar = s"/datalake/bronze/sources/dbms/dec/processamento/nfe/processar/$anoMesDia"
+    val targetDirProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/nfe/processado/$anoMesDia"
+    val targetDirProcessarDet = s"/datalake/bronze/sources/dbms/dec/processamento/nfe/processar_det/$anoMesDia"
+
+    // Verifica se o arquivo já existe em processar ou processado
+    val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
+    if (fs.exists(new Path(targetDirProcessar)) || fs.exists(new Path(targetDirProcessado)) || fs.exists(new Path(targetDirProcessarDet))) {
+      println(s"Arquivo já existe em $targetDirProcessar , $targetDirProcessado ou $targetDirProcessarDet. Processamento interrompido.")
+      spark.stop()
+      System.exit(0)
+    }
+
     // Configurações de conexão com o banco de dados Oracle
-    val jdbcUrl = "jdbc:oracle:thin:@sefsrvprd704.fazenda.net:1521/ORAPRD21"
+    val jdbcUrl = "jdbc:oracle:thin:@codvm01-scan1.gdfnet.df:1521/ORAPRD23"
     val connectionProperties = new Properties()
-    connectionProperties.put("user", "userdec")
-    connectionProperties.put("password", "userdec201811")
+    connectionProperties.put("user", "admhadoop")
+    connectionProperties.put("password", ".admhadoop#")
     connectionProperties.put("driver", "oracle.jdbc.driver.OracleDriver")
 
     // Coluna para particionamento (equivalente ao --split-by do Sqoop)

@@ -1,0 +1,47 @@
+package Schemas
+
+import org.apache.spark.sql.types._
+
+object BPeEventoSchema {
+  def createSchema(): StructType = {
+    new StructType()
+      .add("eventoBPe", new StructType()
+        .add("_versao", StringType, nullable = true)
+        .add("infEvento", new StructType()
+          .add("CNPJ", StringType, nullable = true)
+          .add("_Id", StringType, nullable = true)
+          .add("cOrgao", StringType, nullable = true)
+          .add("chBPe", StringType, nullable = true)
+          .add("detEvento", new StructType()
+            .add("_versaoEvento", StringType, nullable = true)
+            .add("evCancBPe", new StructType()
+              .add("descEvento", StringType, nullable = true)
+              .add("nProt", StringType, nullable = true)
+              .add("xJust", StringType, nullable = true)
+            )
+          )
+          .add("dhEvento", StringType, nullable = true)
+          .add("nSeqEvento", StringType, nullable = true)
+          .add("tpAmb", StringType, nullable = true)
+          .add("tpEvento", StringType, nullable = true)
+        )
+      )
+      .add("retEventoBPe", new StructType()
+        .add("_versao", StringType, nullable = true)
+        .add("infEvento", new StructType()
+          .add("_Id", StringType, nullable = true)
+          .add("cOrgao", StringType, nullable = true)
+          .add("cStat", StringType, nullable = true)
+          .add("chBPe", StringType, nullable = true)
+          .add("dhRegEvento", StringType, nullable = true)
+          .add("nProt", StringType, nullable = true)
+          .add("nSeqEvento", StringType, nullable = true)
+          .add("tpAmb", StringType, nullable = true)
+          .add("tpEvento", StringType, nullable = true)
+          .add("verAplic", StringType, nullable = true)
+          .add("xEvento", StringType, nullable = true)
+          .add("xMotivo", StringType, nullable = true)
+        )
+      )
+  }
+}

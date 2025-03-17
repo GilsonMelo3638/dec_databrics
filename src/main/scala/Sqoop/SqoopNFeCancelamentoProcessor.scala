@@ -29,7 +29,7 @@ import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, ZoneId}
 import java.util.Properties
 
-object SqoopNFCeProcessor {
+object SqoopNFeCancelamentoProcessor {
 
   def main(args: Array[String]): Unit = {
     // Inicializa a sessão do Spark
@@ -46,7 +46,7 @@ object SqoopNFCeProcessor {
     val formatterAnoMesDia = DateTimeFormatter.ofPattern("yyyyMMdd")
     val formatterDataHora = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
-    val anoMes = ontem.format(formatterAnoMes)       // Formato: "202502"
+    val anoMes = ontem.format(formatterAnoMes) // Formato: "202502"
     val anoMesDia = ontem.format(formatterAnoMesDia) // Formato: "20250201"
     val dataFormatada = ontem.format(formatterDataHora)
 
@@ -60,42 +60,45 @@ object SqoopNFCeProcessor {
     println(s"dataFinal: $dataFinal")
 
     // Caminhos de destino no HDFS
-    val targetDirProcessar = s"/datalake/bronze/sources/dbms/dec/processamento/nfce/processar/$anoMesDia"
-    val targetDirProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/nfce/processado/$anoMesDia"
-    val targetDirProcessarDet = s"/datalake/bronze/sources/dbms/dec/processamento/nfce/processar_det/$anoMesDia"
+    val targetDirProcessar = s"/datalake/bronze/sources/dbms/dec/processamento/nfe_cancelamento/processar/$anoMesDia"
+    val targetDirProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/nfe_cancelamento/processado/$anoMesDia"
 
     // Verifica se o arquivo já existe em processar ou processado
     val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
-    if (fs.exists(new Path(targetDirProcessar)) || fs.exists(new Path(targetDirProcessado))|| fs.exists(new Path(targetDirProcessarDet))) {
-      println(s"Arquivo já existe em $targetDirProcessar , $targetDirProcessado ou $targetDirProcessarDet. Processamento interrompido.")
+    if (fs.exists(new Path(targetDirProcessar)) || fs.exists(new Path(targetDirProcessado))) {
+      println(s"Arquivo já existe em $targetDirProcessar ou $targetDirProcessado. Processamento interrompido.")
       spark.stop()
       System.exit(0)
     }
 
     // Configurações de conexão com o banco de dados Oracle
-    val jdbcUrl = "jdbc:oracle:thin:@sefsrvprd704.fazenda.net:1521/ORAPRD21"
+    val jdbcUrl = "jdbc:oracle:thin:@codvm01-scan1.gdfnet.df:1521/ORAPRD23"
     val connectionProperties = new Properties()
-    connectionProperties.put("user", "userdec")
-    connectionProperties.put("password", "userdec201811")
+    connectionProperties.put("user", "admhadoop")
+    connectionProperties.put("password", ".admhadoop#")
     connectionProperties.put("driver", "oracle.jdbc.driver.OracleDriver")
 
     // Coluna para particionamento (equivalente ao --split-by do Sqoop)
-    val splitByColumn = "NSU"
+    val splitByColumn = "NSUDF"
 
     // Número de partições (equivalente ao --num-mappers do Sqoop)
-    val numPartitions = 600
+    val numPartitions = 50
 
     // Query SQL base
     val baseQuery =
       s"""
-    SELECT NSU,
-           REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//nfeProc', 'xmlns=\"http://www.portalfiscal.inf.br/nfe\"') AS CLOB), CHR(10), ' '), CHR(13), ' ') AS XML_DOCUMENTO_CLOB,
-           f.CSTAT, f.CHAVE, f.IP_TRANSMISSOR,
-           TO_CHAR(f.DHRECBTO, 'DD/MM/YYYY HH24:MI:SS') AS DHRECBTO,
-           TO_CHAR(f.DHEMI, 'DD/MM/YYYY HH24:MI:SS') AS DHEMI,
-           TO_CHAR(f.DHPROC, 'DD/MM/YYYY HH24:MI:SS') AS DHPROC,
-           f.EMITENTE, f.UF_EMITENTE, f.DESTINATARIO, f.UF_DESTINATARIO
-    FROM DEC_DFE_NFCE f
+      NSUDF,
+      REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//procEventoNFe', 'xmlns=\"http://www.portalfiscal.inf.br/nfe\"') AS CLOB), CHR(10), ' '), CHR(13), ' ') AS XML_DOCUMENTO_CLOB,
+      f.NSUAN,
+      f.CSTAT,
+      f.CHAVE,
+      f.IP_TRANSMISSOR,
+      TO_CHAR(f.DHEVENTO, 'DD/MM/YYYY HH24:MI:SS') AS DHEVENTO,
+      TO_CHAR(f.DH_REG_EVENTO, 'DD/MM/YYYY HH24:MI:SS') AS DH_REG_EVENTO,
+      TO_CHAR(f.DHPROC, 'DD/MM/YYYY HH24:MI:SS') AS DHPROC,
+      f.SEQ_EVENTO,
+      f.TP_EVENTO
+      FROM DEC_DFE_NFE_CANCELAMENTO f
     WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
   """
 
@@ -122,7 +125,7 @@ object SqoopNFCeProcessor {
     )
 
     // Salva os dados no HDFS no formato Parquet com compressão LZ4
-    df.repartition(23)
+    df.repartition(2)
       .write
       .option("compression", "lz4")
       .option("parquet.block.size", "536870912") // 512 MB
@@ -130,4 +133,4 @@ object SqoopNFCeProcessor {
   }
 }
 
-//SqoopNFCeProcessor.main(Array())
+//SqoopNFeCancelamentoProcessor.main(Array())

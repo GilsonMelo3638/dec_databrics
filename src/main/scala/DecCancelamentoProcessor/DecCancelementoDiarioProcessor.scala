@@ -1,32 +1,34 @@
-package DECBPeProcessor
+package DecCancelamentoProcessor
+import Processors.{BPeEventoProcessor, NF3eEventoProcessor, NFCeEventoProcessor}
+import Schemas.{BPeEventoSchema, NF3eEventoSchema, NFCeEventoSchema}
 
-import Schemas.BPeSchema
-import Processors.BPeProcessor
 import com.databricks.spark.xml.functions.from_xml
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import org.apache.hadoop.fs.{FileSystem, Path}
 
-object BpeProcDiarioProcessor {
-  // Variáveis externas para o tipo de documento
-  val tipoDocumento = "bpe"
-  val prataDocumento = "BPe"
+// Classe genérica para processamento de documentos
+abstract class DecCancelamentoDiarioProcessor(
+                                               val tipoDocumento: String,
+                                               val tipoDocumentoCancelamento: String,
+                                               val prataDocumento: String,
+                                               val schema: org.apache.spark.sql.types.StructType
+                                             ) {
+
+  def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame
 
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder().appName("ExtractInfBPe").enableHiveSupport().getOrCreate()
+    val spark = SparkSession.builder().appName(s"Extract${tipoDocumento.capitalize}Cancelamento").enableHiveSupport().getOrCreate()
     import spark.implicits._
-
-    // Obter o esquema da classe BPeSchema
-    val schema = BPeSchema.createSchema()
 
     // Gerar a lista dos últimos 10 dias no formato YYYYMMDD, começando do dia anterior
     val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
     val dataAtual = LocalDateTime.now()
-    val ultimos10Dias = (1 to 10).map { diasAtras =>
+    val ultimos10Dias = (1 to 16).map { diasAtras =>
       dataAtual.minus(diasAtras, ChronoUnit.DAYS).format(dateFormatter)
     }.toList
 
@@ -34,9 +36,9 @@ object BpeProcDiarioProcessor {
     val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
     ultimos10Dias.foreach { dia =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$prataDocumento/processar/$dia"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumentoCancelamento/processar/$dia"
       val parquetPrataPath = s"/datalake/prata/sources/dbms/dec/$tipoDocumento/$prataDocumento"
-      val parquetPathProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processado/$dia"
+      val parquetPathProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumentoCancelamento/processado/$dia"
 
       // Verificar se o diretório existe
       if (fs.exists(new Path(parquetPath))) {
@@ -61,38 +63,26 @@ object BpeProcDiarioProcessor {
             println(s"Verificação bem-sucedida: Total ($totalCount) e distintos ($distinctCount) são iguais no caminho: $parquetPath")
           }
 
-          // 2. Seleciona as colunas e filtra MODELO = 64
+          // 2. Seleciona as colunas
           val xmlDF = parquetDF
             .select(
               $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
               $"NSU".cast("string").as("NSU"),
               $"DHPROC",
-              $"DHEMI",
+              $"DHEVENTO",
               $"IP_TRANSMISSOR"
             )
-          xmlDF.show()
 
           // 3. Usa `from_xml` para ler o XML da coluna usando o esquema
           val parsedDF = xmlDF.withColumn("parsed", from_xml($"xml", schema))
 
           // 4. Gera o DataFrame selectedDF usando a nova classe
-          implicit val sparkSession: SparkSession = spark // Passando o SparkSession implicitamente
-          val selectedDF = BPeProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
+          implicit val sparkSession: SparkSession = spark
+          val selectedDF = generateSelectedDF(parsedDF)
           val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
-//          // Imprimir no console as variações e a contagem de 'chave_particao'
-//          val chaveParticaoContagem = selectedDFComParticao
-//            .groupBy("chave_particao")
-//            .agg(count("chave").alias("contagem_chaves"))
-//            .orderBy("chave_particao")
-//
-//          // Coletar os dados para exibição no console
-//          chaveParticaoContagem.collect().foreach { row =>
-//            println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
-//          }
-
           // Redistribuir os dados para 5 partições
-          val repartitionedDF = selectedDFComParticao.repartition(5)
+          val repartitionedDF = selectedDFComParticao.repartition(2)
 
           // Escrever os dados particionados
           repartitionedDF
@@ -135,4 +125,33 @@ object BpeProcDiarioProcessor {
   }
 }
 
-//BpeProcDiarioProcessor.main(Array())
+// Implementações específicas para cada tipo de documento
+
+object BPeCancelamentoDiarioProcessor extends DecCancelamentoDiarioProcessor(
+  "bpe", "bpe_cancelamento", "cancelamento", BPeEventoSchema.createSchema()
+) {
+  override def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = {
+    BPeEventoProcessor.generateSelectedDF(parsedDF)
+  }
+}
+
+object NF3eCancelamentoDiarioProcessor extends DecCancelamentoDiarioProcessor(
+  "nf3e", "nf3e_cancelamento", "cancelamento", NF3eEventoSchema.createSchema()
+) {
+  override def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = {
+    NF3eEventoProcessor.generateSelectedDF(parsedDF)
+  }
+}
+
+object NFCeCancelamentoDiarioProcessor extends DecCancelamentoDiarioProcessor(
+  "nfce", "nfce_cancelamento", "cancelamento", NFCeEventoSchema.createSchema()
+) {
+  override def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = {
+    NFCeEventoProcessor.generateSelectedDF(parsedDF)
+  }
+}
+
+// Exemplo de uso
+// BPeCancelamentoDiarioProcessor.main(Array())
+// NF3eCancelamentoDiarioProcessor.main(Array())
+// NFCeCancelamentoDiarioProcessor.main(Array())

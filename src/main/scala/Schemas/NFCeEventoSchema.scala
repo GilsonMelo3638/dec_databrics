@@ -1,0 +1,47 @@
+package Schemas
+
+import org.apache.spark.sql.types._
+
+object NFCeEventoSchema {
+  def createSchema(): StructType = {
+    new StructType()
+      .add("infEvento", new StructType()
+        .add("CNPJ", StringType, nullable = true)
+        .add("_Id", StringType, nullable = true)
+        .add("cOrgao", StringType, nullable = true)
+        .add("chNFe", StringType, nullable = true)
+        .add("detEvento", new StructType()
+          .add("_versao", StringType, nullable = true)
+          .add("cOrgaoAutor", StringType, nullable = true)
+          .add("chNFeRef", StringType, nullable = true)
+          .add("descEvento", StringType, nullable = true)
+          .add("nProt", StringType, nullable = true)
+          .add("tpAutor", StringType, nullable = true)
+          .add("verAplic", StringType, nullable = true)
+          .add("xJust", StringType, nullable = true)
+        )
+        .add("dhEvento", StringType, nullable = true)
+        .add("nSeqEvento", StringType, nullable = true)
+        .add("tpAmb", StringType, nullable = true)
+        .add("tpEvento", StringType, nullable = true)
+        .add("verEvento", StringType, nullable = true)
+      )
+      .add("retEvento", new StructType()
+        .add("_versao", StringType, nullable = true)
+        .add("infEvento", new StructType()
+          .add("CNPJDest", StringType, nullable = true)
+          .add("cOrgao", StringType, nullable = true)
+          .add("cStat", StringType, nullable = true)
+          .add("chNFe", StringType, nullable = true)
+          .add("dhRegEvento", StringType, nullable = true)
+          .add("emailDest", StringType, nullable = true)
+          .add("nProt", StringType, nullable = true)
+          .add("nSeqEvento", StringType, nullable = true)
+          .add("tpAmb", StringType, nullable = true)
+          .add("tpEvento", StringType, nullable = true)
+          .add("verAplic", StringType, nullable = true)
+          .add("xMotivo", StringType, nullable = true)
+        )
+      )
+  }
+}

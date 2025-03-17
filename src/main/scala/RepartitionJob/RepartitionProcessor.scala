@@ -24,16 +24,55 @@ package RepartitionJob
 
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
+
+import java.util.Calendar
+
 object RepartitionProcessor {
   val spark = SparkSession.builder().getOrCreate()
   val hadoopConf = spark.sparkContext.hadoopConfiguration
   val fs = FileSystem.get(hadoopConf)
-  def main(args: Array[String]): Unit = {
-  // Função genérica para processar partições
-  def processPartitions(basePath: String, maxFiles: Int): Unit = {
-    val partitions = fs.listStatus(new Path(basePath)).filter(_.isDirectory).map(_.getPath.toString)
 
-    partitions.foreach { partitionPath =>
+  def main(args: Array[String]): Unit = {
+    // Função genérica para processar partições
+    def processPartitions(basePath: String, maxFiles: Int, isSunday: Boolean, isNfceDet: Boolean = false): Unit = {
+      val partitions = fs.listStatus(new Path(basePath))
+        .filter(_.isDirectory)
+        .map(_.getPath.toString)
+
+      // Extrai o valor numérico da partição e ordena
+      val sortedPartitions = partitions
+        .map { path =>
+          val partitionValue = path.split("=")(1).toInt // Extrai o valor numérico
+          (partitionValue, path) // Retorna uma tupla (valor, caminho)
+        }
+        .sortBy(_._1) // Ordena pelo valor numérico
+        .map(_._2) // Mantém apenas o caminho
+
+      // Se for o diretório especial (/datalake/prata/sources/dbms/dec/nfce/det), aplica a regra especial
+      if (isNfceDet) {
+        if (isSunday) {
+          // Se for domingo, reparticiona todas as partições
+          sortedPartitions.foreach { partitionPath =>
+            repartitionIfNeeded(partitionPath, maxFiles)
+          }
+        } else {
+          // Se não for domingo, reparticiona apenas a última e a penúltima partição
+          val lastPartition = sortedPartitions.last
+          val secondLastPartition = sortedPartitions(sortedPartitions.length - 2)
+
+          repartitionIfNeeded(lastPartition, maxFiles)
+          repartitionIfNeeded(secondLastPartition, maxFiles)
+        }
+      } else {
+        // Para outros diretórios, reparticiona todas as partições em todos os dias
+        sortedPartitions.foreach { partitionPath =>
+          repartitionIfNeeded(partitionPath, maxFiles)
+        }
+      }
+    }
+
+    // Função para repartitionar se necessário
+    def repartitionIfNeeded(partitionPath: String, maxFiles: Int): Unit = {
       val fileCount = fs.listStatus(new Path(partitionPath)).count(_.getPath.getName.endsWith(".parquet"))
 
       println(s"Partição: $partitionPath, Arquivos: $fileCount")
@@ -53,18 +92,23 @@ object RepartitionProcessor {
         println(s"Nenhuma ação necessária para: $partitionPath")
       }
     }
+
+    // Verifica se hoje é domingo
+    val calendar = Calendar.getInstance()
+    val isSunday = calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY
+
+    // Definição dos diretórios e seus respectivos limites de reparticionamento
+    val pathsWithLimits = Seq(
+      ("/datalake/prata/sources/dbms/dec/nfe/infNFe", 40, false),
+      ("/datalake/prata/sources/dbms/dec/nfe/det", 40, false),
+      ("/datalake/prata/sources/dbms/dec/nfce/infNFCe", 60, false),
+      ("/datalake/prata/sources/dbms/dec/nfce/det", 60, true) // Diretório especial
+    )
+
+    // Processar todas as partições com seus respectivos limites
+    pathsWithLimits.foreach { case (path, maxFiles, isNfceDet) =>
+      processPartitions(path, maxFiles, isSunday, isNfceDet)
+    }
   }
-
-  // Definição dos diretórios e seus respectivos limites de reparticionamento
-  val pathsWithLimits = Seq(
-    ("/datalake/prata/sources/dbms/dec/nfe/infNFe", 40),
-    ("/datalake/prata/sources/dbms/dec/nfe/det", 40),
-    ("/datalake/prata/sources/dbms/dec/nfce/infNFCe", 60),
-    ("/datalake/prata/sources/dbms/dec/nfce/det", 60)
-  )
-
-  // Processar todas as partições com seus respectivos limites
-  pathsWithLimits.foreach { case (path, maxFiles) => processPartitions(path, maxFiles) }
-}}
-
+}
 //RepartitionProcessor.main(Array())

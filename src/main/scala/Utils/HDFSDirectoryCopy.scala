@@ -1,15 +1,16 @@
-package utils
+package Utils
 
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path, FSDataInputStream, FSDataOutputStream}
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
-import scala.util.{Try, Success, Failure}
+
+import scala.util.{Failure, Success, Try}
 
 object HDFSDirectoryCopy {
   def main(args: Array[String]): Unit = {
     // Caminhos de origem e destino
     val sourcePath = new Path("/datalake/prata/sources/dbms/dec/")
-    val destinationPath = new Path("/datalake/prata/backup_producao/20250309/")
+    val destinationPath = new Path("/datalake/prata/backup_producao/20250313/")
 
     // Configuração do Hadoop
     val conf = new Configuration()

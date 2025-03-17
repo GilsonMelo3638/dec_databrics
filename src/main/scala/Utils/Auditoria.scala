@@ -1,9 +1,11 @@
 package utils
 
+import Utils.{AgrupamentoParquetPorMes, AuditoriaDet, UltimaPastaHDFS}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.{col, lower}
 import org.apache.hadoop.fs.{FileSystem, Path}
 
+UltimaPastaHDFS.main(Array())
 AgrupamentoParquetPorMes.main(Array())
 
 // Função genérica para processar os dados
@@ -49,8 +51,13 @@ processarDocumento("/datalake/bronze/sources/dbms/dec/cte/", "/datalake/prata/so
 processarDocumento("/datalake/bronze/sources/dbms/dec/cte/", "/datalake/prata/sources/dbms/dec/cte/CTeOS/", anoMesList, Some(67))
 processarDocumento("/datalake/bronze/sources/dbms/dec/cte/", "/datalake/prata/sources/dbms/dec/cte/GVTe/", anoMesList, Some(64))
 processarDocumento("/datalake/bronze/sources/dbms/dec/nf3e/", "/datalake/prata/sources/dbms/dec/nf3e/NF3e/", anoMesList)
+processarDocumento("/datalake/bronze/sources/dbms/dec/bpe_cancelamento/", "/datalake/prata/sources/dbms/dec/bpe/cancelamento/", anoMesList)
+processarDocumento("/datalake/bronze/sources/dbms/dec/nf3e_cancelamento/", "/datalake/prata/sources/dbms/dec/nf3e/cancelamento/", anoMesList)
+processarDocumento("/datalake/bronze/sources/dbms/dec/nfce_cancelamento/", "/datalake/prata/sources/dbms/dec/nfce/cancelamento/", anoMesList)
+processarDocumento("/datalake/bronze/sources/dbms/dec/nfe_cancelamento/", "/datalake/prata/sources/dbms/dec/nfe/cancelamento/", anoMesList)
 processarDocumento("/datalake/bronze/sources/dbms/dec/nfe/", "/datalake/prata/sources/dbms/dec/nfe/infNFe/", anoMesList)
 processarDocumento("/datalake/bronze/sources/dbms/dec/nfce/", "/datalake/prata/sources/dbms/dec/nfce/infNFCe/", anoMesList)
+
 
 val spark = SparkSession.builder.appName("AuditoriaDet").getOrCreate()
 
