@@ -1,6 +1,6 @@
 package DecCancelamentoProcessor
-import Processors.{BPeEventoProcessor, NF3eEventoProcessor, NFCeEventoProcessor}
-import Schemas.{BPeEventoSchema, NF3eEventoSchema, NFCeEventoSchema}
+import Processors.{BPeEventoProcessor, MDFeEventoProcessor, NF3eEventoProcessor, NFCeEventoProcessor}
+import Schemas.{BPeEventoSchema, MDFeEventoSchema, NF3eEventoSchema, NFCeEventoSchema}
 
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.hadoop.fs.{FileSystem, Path}
@@ -134,6 +134,16 @@ object BPeCancelamentoDiarioProcessor extends DecCancelamentoDiarioProcessor(
     BPeEventoProcessor.generateSelectedDF(parsedDF)
   }
 }
+
+
+object MDFeCancelamentoDiarioProcessor extends DecCancelamentoDiarioProcessor(
+  "mdfe", "mdfe_cancelamento", "cancelamento", MDFeEventoSchema.createSchema()
+) {
+  override def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = {
+    MDFeEventoProcessor.generateSelectedDF(parsedDF)
+  }
+}
+
 
 object NF3eCancelamentoDiarioProcessor extends DecCancelamentoDiarioProcessor(
   "nf3e", "nf3e_cancelamento", "cancelamento", NF3eEventoSchema.createSchema()

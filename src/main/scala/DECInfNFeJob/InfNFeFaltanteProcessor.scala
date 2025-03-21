@@ -48,7 +48,7 @@ object InfNFeFaltanteProcessor {
     }.toList
 
     anoMesList.foreach { anoMes =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/faltantes/$anoMes"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/nfe/faltantes/"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $anoMes: $startTime")

@@ -1,6 +1,6 @@
 package MainProcessor
 
-import DecCancelamentoProcessor.{BPeCancelamentoDiarioProcessor, NF3eCancelamentoDiarioProcessor, NFCeCancelamentoDiarioProcessor}
+import DecCancelamentoProcessor.{BPeCancelamentoDiarioProcessor, NF3eCancelamentoDiarioProcessor, MDFeCancelamentoDiarioProcessor, NFCeCancelamentoDiarioProcessor}
 import DecNFeEventoProcessor.NFeCancelamentoDiarioProcessor
 import Sqoop.{SqoopGenericoCancelamentoProcessor, SqoopGenericoNFCeCancelamentoProcessor}
 
@@ -10,6 +10,7 @@ object SqoopCancelamentoProcessorApp {
     SqoopGenericoNFCeCancelamentoProcessor.main(Array())
     SqoopGenericoCancelamentoProcessor.main(args)
     BPeCancelamentoDiarioProcessor.main(Array())
+    MDFeCancelamentoDiarioProcessor.main(Array())
     NF3eCancelamentoDiarioProcessor.main(Array())
     NFCeCancelamentoDiarioProcessor.main(Array())
     NFeCancelamentoDiarioProcessor.main(Array())

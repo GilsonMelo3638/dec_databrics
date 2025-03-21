@@ -1,7 +1,8 @@
 package Sqoop
 
-import org.apache.spark.sql.SparkSession
 import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.spark.sql.SparkSession
+
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, ZoneId}
 import java.util.Properties
@@ -86,10 +87,11 @@ object SqoopProcessor {
           s"""
         SELECT NSUSVD,
           COALESCE(
-              REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//cteProc', 'xmlns=\"http://www.portalfiscal.inf.br/cte\"') AS CLOB), CHR(10), ' '), CHR(13), ' '),
-              REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//cteOSProc', 'xmlns=\"http://www.portalfiscal.inf.br/cte\"') AS CLOB), CHR(10), ' '), CHR(13), ' '),
-              REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//GTVeProc', 'xmlns=\"http://www.portalfiscal.inf.br/cte\"') AS CLOB), CHR(10), ' '), CHR(13), ' ')
-          ) AS XML_DOCUMENTO_CLOB,
+                      REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//cteSimpProc', 'xmlns=\"http://www.portalfiscal.inf.br/cte\"') AS CLOB), CHR(10), ' '), CHR(13), ' '),
+                      REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//cteProc', 'xmlns=\"http://www.portalfiscal.inf.br/cte\"') AS CLOB), CHR(10), ' '), CHR(13), ' '),
+                      REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//cteOSProc', 'xmlns=\"http://www.portalfiscal.inf.br/cte\"') AS CLOB), CHR(10), ' '), CHR(13), ' '),
+                      REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//GTVeProc', 'xmlns=\"http://www.portalfiscal.inf.br/cte\"') AS CLOB), CHR(10), ' '), CHR(13), ' ')
+                  ) AS XML_DOCUMENTO_CLOB,
           f.NSUAUT,
           f.CSTAT,
           f.CHAVE,
@@ -172,3 +174,4 @@ object SqoopProcessor {
     }
   }
 }
+//SqoopProcessor.main(Array())

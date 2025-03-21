@@ -1,8 +1,8 @@
 package Schemas
 
-import org.apache.spark.sql.types.{DateType, StringType, StructType, _}
+import org.apache.spark.sql.types._
 
-object NFeSchema {
+object NFCeSchema {
   def createSchema(): StructType = {
     new StructType()
       .add("protNFe", new StructType()
@@ -359,6 +359,10 @@ object NFeSchema {
               .add("vRetPIS", DoubleType, nullable = true)
             )
           )
+        )
+        .add("infNFeSupl", new StructType() // Adicionando a estrutura infNFeSupl
+          .add("qrCode", StringType, nullable = true)
+          .add("urlChave", StringType, nullable = true)
         )
       )
   }

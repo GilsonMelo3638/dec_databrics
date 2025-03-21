@@ -1,31 +1,34 @@
-package DECCTeProcessor
-import Processors.CTeProcessor
-import Schemas.CTeSchema
+package DecMDFeEventoProcessor
+
+import Processors.MDFeEventoProcessor
+import Schemas.MDFeEventoSchema
 
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
+
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-object CTeProcDiarioProcessor {
+object MDFeCancelamentoDiarioProcessor {
   // Variáveis externas para o tipo de documento
-  val tipoDocumento = "cte"
-  val prataDocumento = "CTe"
+  val tipoDocumento = "mdfe"
+  val tipoDocumentoCancelamento = "mdfe_cancelamento"
+  val prataDocumento = "cancelamento"
 
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder().appName("ExtractInfBPe").enableHiveSupport().getOrCreate()
+    val spark = SparkSession.builder().appName("ExtractMDFeCancelamento").enableHiveSupport().getOrCreate()
     import spark.implicits._
 
     // Obter o esquema da classe BPeSchema
-    val schema = CTeSchema.createSchema()
+    val schema = MDFeEventoSchema.createSchema()
 
     // Gerar a lista dos últimos 10 dias no formato YYYYMMDD, começando do dia anterior
     val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
     val dataAtual = LocalDateTime.now()
-    val ultimos10Dias = (1 to 10).map { diasAtras =>
+    val ultimos10Dias = (1 to 17).map { diasAtras =>
       dataAtual.minus(diasAtras, ChronoUnit.DAYS).format(dateFormatter)
     }.toList
 
@@ -33,9 +36,9 @@ object CTeProcDiarioProcessor {
     val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
     ultimos10Dias.foreach { dia =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$prataDocumento/processar/$dia"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumentoCancelamento/processar/$dia"
       val parquetPrataPath = s"/datalake/prata/sources/dbms/dec/$tipoDocumento/$prataDocumento"
-      val parquetPathProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_CTeSimp/$dia"
+      val parquetPathProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumentoCancelamento/processado/$dia"
 
       // Verificar se o diretório existe
       if (fs.exists(new Path(parquetPath))) {
@@ -60,28 +63,23 @@ object CTeProcDiarioProcessor {
             println(s"Verificação bem-sucedida: Total ($totalCount) e distintos ($distinctCount) são iguais no caminho: $parquetPath")
           }
 
-          // 2. Seleciona as colunas e filtra MODELO = 57 e XML_DOCUMENTO_CLOB contém <cteSimpProc>
+          // 2. Seleciona as colunas
           val xmlDF = parquetDF
-            .filter($"MODELO" === 57) // Filtra onde MODELO é igual a 57
-            .filter($"XML_DOCUMENTO_CLOB".rlike("<cteProc")) // Filtra onde XML_DOCUMENTO_CLOB contém <cteSimpProc>
             .select(
               $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
-              $"NSUSVD".cast("string").as("NSUSVD"),
+              $"NSU".cast("string").as("NSU"),
               $"DHPROC",
-              $"DHEMI",
-              $"IP_TRANSMISSOR",
-              $"MODELO".cast("string").as("MODELO"),
-              $"TPEMIS".cast("string").as("TPEMIS")
+              $"DHEVENTO",
+              $"IP_TRANSMISSOR"
             )
-
-          xmlDF.show()
+//          xmlDF.show()
 
           // 3. Usa `from_xml` para ler o XML da coluna usando o esquema
           val parsedDF = xmlDF.withColumn("parsed", from_xml($"xml", schema))
 
           // 4. Gera o DataFrame selectedDF usando a nova classe
           implicit val sparkSession: SparkSession = spark // Passando o SparkSession implicitamente
-          val selectedDF = CTeProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
+          val selectedDF = MDFeEventoProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
           val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
 //          // Imprimir no console as variações e a contagem de 'chave_particao'
@@ -95,8 +93,8 @@ object CTeProcDiarioProcessor {
 //            println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
 //          }
 
-          // Redistribuir os dados para 40 partições
-          val repartitionedDF = selectedDFComParticao.repartition(1)
+          // Redistribuir os dados para 5 partições
+          val repartitionedDF = selectedDFComParticao.repartition(5)
 
           // Escrever os dados particionados
           repartitionedDF
@@ -139,4 +137,4 @@ object CTeProcDiarioProcessor {
   }
 }
 
-//CTeProcDiarioProcessor.main(Array())
+//MDFeCancelamentoDiarioProcessor.main(Array())

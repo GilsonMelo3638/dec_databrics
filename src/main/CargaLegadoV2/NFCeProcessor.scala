@@ -3,12 +3,11 @@ package Processors
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object NFeProcessor {
+object NFCeProcessor {
   def generateSelectedDF(parsedDF: DataFrame)(implicit spark: SparkSession): DataFrame = {
     import spark.implicits._ // Habilita o uso de $"coluna"
-
     parsedDF.select(
-      $"NSUDF",
+      $"NSU",
       concat(
         substring($"DHPROC", 7, 4),
         substring($"DHPROC", 4, 2),
@@ -231,7 +230,9 @@ object NFeProcessor {
       $"parsed.NFe.infNFe.infRespTec.hashCSRT".as("infresptec_hashcsrt"),
       $"parsed.NFe.infNFe.infRespTec.idCSRT".as("infresptec_idcsrt"),
       $"parsed.NFe.infNFe.infRespTec.xContato".as("infresptec_xcontato"),
-      $"parsed.NFe.infNFe.infSolicNFF.xSolic".as("infsolicnff_xsolic")
+      $"parsed.NFe.infNFe.infSolicNFF.xSolic".as("infsolicnff_xsolic"),
+      $"parsed.NFe.infNFeSupl.qrCode".as("qrCode"),
+      $"parsed.NFe.infNFeSupl.urlChave".as("urlChave")
     )
   }
 }

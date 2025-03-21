@@ -1,13 +1,14 @@
 package MainProcessor
 
-import RepartitionJob.RepartitionXlmPequenosMediosProcessor
-import Sqoop.SqoopProcessor
 import DECBPeProcessor.BpeProcDiarioProcessor
+import DECCTeOSProcessor.CTeOSDiarioProcessor
+import DECCTeProcessor.CTeProcDiarioProcessor
+import DECGVTeProcessor.GVTeDiarioProcessor
 import DECMDFeProcessor.MDFeProcDiarioProcessor
 import DECNF3eProcessor.NF3eProcDiarioProcessor
-import DECCTeProcessor.CTeProcDiarioProcessor
-import DECCTeOSProcessor.CTeOSDiarioProcessor
-import DECGVTeProcessor.GVTeDiarioProcessor
+import DecCTeSimpProcessor.CTeSimpProcDiarioProcessor
+import RepartitionJob.RepartitionXlmPequenosMediosProcessor
+import Sqoop.SqoopProcessor
 import org.apache.spark.sql.SparkSession
 
 import java.util.Properties
@@ -97,11 +98,20 @@ object SqoopProcessorApp {
       }
 
       try {
-        println("=== Executando CTeOSDiarioProcessor ===")
+        println("=== Executando CTeSimpDiarioProcessor ===")
+        CTeSimpProcDiarioProcessor.main(Array())
+      } catch {
+        case e: Exception =>
+          println(s"Erro ao executar CTeSimpDiarioProcessor: ${e.getMessage}")
+          e.printStackTrace()
+      }
+
+      try {
+        println("=== Executando CTeOsDiarioProcessor ===")
         CTeOSDiarioProcessor.main(Array())
       } catch {
         case e: Exception =>
-          println(s"Erro ao executar CTeOSDiarioProcessor: ${e.getMessage}")
+          println(s"Erro ao executar CTeOsDiarioProcessor: ${e.getMessage}")
           e.printStackTrace()
       }
 
@@ -123,6 +133,7 @@ object SqoopProcessorApp {
         val configs = Map(
           "CTe" -> ("/datalake/prata/sources/dbms/dec/cte/CTe", 10, 10),
           "CTeOS" -> ("/datalake/prata/sources/dbms/dec/cte/CTeOS", 2, 2),
+          "CTeSimp" -> ("/datalake/prata/sources/dbms/dec/cte/CTeOS", 2, 2),
           "GVTe" -> ("/datalake/prata/sources/dbms/dec/cte/GVTe", 2, 2),
           "BPe" -> ("/datalake/prata/sources/dbms/dec/bpe/BPe", 5, 5),
           "MDFe" -> ("/datalake/prata/sources/dbms/dec/mdfe/MDFe", 4, 4),

@@ -32,9 +32,9 @@ import java.time.LocalDateTime
 
 object InfNFCeLegadoProcessor {
     // Variáveis externas para o intervalo de meses e ano de processamento
-    val ano = 2025
-    val mesInicio = 3
-    val mesFim = 3
+    val ano = 2019
+    val mesInicio = 1
+    val mesFim = 12
     val tipoDocumento = "nfce"
 
   def main(args: Array[String]): Unit = {
@@ -75,16 +75,16 @@ object InfNFCeLegadoProcessor {
         val selectedDF = NFCeProcessor.generateSelectedDF(parsedDF)
         // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
         val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
-        // Imprimir no console as variações e a contagem de 'chave_particao'
-        val chaveParticaoContagem = selectedDFComParticao
-          .groupBy("chave_particao")
-          .agg(count("chave").alias("contagem_chaves"))
-          .orderBy("chave_particao")
-
-        // Coletar os dados para exibição no console
-        chaveParticaoContagem.collect().foreach { row =>
-          println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
-        }
+//        // Imprimir no console as variações e a contagem de 'chave_particao'
+//        val chaveParticaoContagem = selectedDFComParticao
+//          .groupBy("chave_particao")
+//          .agg(count("chave").alias("contagem_chaves"))
+//          .orderBy("chave_particao")
+//
+//        // Coletar os dados para exibição no console
+//        chaveParticaoContagem.collect().foreach { row =>
+//          println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
+//        }
 
         // Redistribuir os dados para 40 partições
         val repartitionedDF = selectedDFComParticao.repartition(40)
@@ -96,7 +96,7 @@ object InfNFCeLegadoProcessor {
           .option("compression", "lz4")
           .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
           .partitionBy("chave_particao") // Garante a separação por partição
-          .save("/datalake/prata/sources/dbms/dec/nfce/infNFCe")
+          .save("/datalake/prata/sources/dbms/dec/nfce/infNFCeV2")
 
         // Registrar o horário de término da gravação
         val saveEndTime = LocalDateTime.now()

@@ -43,13 +43,14 @@ object SqoopGenericoCancelamentoProcessor {
     val configs = List(
       ("procEventoNF3e", "nf3e", "NF3E", "nf3e_cancelamento", "NSU"),
       ("procEventoNFe", "nfe", "NFE", "nfe_cancelamento", "NSUDF"),
-      ("procEventoBPe", "bpe", "BPE", "bpe_cancelamento", "NSU")
+      ("procEventoBPe", "bpe", "BPE", "bpe_cancelamento", "NSU"),
+      ("procEventoMDFe", "mdfe", "MDFE", "mdfe_cancelamento", "NSU")
     )
 
     // Loop para processar cada configuração
     for ((tabAbertura, urlDocumento, tabela, dirBronze, colSplit) <- configs) {
       // Loop para gerar intervalos de minusDays de -1 a -15
-      for (daysAgo <- 1 to 1) {
+      for (daysAgo <- 1 to 17) {
         // Obtém a data correspondente ao número de dias atrás no fuso horário desejado
         val data = LocalDate.now(ZoneId.of("America/Sao_Paulo")).minusDays(daysAgo)
 
