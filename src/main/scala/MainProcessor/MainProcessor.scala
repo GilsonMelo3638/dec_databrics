@@ -1,5 +1,7 @@
 package MainProcessor
 
+import DecDiarioProcessor.Principal.{InfNFCe, InfNFe, nfceDet, nfeDet}
+import Extrator.{diarioNFCe, diarioNFe}
 import org.apache.spark.sql.SparkSession
 
 object MainProcessor {
@@ -12,47 +14,47 @@ object MainProcessor {
           .getOrCreate()
 
         try {
-            println("=== Iniciando o SqoopNFCeProcessor ===")
+            println("=== Iniciando a extração diária de NFe ===")
 
             // Executando o InfNFCeProcessor
             executarProcessador(
-                nome = "SqoopNFeProcessor",
-                processador = Sqoop.SqoopNFeProcessor,
-                args = args
-            )
-
-            // Executando o InfNFCeProcessor
-            executarProcessador(
-                nome = "SqoopNFCeProcessor",
-                processador = Sqoop.SqoopNFCeProcessor,
+                nome = "diáriaNFe",
+                processador = diarioNFe,
                 args = args
             )
 
             // Executando o InfNFeProcessor
             executarProcessador(
                 nome = "InfNFeProcessor",
-                processador = DECInfNFeJob.InfNFeProcessor,
+                processador = InfNFe,
                 args = args
             )
 
             // Executando o NFeDetProcessor
             executarProcessador(
                 nome = "NFeDetProcessor",
-                processador = DECNFeDetJob.NFeDetProcessor,
+                processador = nfeDet,
+                args = args
+            )
+
+            // Executando o InfNFCeProcessor
+            executarProcessador(
+                nome = "diáriaNFCe",
+                processador = diarioNFCe,
                 args = args
             )
 
             // Executando o InfNFCeProcessor
             executarProcessador(
                 nome = "InfNFCeProcessor",
-                processador = DECInfNFCeJob.InfNFCeProcessor,
+                processador = InfNFCe,
                 args = args
             )
 
             // Executando o NFCeDetProcessor
             executarProcessador(
                 nome = "NFCeDetProcessor",
-                processador = DECNFCeDetJob.NFCeDetProcessor,
+                processador = nfceDet,
                 args = args
             )
 

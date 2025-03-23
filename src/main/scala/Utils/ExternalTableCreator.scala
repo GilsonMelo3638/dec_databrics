@@ -59,4 +59,4 @@ object ExternalTableCreator {
   }
 }
 
-ExternalTableCreator.main(Array())
+//ExternalTableCreator.main(Array())

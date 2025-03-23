@@ -1,7 +1,4 @@
 package Auditoria
-
-package Utils
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
@@ -12,7 +9,7 @@ object HDFSDirectoryCopy {
   def main(args: Array[String]): Unit = {
     // Caminhos de origem e destino
     val sourcePath = new Path("/datalake/prata/sources/dbms/dec/")
-    val destinationPath = new Path("/datalake/prata/backup_producao/20250313/")
+    val destinationPath = new Path("/datalake/prata/backup_producao/20250320")
 
     // Configuração do Hadoop
     val conf = new Configuration()
