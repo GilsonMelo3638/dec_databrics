@@ -1,5 +1,4 @@
 package Processors
-
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -107,7 +106,7 @@ object NFCeProcessor {
       $"parsed.NFe.infNFe.exporta.xLocExporta".as("exporta_xlocexporta"),
       $"parsed.NFe.infNFe.ide.dhEmi".as("ide_dhemi"),
       $"parsed.NFe.infNFe.ide.cDV".as("ide_cdv"),
-      $"parsed.NFe.infNFe.ide.cMunFG".as("ide_cmungfg"),
+      $"parsed.NFe.infNFe.ide.cMunFG".as("ide_cmunfg"),
       $"parsed.NFe.infNFe.ide.cNF".as("ide_cnf"),
       $"parsed.NFe.infNFe.ide.cUF".as("ide_cuf"),
       $"parsed.NFe.infNFe.ide.dhCont".as("ide_dhcont"),
@@ -181,6 +180,19 @@ object NFCeProcessor {
       $"parsed.NFe.infNFe.total.icmstot.vst".as("icmstot_vst"),
       $"parsed.NFe.infNFe.total.icmstot.vseg".as("icmstot_vseg"),
       $"parsed.NFe.infNFe.total.icmstot.vtottrib".as("icmstot_vtottrib"),
+      $"parsed.NFe.infNFe.total.ISSQNtot.cRegTrib".as("issqntot_cregtrib"),
+      $"parsed.NFe.infNFe.total.ISSQNtot.dCompet".as("issqntot_dcompet"),
+      $"parsed.NFe.infNFe.total.ISSQNtot.vBC".as("issqntot_vbc"),
+      $"parsed.NFe.infNFe.total.ISSQNtot.vCOFINS".as("issqntot_vcofins"),
+      $"parsed.NFe.infNFe.total.ISSQNtot.vISS".as("issqntot_viss"),
+      $"parsed.NFe.infNFe.total.ISSQNtot.vPIS".as("issqntot_vpis"),
+      $"parsed.NFe.infNFe.total.ISSQNtot.vServ".as("issqntot_vserv"),
+      $"parsed.NFe.infNFe.total.retTrib.vBCIRRF".as("rettrib_vbcirrf"),
+      $"parsed.NFe.infNFe.total.retTrib.vBCRetPrev".as("rettrib_vbcretprev"),
+      $"parsed.NFe.infNFe.total.retTrib.vIRRF".as("rettrib_virrf"),
+      $"parsed.NFe.infNFe.total.retTrib.vRetCOFINS".as("rettrib_vretcofins"),
+      $"parsed.NFe.infNFe.total.retTrib.vRetCSLL".as("rettrib_vretcsll"),
+      $"parsed.NFe.infNFe.total.retTrib.vRetPIS".as("rettrib_vretpis"),
       $"parsed.NFe.infNFe.pag.detPag".as("pag_detPag"),
       $"parsed.NFe.infNFe.pag.vTroco".as("pag_vtroco"),
       $"parsed.NFe.infNFe.transp.modFrete".as("transp_modFrete"),

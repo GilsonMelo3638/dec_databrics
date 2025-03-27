@@ -32,9 +32,9 @@ import java.time.LocalDateTime
 
 object InfNFCe {
     // Variáveis externas para o intervalo de meses e ano de processamento
-    val ano = 2021
-    val mesInicio = 1
-    val mesFim = 12
+    val ano = 2025
+    val mesInicio = 3
+    val mesFim = 3
     val tipoDocumento = "nfce"
 
   def main(args: Array[String]): Unit = {
@@ -96,7 +96,7 @@ object InfNFCe {
           .option("compression", "lz4")
           .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
           .partitionBy("chave_particao") // Garante a separação por partição
-          .save("/datalake/prata/sources/dbms/dec/nfce/infNFCeV2")
+          .save("/datalake/prata/sources/dbms/dec/nfce/infNFCe")
 
         // Registrar o horário de término da gravação
         val saveEndTime = LocalDateTime.now()
@@ -104,4 +104,4 @@ object InfNFCe {
     }
   }
 
-//InfNFCeLegadoProcessor.main(Array())
+//InfNFCe.main(Array())

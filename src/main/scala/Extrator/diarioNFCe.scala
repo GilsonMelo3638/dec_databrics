@@ -73,10 +73,10 @@ object diarioNFCe {
     }
 
     // Configurações de conexão com o banco de dados Oracle
-    val jdbcUrl = "jdbc:oracle:thin:@sefsrvprd704.fazenda.net:1521/ORAPRD21"
+    val jdbcUrl = "jdbc:oracle:thin:@codvm01-scan1.gdfnet.df:1521/ORAPRD23"
     val connectionProperties = new Properties()
-    connectionProperties.put("user", "userdec")
-    connectionProperties.put("password", "userdec201811")
+    connectionProperties.put("user", "admhadoop")
+    connectionProperties.put("password", ".admhadoop#")
     connectionProperties.put("driver", "oracle.jdbc.driver.OracleDriver")
 
     // Coluna para particionamento (equivalente ao --split-by do Sqoop)

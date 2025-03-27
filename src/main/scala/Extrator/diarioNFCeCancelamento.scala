@@ -1,25 +1,3 @@
-//scp "C:\dec\target\DecInfNFePrata-0.0.1-SNAPSHOT.jar"  gamelo@10.69.22.71:src/main/scala/DecInfNFePrata-0.0.1-SNAPSHOT.jar
-//hdfs dfs -put -f /export/home/gamelo/src/main/scala/DecInfNFePrata-0.0.1-SNAPSHOT.jar /app/dec
-//hdfs dfs -ls /app/dec
-// hdfs dfs -rm -skipTrash /app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
-// spark-submit \
-//  --class DECJob.InfNFeProcessor \
-//  --master yarn \
-//  --deploy-mode cluster \
-//  --num-executors 20 \
-//  --executor-memory 4G \
-//  --executor-cores 2 \
-//  --conf "spark.sql.parquet.writeLegacyFormat=true" \
-//  --conf "spark.sql.debug.maxToStringFields=100" \
-//  --conf "spark.executor.memoryOverhead=1024" \
-//  --conf "spark.network.timeout=800s" \
-//  --conf "spark.yarn.executor.memoryOverhead=4096" \
-//  --conf "spark.shuffle.service.enabled=true" \
-//  --conf "spark.dynamicAllocation.enabled=true" \
-//  --conf "spark.dynamicAllocation.minExecutors=10" \
-//  --conf "spark.dynamicAllocation.maxExecutors=40" \
-//  --packages com.databricks:spark-xml_2.12:0.13.0 \
-//  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
 package Extrator
 
 import org.apache.hadoop.fs.{FileSystem, Path}
@@ -72,10 +50,10 @@ object diarioNFCeCancelamento {
         println(s"Arquivo já existe em $targetDirProcessar ou $targetDirProcessado. Processamento interrompido para a data $dataFormatada.")
       } else {
         // Configurações de conexão com o banco de dados Oracle
-        val jdbcUrl = "jdbc:oracle:thin:@sefsrvprd704.fazenda.net:1521/ORAPRD21"
+        val jdbcUrl = "jdbc:oracle:thin:@codvm01-scan1.gdfnet.df:1521/ORAPRD23"
         val connectionProperties = new Properties()
-        connectionProperties.put("user", "userdec")
-        connectionProperties.put("password", "userdec201811")
+        connectionProperties.put("user", "admhadoop")
+        connectionProperties.put("password", ".admhadoop#")
         connectionProperties.put("driver", "oracle.jdbc.driver.OracleDriver")
 
         // Coluna para particionamento (equivalente ao --split-by do Sqoop)

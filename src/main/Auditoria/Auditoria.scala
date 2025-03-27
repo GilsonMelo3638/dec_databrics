@@ -56,6 +56,7 @@ processarDocumento("/datalake/bronze/sources/dbms/dec/nf3e_cancelamento/", "/dat
 processarDocumento("/datalake/bronze/sources/dbms/dec/nfce_cancelamento/", "/datalake/prata/sources/dbms/dec/nfce/cancelamento/", anoMesList)
 processarDocumento("/datalake/bronze/sources/dbms/dec/mdfe_cancelamento/", "/datalake/prata/sources/dbms/dec/mdfe/cancelamento/", anoMesList)
 processarDocumento("/datalake/bronze/sources/dbms/dec/nfe_cancelamento/", "/datalake/prata/sources/dbms/dec/nfe/cancelamento/", anoMesList)
+processarDocumento("/datalake/bronze/sources/dbms/dec/cte_cancelamento/", "/datalake/prata/sources/dbms/dec/cte/cancelamento/", anoMesList)
 processarDocumento("/datalake/bronze/sources/dbms/dec/nfe/", "/datalake/prata/sources/dbms/dec/nfe/infNFe/", anoMesList)
 processarDocumento("/datalake/bronze/sources/dbms/dec/nfce/", "/datalake/prata/sources/dbms/dec/nfce/infNFCe/", anoMesList)
 

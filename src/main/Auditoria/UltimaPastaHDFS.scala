@@ -1,7 +1,6 @@
 package Auditoria
 
 import scala.sys.process._
-
 object UltimaPastaHDFS {
   def main(args: Array[String]): Unit = {
     val diretorios = Seq(
@@ -15,11 +14,12 @@ object UltimaPastaHDFS {
       "/datalake/bronze/sources/dbms/dec/processamento/bpe_cancelamento/processado",
       "/datalake/bronze/sources/dbms/dec/processamento/nf3e_cancelamento/processado",
       "/datalake/bronze/sources/dbms/dec/processamento/nfe_cancelamento/processado",
-      "/datalake/bronze/sources/dbms/dec/processamento/mdfe_cancelamento/processado"
+      "/datalake/bronze/sources/dbms/dec/processamento/mdfe_cancelamento/processado",
+      "/datalake/bronze/sources/dbms/dec/processamento/cte_cancelamento/processado"
     )
 
     diretorios.foreach { dir =>
-      val comando = s"hdfs dfs -ls $dir"
+    val comando = s"hdfs dfs -ls $dir"
       val resultado = comando.!!
 
       val pastas = resultado.split("\n")
@@ -35,3 +35,4 @@ object UltimaPastaHDFS {
   }
 }
 //UltimaPastaHDFS.main(Array())
+
