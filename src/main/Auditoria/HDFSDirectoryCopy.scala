@@ -9,7 +9,7 @@ object HDFSDirectoryCopy {
   def main(args: Array[String]): Unit = {
     // Caminhos de origem e destino
     val sourcePath = new Path("/datalake/prata/sources/dbms/dec/")
-    val destinationPath = new Path("/datalake/prata/backup_producao/20250320")
+    val destinationPath = new Path("/datalake/prata/backup_producao/20250328")
 
     // Configuração do Hadoop
     val conf = new Configuration()
@@ -137,4 +137,4 @@ object HDFSDirectoryCopy {
     }
   }
 }
-//HDFSDirectoryCopy.main(Array())<
+//HDFSDirectoryCopy.main(Array())
