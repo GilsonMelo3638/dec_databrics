@@ -95,7 +95,7 @@ object RepartitionProcessor {
 
     // Verifica se hoje é domingo
     val calendar = Calendar.getInstance()
-    val isSunday = calendar.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY
+    val isSunday = calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY
 
     // Definição dos diretórios e seus respectivos limites de reparticionamento
     val pathsWithLimits = Seq(

@@ -121,25 +121,11 @@ object SqoopProcessorApp {
       // Executa o RepartitionXlmPequenosMediosProcessor como último processo
       try {
         println("=== Executando RepartitionXlmPequenosMediosProcessor ===")
-        val repartitionProcessor = new RepartitionXlmPequenosMediosProcessor(spark)
 
-        // Define os caminhos e configurações para cada tipo de documento
-        val configs = Map(
-          "CTe" -> ("/datalake/prata/sources/dbms/dec/cte/CTe", 10, 10),
-          "CTeOS" -> ("/datalake/prata/sources/dbms/dec/cte/CTeOS", 2, 2),
-          "CTeSimp" -> ("/datalake/prata/sources/dbms/dec/cte/CTeOS", 2, 2),
-          "GVTe" -> ("/datalake/prata/sources/dbms/dec/cte/GVTe", 2, 2),
-          "BPe" -> ("/datalake/prata/sources/dbms/dec/bpe/BPe", 5, 5),
-          "MDFe" -> ("/datalake/prata/sources/dbms/dec/mdfe/MDFe", 4, 4),
-          "NF3e" -> ("/datalake/prata/sources/dbms/dec/nf3e/nf3e", 4, 4)
-        )
+        // Chamada simples sem argumentos (configurações internas)
+        RepartitionXlmPequenosMediosProcessor.main(Array.empty)
 
-        // Processa cada tipo de documento
-        configs.foreach { case (docType, (basePath, maxFiles, targetRepartition)) =>
-          println(s"Processando $docType...")
-          repartitionProcessor.processPartitions(basePath, maxFiles, targetRepartition)
-          println(s"Concluído processamento de $docType.")
-        }
+        println("=== RepartitionXlmPequenosMediosProcessor concluído com sucesso ===")
       } catch {
         case e: Exception =>
           println(s"Erro ao executar RepartitionXlmPequenosMediosProcessor: ${e.getMessage}")

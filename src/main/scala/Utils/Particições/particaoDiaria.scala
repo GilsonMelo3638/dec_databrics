@@ -7,15 +7,15 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 object particaoDiaria {
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder()
-      .appName("NFCE Partitioning Final")
+      .appName("NFE Partitioning Final")
       .config("spark.sql.parquet.compression.codec", "lz4")
       .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
       .getOrCreate()
 
     try {
       val basePath = "/datalake/bronze/sources/dbms/dec/"
-      val inputBase = s"${basePath}nfce/"
-      val outputPath = s"${basePath}nfce_diario/"
+      val inputBase = s"${basePath}nfe/"
+      val outputPath = s"${basePath}nfe_diario/"
 
       processAllMonths(spark, inputBase, outputPath)
       println("✅ Processamento concluído com sucesso!")
@@ -28,9 +28,9 @@ object particaoDiaria {
     val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
     // Definir o período completo desejado
-    val startYear = 2023
-    val endYear = 2023
-    val endMonth = 4 // Fevereiro de 2025
+    val startYear = 2021
+    val endYear = 2022
+    val endMonth = 12 // Fevereiro de 2025
 
     (startYear to endYear).foreach { year =>
       val monthsRange = if (year == endYear) 1 to endMonth else 1 to 12
@@ -74,7 +74,7 @@ object particaoDiaria {
         .drop("year", "month", "day")
 
       // Número fixo de partições baseado no tamanho esperado
-      val numPartitions = 20 // Para ~5GB/dia resulta em ~500MB/arquivo
+      val numPartitions = 4 // Para ~5GB/dia resulta em ~500MB/arquivo
 
       dayDF.repartition(numPartitions)
         .write

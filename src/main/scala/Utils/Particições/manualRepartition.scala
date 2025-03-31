@@ -20,7 +20,7 @@
 //  --conf "spark.dynamicAllocation.maxExecutors=40" \
 //  --packages com.databricks:spark-xml_2.12:0.13.0 \
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
-package Utils
+package Utils.Particições
 
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
