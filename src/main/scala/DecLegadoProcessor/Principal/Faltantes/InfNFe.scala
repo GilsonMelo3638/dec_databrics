@@ -49,7 +49,7 @@ object InfNFe {
     }.toList
 
     anoMesList.foreach { anoMes =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/nfe/faltantes/"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/nfe/faltantes/$anoMes"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $anoMes: $startTime")
@@ -96,7 +96,7 @@ object InfNFe {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/nfe/infNFe")
+        .save("/datalake/prata/sources/dbms/dec/nfe/infNFe2")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()
@@ -104,4 +104,4 @@ object InfNFe {
   }
 }
 
-//InfNFeFaltanteProcessor.main(Array())
+//InfNFe.main(Array())

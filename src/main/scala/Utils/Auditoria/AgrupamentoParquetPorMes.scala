@@ -16,7 +16,7 @@ object AgrupamentoParquetPorMes {
     val baseDestino = "/datalake/bronze/sources/dbms/dec/"
 
     // Mês e ano de interesse no formato YYYYMM
-    val anoMes = "202503"
+    val anoMes = "202504"
 
     // Tamanho máximo por partição (300 MB)
     val tamanhoMaximoParticaoMB = 300

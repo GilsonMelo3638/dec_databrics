@@ -6,11 +6,11 @@ import org.apache.spark.sql.SparkSession
 
 import scala.util.{Failure, Success, Try}
 
-object HDFSDirectoryCopy {
+object HDFSDirectoryFull {
   def main(args: Array[String]): Unit = {
     // Caminhos de origem e destino
     val sourcePath = new Path("/datalake/prata/sources/dbms/dec/")
-    val destinationPath = new Path("/datalake/prata/backup_producao/20250328")
+    val destinationPath = new Path("/datalake/prata/backup_producao/20250403")
 
     // Configuração do Hadoop
     val conf = new Configuration()
