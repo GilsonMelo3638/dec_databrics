@@ -1,6 +1,6 @@
 package MainProcessor
 
-import DecDiarioProcessor.Principal.{Bpe, CTeOS, CTe, CTeSimp, GVTe, MDFe, NF3e}
+import Abstract.Principal._
 import Extrator.diarioGenerico
 import RepartitionJob.RepartitionXlmPequenosMediosProcessor
 import org.apache.spark.sql.SparkSession
@@ -54,69 +54,13 @@ object SqoopProcessorApp {
         }
       }
 
-      // Executa as classes de processamento diário após as queries
-      try {
-        println("=== Executando BpeProcDiarioProcessor ===")
-        Bpe.main(Array())
-      } catch {
-        case e: Exception =>
-          println(s"Erro ao executar BpeProcDiarioProcessor: ${e.getMessage}")
-          e.printStackTrace()
-      }
-
-      try {
-        println("=== Executando MDFeProcDiarioProcessor ===")
-        MDFe.main(Array())
-      } catch {
-        case e: Exception =>
-          println(s"Erro ao executar MDFeProcDiarioProcessor: ${e.getMessage}")
-          e.printStackTrace()
-      }
-
-      try {
-        println("=== Executando NF3eProcDiarioProcessor ===")
-        NF3e.main(Array())
-      } catch {
-        case e: Exception =>
-          println(s"Erro ao executar NF3eProcDiarioProcessor: ${e.getMessage}")
-          e.printStackTrace()
-      }
-
-      try {
-        println("=== Executando CTeProcDiarioProcessor ===")
-        CTe.main(Array())
-      } catch {
-        case e: Exception =>
-          println(s"Erro ao executar CTeProcDiarioProcessor: ${e.getMessage}")
-          e.printStackTrace()
-      }
-
-      try {
-        println("=== Executando CTeSimpDiarioProcessor ===")
-        CTeSimp.main(Array())
-      } catch {
-        case e: Exception =>
-          println(s"Erro ao executar CTeSimpDiarioProcessor: ${e.getMessage}")
-          e.printStackTrace()
-      }
-
-      try {
-        println("=== Executando CTeOsDiarioProcessor ===")
-        CTeOS.main(Array())
-      } catch {
-        case e: Exception =>
-          println(s"Erro ao executar CTeOsDiarioProcessor: ${e.getMessage}")
-          e.printStackTrace()
-      }
-
-      try {
-        println("=== Executando GVTeDiarioProcessor ===")
-        GVTe.main(Array())
-      } catch {
-        case e: Exception =>
-          println(s"Erro ao executar GVTeDiarioProcessor: ${e.getMessage}")
-          e.printStackTrace()
-      }
+      BPeProcessor.main(Array())
+      MDFeProcessor.main(Array())
+      NF3eProcessor.main(Array())
+      CTeProcessor.main(Array())
+      CTeSimpProcessor.main(Array())
+      CTeOSProcessor.main(Array())
+      GVTeProcessor.main(Array())
 
       // Executa o RepartitionXlmPequenosMediosProcessor como último processo
       try {
@@ -142,3 +86,5 @@ object SqoopProcessorApp {
     }
   }
 }
+
+//SqoopProcessorApp.main(Array("/datalake/bronze/sources/dbms/dec/processamento"))

@@ -13,13 +13,79 @@ abstract class DocumentProcessor(
                                   tipoDocumento: String,
                                   prataDocumento: String,
                                   nsuColumnName: String, // Nome da coluna no DataFrame
-                                  nsuAlias: String       // Alias da coluna no resultado
+                                  nsuAlias: String // Alias da coluna no resultado
                                 ) {
 
   def createSchema(): org.apache.spark.sql.types.StructType
 
   // Adicionar SparkSession como parâmetro implícito
   def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame
+
+  // Método para criar o xmlDF com filtros específicos para cada tipo de documento
+  protected def createXmlDF(parquetDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = {
+    import spark.implicits._
+
+    prataDocumento match {
+      case "CTe" =>
+        parquetDF
+          .filter($"MODELO" === 57)
+          .filter($"XML_DOCUMENTO_CLOB".rlike("<cteProc"))
+          .select(
+            $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
+            $"NSUSVD".cast("string").as("NSUSVD"),
+            $"DHPROC",
+            $"DHEMI",
+            $"IP_TRANSMISSOR",
+            $"MODELO".cast("string").as("MODELO"),
+            $"TPEMIS".cast("string").as("TPEMIS")
+          )
+      case "CTeOS" =>
+        parquetDF
+          .filter($"MODELO" === 67)
+          .select(
+            $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
+            $"NSUSVD".cast("string").as("NSUSVD"),
+            $"DHPROC",
+            $"DHEMI",
+            $"IP_TRANSMISSOR",
+            $"MODELO".cast("string").as("MODELO"),
+            $"TPEMIS".cast("string").as("TPEMIS")
+          )
+      case "GVTe" =>
+        parquetDF
+          .filter($"MODELO" === 64)
+          .select(
+            $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
+            $"NSUSVD".cast("string").as("NSUSVD"),
+            $"DHPROC",
+            $"DHEMI",
+            $"IP_TRANSMISSOR",
+            $"MODELO".cast("string").as("MODELO"),
+            $"TPEMIS".cast("string").as("TPEMIS")
+          )
+      case "CTeSimp" =>
+        parquetDF
+          .filter($"MODELO" === 57)
+          .filter($"XML_DOCUMENTO_CLOB".rlike("<cteSimpProc"))
+          .select(
+            $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
+            $"NSUSVD".cast("string").as("NSUSVD"),
+            $"DHPROC",
+            $"DHEMI",
+            $"IP_TRANSMISSOR",
+            $"MODELO".cast("string").as("MODELO"),
+            $"TPEMIS".cast("string").as("TPEMIS")
+          )
+      case _ =>
+        parquetDF.select(
+          $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
+          col(nsuColumnName).cast("string").as(nsuAlias),
+          $"DHPROC",
+          $"DHEMI",
+          $"IP_TRANSMISSOR"
+        )
+    }
+  }
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder().appName(s"ExtractInf$prataDocumento").enableHiveSupport().getOrCreate()
@@ -41,9 +107,23 @@ abstract class DocumentProcessor(
     val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
     ultimos10Dias.foreach { dia =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$prataDocumento/processar/$dia"
+      // Definir parquetPath com base no tipo de documento
+      val parquetPath = prataDocumento match {
+        case "GVTe" => s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_GVTe/$dia"
+        case "CTeSimp" => s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_CTeSimp/$dia"
+        case "CTeOS" => s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_CTeOS/$dia"
+        case _ => s"/datalake/bronze/sources/dbms/dec/processamento/$prataDocumento/processar/$dia"
+      }
+
       val parquetPrataPath = s"/datalake/prata/sources/dbms/dec/$tipoDocumento/$prataDocumento"
-      val parquetPathProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processado/$dia"
+
+      // Definir parquetPathProcessado com base no tipo de documento
+      val parquetPathProcessado = prataDocumento match {
+        case "CTe" => s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_CTeSimp/$dia"
+        case "CTeSimp" => s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_CTeOS/$dia"
+        case "CTeOS" => s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_GVTe/$dia"
+        case _ => s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processado/$dia"
+      }
 
       // Verificar se o diretório existe
       if (fs.exists(new Path(parquetPath))) {
@@ -68,14 +148,8 @@ abstract class DocumentProcessor(
             println(s"Verificação bem-sucedida: Total ($totalCount) e distintos ($distinctCount) são iguais no caminho: $parquetPath")
           }
 
-          // Seleciona as colunas, incluindo a coluna NSU com o nome e alias corretos
-          val xmlDF = parquetDF.select(
-            $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
-            col(nsuColumnName).cast("string").as(nsuAlias), // Usando nome da coluna e alias parametrizados
-            $"DHPROC",
-            $"DHEMI",
-            $"IP_TRANSMISSOR"
-          )
+          // Seleciona as colunas usando o método específico para cada tipo de documento
+          val xmlDF = createXmlDF(parquetDF)
           xmlDF.show()
 
           // 3. Usa `from_xml` para ler o XML da coluna usando o esquema
@@ -84,17 +158,6 @@ abstract class DocumentProcessor(
           // Chamar generateSelectedDF com o SparkSession implícito
           val selectedDF = generateSelectedDF(parsedDF)
           val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
-
-          //          // Imprimir no console as variações e a contagem de 'chave_particao'
-          //          val chaveParticaoContagem = selectedDFComParticao
-          //            .groupBy("chave_particao")
-          //            .agg(count("chave").alias("contagem_chaves"))
-          //            .orderBy("chave_particao")
-          //
-          //          // Coletar os dados para exibição no console
-          //          chaveParticaoContagem.collect().foreach { row =>
-          //            println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
-          //          }
 
           // Redistribuir os dados para 5 partições
           val repartitionedDF = selectedDFComParticao.repartition(5)
@@ -140,6 +203,9 @@ abstract class DocumentProcessor(
   }
 }
 
+// As implementações específicas para cada tipo de documento permanecem as mesmas
+// (BPeProcessor, MDFeProcessor, CTeProcessor, CTeOS, GVTe, CTeSimp, NF3eProcessor, NFeProcessor, NFCeProcessor)
+
 // Implementações específicas para cada tipo de documento
 object BPeProcessor extends DocumentProcessor("bpe", "BPe", "NSU", "NSU") {
   override def createSchema(): org.apache.spark.sql.types.StructType = Schemas.BPeSchema.createSchema()
@@ -156,6 +222,42 @@ object MDFeProcessor extends DocumentProcessor("mdfe", "MDFe", "NSU", "NSU") {
   // Aceitar SparkSession implicitamente
   override def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = { // Importar implicits aqui
     Processors.MDFeProcessor.generateSelectedDF(parsedDF)
+  }
+}
+
+object CTeProcessor extends DocumentProcessor("cte", "CTe", "NSUSVD", "NSUSVD") {
+  override def createSchema(): org.apache.spark.sql.types.StructType = Schemas.CTeSchema.createSchema()
+
+  // Aceitar SparkSession implicitamente
+  override def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = { // Importar implicits aqui
+    Processors.CTeProcessor.generateSelectedDF(parsedDF)
+  }
+}
+
+object CTeOSProcessor extends DocumentProcessor("cte", "CTeOS", "NSUSVD", "NSUSVD") {
+  override def createSchema(): org.apache.spark.sql.types.StructType = Schemas.CTeOSSchema.createSchema()
+
+  // Aceitar SparkSession implicitamente
+  override def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = { // Importar implicits aqui
+    Processors.CTeOSProcessor.generateSelectedDF(parsedDF)
+  }
+}
+
+object GVTeProcessor extends DocumentProcessor("cte", "GVTe", "NSUSVD", "NSUSVD") {
+  override def createSchema(): org.apache.spark.sql.types.StructType = Schemas.GVTeSchema.createSchema()
+
+  // Aceitar SparkSession implicitamente
+  override def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = { // Importar implicits aqui
+    Processors.GVTeProcessor.generateSelectedDF(parsedDF)
+  }
+}
+
+object CTeSimpProcessor extends DocumentProcessor("cte", "CTeSimp", "NSUSVD", "NSUSVD") {
+  override def createSchema(): org.apache.spark.sql.types.StructType = Schemas.CTeSimpSchema.createSchema()
+
+  // Aceitar SparkSession implicitamente
+  override def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = { // Importar implicits aqui
+    Processors.CTeSimpProcessor.generateSelectedDF(parsedDF)
   }
 }
 
