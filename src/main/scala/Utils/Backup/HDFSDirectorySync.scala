@@ -3,15 +3,17 @@ package Utils.Backup
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
-import scala.util.{Failure, Success, Try}
+import scala.collection.mutable.ListBuffer
 import java.time.{LocalDate, ZoneId}
 
-object HDFSDirectorySync {
+case class SyncResult(mainDir: String, subDir: String, sourcePath: String, destPath: String, srcCount: Long, dstCount: Long, status: String)
+
+object HDFSDirectorySync{
   def main(args: Array[String]): Unit = {
     // Configurações básicas
     val sourceRoot = "/datalake/prata/sources/dbms/dec"
     val destRoot = "/datalake/prata/backup_producao"
-    val referenceDate = LocalDate.of(2025, 4, 8) // Data de referência para sincronização
+    val referenceDate = LocalDate.of(2025, 4, 18) // Data de referência para sincronização
 
     // Todos os diretórios que precisam ser sincronizados
     val directoriesToSync = Map(
@@ -26,6 +28,7 @@ object HDFSDirectorySync {
     val conf = new Configuration()
     val fs = FileSystem.get(conf)
     val spark = SparkSession.builder().appName("HDFS Backup Directory Sync").getOrCreate()
+    val syncResults = ListBuffer[SyncResult]()
 
     try {
       // Processa cada categoria e seus subdiretórios
@@ -39,14 +42,19 @@ object HDFSDirectorySync {
           if (fs.exists(sourcePath)) {
             println(s"\nSincronizando: $mainDir/$subDir")
             syncDirectory(fs, sourcePath, destPath, referenceDate)
-            verifyCount(spark, sourcePath.toString, destPath.toString)
+            val result = verifyCount(spark, mainDir, subDir, sourcePath.toString, destPath.toString)
+            syncResults += result
           } else {
             println(s"\nAviso: Diretório não encontrado - ${sourcePath.toString}")
+            syncResults += SyncResult(mainDir, subDir, sourcePath.toString, destPath.toString, 0, 0, "Diretório não encontrado")
           }
         }
       }
 
-      println("\nSincronização concluída com sucesso!")
+      // Imprime relatório final
+      printFinalReport(syncResults.toList)
+
+      println("\nSincronização concluída!")
     } catch {
       case e: Exception =>
         println(s"\nErro durante a sincronização: ${e.getMessage}")
@@ -109,7 +117,7 @@ object HDFSDirectorySync {
     }
   }
 
-  def verifyCount(spark: SparkSession, sourcePath: String, destPath: String): Unit = {
+  def verifyCount(spark: SparkSession, mainDir: String, subDir: String, sourcePath: String, destPath: String): SyncResult = {
     try {
       val srcCount = spark.read.parquet(sourcePath).count()
       val dstCount = spark.read.parquet(destPath).count()
@@ -119,14 +127,51 @@ object HDFSDirectorySync {
       println(s"    Destino ($destPath): $dstCount registros")
 
       if (srcCount != dstCount) {
-        println(s"    AVISO: Diferença encontrada! (${srcCount - dstCount} registros)")
+        val diff = srcCount - dstCount
+        println(s"    AVISO: Diferença encontrada! ($diff registros)")
+        SyncResult(mainDir, subDir, sourcePath, destPath, srcCount, dstCount, s"Diferença: $diff registros")
       } else {
         println("    OK: Contagens idênticas")
+        SyncResult(mainDir, subDir, sourcePath, destPath, srcCount, dstCount, "OK")
       }
     } catch {
       case e: Exception =>
         println(s"  Erro ao verificar contagens: ${e.getMessage}")
+        SyncResult(mainDir, subDir, sourcePath, destPath, 0, 0, s"Erro: ${e.getMessage}")
+    }
+  }
+
+  def printFinalReport(results: List[SyncResult]): Unit = {
+    val discrepancies = results.filter(r => r.status != "OK" && r.status != "Diretório não encontrado")
+    val notFound = results.filter(_.status == "Diretório não encontrado")
+
+    println("\n=== RELATÓRIO FINAL ===")
+    println(s"Total de diretórios processados: ${results.size}")
+    println(s"Diretórios com contagens idênticas: ${results.count(_.status == "OK")}")
+    println(s"Diretórios não encontrados: ${notFound.size}")
+    println(s"Diretórios com discrepâncias: ${discrepancies.size}\n")
+
+    if (discrepancies.nonEmpty) {
+      println("=== DETALHES DAS DISCREPÂNCIAS ===")
+      discrepancies.foreach { r =>
+        println(s"- ${r.mainDir}/${r.subDir}")
+        println(s"  Origem: ${r.sourcePath} (${r.srcCount} registros)")
+        println(s"  Destino: ${r.destPath} (${r.dstCount} registros)")
+        println(s"  Status: ${r.status}")
+        println(s"  Diferença: ${r.srcCount - r.dstCount} registros\n")
+      }
+    }
+
+    if (notFound.nonEmpty) {
+      println("\n=== DIRETÓRIOS NÃO ENCONTRADOS ===")
+      notFound.foreach { r =>
+        println(s"- ${r.mainDir}/${r.subDir}: ${r.sourcePath}")
+      }
+    }
+
+    if (discrepancies.isEmpty && notFound.isEmpty) {
+      println("Todos os diretórios foram sincronizados com sucesso e as contagens estão consistentes.")
     }
   }
 }
-// HDFSDirectorySync.main(Array())
+//HDFSDirectorySync.main(Array())

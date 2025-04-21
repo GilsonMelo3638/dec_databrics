@@ -7,7 +7,7 @@ import org.apache.spark.sql.functions.{col, lower}
 object AuditoriaDet {
   // Caminhos base
   private val HdfsPathPrata = "/datalake/prata/sources/dbms/dec/"
-  private val HdfsPathBronze = "/datalake/bronze/sources/dbms/dec/"
+  private val HdfsPathBronze = "/datalake/bronze/sources/dbms/dec/diario/"
   private val HdfsPathBronzeProcessamento = "/datalake/bronze/sources/dbms/dec/processamento/"
 
   // Configurar compactação LZ4 (pode ser feito uma vez no início)
@@ -28,9 +28,9 @@ object AuditoriaDet {
 
     for (ano <- anoInicio to anoFim) {
       for (mes <- mesInicio to 12 if !(ano == anoFim && mes > mesFim)) {
-        val anoMes = f"$ano${mes}%02d"
-        val bronzePath = s"${bronzeBasePath}${anoMes}"
-        val faltantesPath = s"${faltantesBasePath}${anoMes}"
+        val formattedMonth = f"$mes%02d"
+        val bronzePath = s"${bronzeBasePath}year=$ano/month=$formattedMonth"
+        val faltantesPath = s"${faltantesBasePath}year=$ano/month=$formattedMonth"
 
         val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
         if (fs.exists(new Path(bronzePath))) {
@@ -45,8 +45,8 @@ object AuditoriaDet {
               .option("compression", "lz4")
               .save(faltantesPath)
 
-            println(s"Chaves do bronze que não existem no prata para $anoMes foram salvas em: $faltantesPath")
-          } else println(s"Nenhuma chave faltante para $anoMes.")
+            println(s"Chaves do bronze que não existem no prata para year=$ano/month=$formattedMonth foram salvas em: $faltantesPath")
+          } else println(s"Nenhuma chave faltante para year=$ano/month=$formattedMonth.")
         } else println(s"O caminho $bronzePath não existe.")
       }
     }

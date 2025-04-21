@@ -1,5 +1,4 @@
 package Utils.Particições
-
 import org.apache.spark.sql.{SparkSession, DataFrame}
 import org.apache.spark.sql.functions._
 import org.apache.hadoop.fs.{FileSystem, Path}
@@ -14,28 +13,46 @@ object particaoDiaria {
 
     try {
       val basePath = "/datalake/bronze/sources/dbms/dec/"
-      val inputBase = s"${basePath}nfe/"
-      val outputPath = s"${basePath}nfe_diario/"
+      val inputBase = s"${basePath}nfce/"
+      val outputPath = s"${basePath}nfce_diario/"
 
-      processAllMonths(spark, inputBase, outputPath)
+      // Parâmetros flexíveis para o período de processamento
+      val startYear = 2025
+      val endYear = 2025
+      val startMonth = 3
+      val endMonth = 3
+
+      processPeriod(spark, inputBase, outputPath, startYear, endYear, startMonth, endMonth)
       println("✅ Processamento concluído com sucesso!")
     } finally {
       spark.stop()
     }
   }
 
-  private def processAllMonths(spark: SparkSession, inputBase: String, outputPath: String): Unit = {
+  private def processPeriod(
+                             spark: SparkSession,
+                             inputBase: String,
+                             outputPath: String,
+                             startYear: Int,
+                             endYear: Int,
+                             startMonth: Int,
+                             endMonth: Int
+                           ): Unit = {
     val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
-    // Definir o período completo desejado
-    val startYear = 2021
-    val endYear = 2022
-    val endMonth = 12 // Fevereiro de 2025
-
     (startYear to endYear).foreach { year =>
-      val monthsRange = if (year == endYear) 1 to endMonth else 1 to 12
+      // Determinar os meses a serem processados para cada ano
+      val (firstMonth, lastMonth) = if (year == startYear && year == endYear) {
+        (startMonth, endMonth)
+      } else if (year == startYear) {
+        (startMonth, 12)
+      } else if (year == endYear) {
+        (1, endMonth)
+      } else {
+        (1, 12)
+      }
 
-      monthsRange.foreach { month =>
+      (firstMonth to lastMonth).foreach { month =>
         val monthStr = f"$year$month%02d"
         val inputPath = s"$inputBase$monthStr/"
 
