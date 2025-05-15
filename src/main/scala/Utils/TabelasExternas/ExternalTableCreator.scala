@@ -15,6 +15,9 @@ object ExternalTableCreator {
     .set("spark.hadoop.hive.server2.authentication.ldap.baseDN", "OU=USUARIOS,DC=fazenda,DC=net")
     .set("spark.hadoop.hive.server2.custom.authentication.username", ldapUsername)
     .set("spark.hadoop.hive.server2.custom.authentication.password", ldapPassword)
+    // Adiciona configuração para atualização automática de metadados
+    .set("spark.sql.hive.metastorePartitionPruning", "true")
+    .set("spark.sql.hive.convertMetastoreParquet", "true")
 
   // Cria o SparkSession com suporte ao Hive
   private val spark = SparkSession.builder()
@@ -39,7 +42,15 @@ object ExternalTableCreator {
       """
 
       spark.sql(createTableSql)
+
+      // Primeiro fazemos o repair table para garantir que todas as partições sejam reconhecidas
       spark.sql(s"MSCK REPAIR TABLE seec_prdc_documento_fiscal.dec_exadata_${documento}_$table")
+
+      // Em seguida, forçamos o refresh da tabela para garantir que os metadados estejam atualizados
+      spark.sql(s"REFRESH TABLE seec_prdc_documento_fiscal.dec_exadata_${documento}_$table")
+
+      // Opcional: podemos também invalidar o cache para garantir que consultas subsequentes usem os dados mais recentes
+      spark.catalog.refreshTable(s"seec_prdc_documento_fiscal.dec_exadata_${documento}_$table")
     }
   }
 

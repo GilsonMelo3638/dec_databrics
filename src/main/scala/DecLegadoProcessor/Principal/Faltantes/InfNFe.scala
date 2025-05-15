@@ -33,8 +33,8 @@ import java.time.LocalDateTime
 object InfNFe {
   // Variáveis externas para o intervalo de meses e ano de processamento
   val ano = 2025
-  val mesInicio = 3
-  val mesFim = 3
+  val mesInicio = 5
+  val mesFim = 5
   val tipoDocumento = "nfe"
 
   def main(args: Array[String]): Unit = {
@@ -49,7 +49,7 @@ object InfNFe {
     }.toList
 
     anoMesList.foreach { anoMes =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/nfe/faltantes/$anoMes"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/nfe/faltantes/year=2025/month=04"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $anoMes: $startTime")
@@ -96,7 +96,7 @@ object InfNFe {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/nfe/infNFe2")
+        .save("/datalake/prata/sources/dbms/dec/nfe/infNFe")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()
