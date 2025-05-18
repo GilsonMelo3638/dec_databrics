@@ -86,6 +86,8 @@ object BPeProcessor {
       $"parsed.BPe.infBPe.ide.tpEmis".as("ide_tpemis"),
       $"parsed.BPe.infBPe.ide.verProc".as("ide_verproc"),
       $"parsed.BPe.infBPe.ide.xJust".as("ide_xjust"),
+      $"parsed.BPe.infBPe.imp.ICMS.ICMSSN.CST".as("icmssn_cst"),
+      $"parsed.BPe.infBPe.imp.ICMS.ICMSSN.indSN".as("icmssn_indsn"),
       $"parsed.BPe.infBPe.imp.ICMS.ICMS00.CST".as("icms00_cst"),
       $"parsed.BPe.infBPe.imp.ICMS.ICMS00.pICMS".as("icms00_picms"),
       $"parsed.BPe.infBPe.imp.ICMS.ICMS00.vBC".as("icms00_vbc"),

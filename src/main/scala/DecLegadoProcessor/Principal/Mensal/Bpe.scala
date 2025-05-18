@@ -32,7 +32,7 @@ import java.time.LocalDateTime
 
 object Bpe {
   // Variáveis externas para o intervalo de meses e ano de processamento
-  val ano = 2025
+  val ano = 2021
   val mesInicio = 2
   val mesFim = 2
   val tipoDocumento = "bpe"
@@ -49,7 +49,7 @@ object Bpe {
     }.toList
 
     anoMesList.foreach { anoMes =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/$tipoDocumento/$anoMes"
+      val parquetPath = "/datalake/bronze/sources/dbms/dec//diario/bpe/year=2025/month=05"
 
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
@@ -108,4 +108,4 @@ object Bpe {
   }
 }
 
-//BpeProcLegadoMensalProcessor.main(Array())
+//Bpe.main(Array())
