@@ -1,7 +1,5 @@
 package Utils.Auditoria
 
-package Auditoria
-
 import scala.sys.process._
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -55,3 +53,4 @@ object AuditoriaPastas {
     }
   }
 }
+//AuditoriaPastas.main(Array())
