@@ -30,7 +30,7 @@ object Auditoria{
 
   private def processarTodosDocumentos(spark: SparkSession): Unit = {
     val year = "2025"
-    val month = "05"
+    val month = "06"
 
     // Lista de configurações para cada tipo de documento
     val documentosConfig = List(
@@ -102,13 +102,13 @@ object Auditoria{
 
     // Para NFE
     println("\nProcessando NFE:")
-    AuditoriaDet.identificarChavesFaltantesNoPrata(spark, "nfe", 2025, 5, 2025, 5)
+    AuditoriaDet.identificarChavesFaltantesNoPrata(spark, "nfe", 2025, 6, 2025, 6)
     AuditoriaDet.identificarAusencias(spark, "nfe")
     AuditoriaDet.verificarDuplicidade(spark, "nfe")
 
     // Para NFCE
     println("\nProcessando NFCE:")
-    AuditoriaDet.identificarChavesFaltantesNoPrata(spark, "nfce", 2025, 5, 2025, 5)
+    AuditoriaDet.identificarChavesFaltantesNoPrata(spark, "nfce", 2025, 6, 2025, 6)
     AuditoriaDet.identificarAusencias(spark, "nfce")
     AuditoriaDet.verificarDuplicidade(spark, "nfce")
   }
