@@ -168,4 +168,4 @@ object NFe extends DocumentProcessor {
 //MDFe.main(Array("2025", "5", "2")) // Ano, mês, número de partições
 //NF3e.main(Array("2025", "5", "2")) // Ano, mês, número de partições
 //NFCe.main(Array("2025", "5", "10")) // Ano, mês, número de partições
-NFe.main(Array("2025", "5", "5")) // Ano, mês, número de partições
+//NFe.main(Array("2025", "5", "5")) // Ano, mês, número de partições

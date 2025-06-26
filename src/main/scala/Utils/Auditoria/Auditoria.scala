@@ -5,8 +5,26 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.{col, lower}
 import org.apache.hadoop.fs.{FileSystem, Path}
 
-object Auditoria{
+object Auditoria {
   def main(args: Array[String]): Unit = {
+    // Default values if not provided in args
+    var year = "2025"
+    var month = "06"
+    var anoInicio = 2025
+    var mesInicio = 6
+    var anoFim = 2025
+    var mesFim = 6
+
+    // Parse arguments if provided
+    if (args.length >= 6) {
+      year = args(0)
+      month = args(1)
+      anoInicio = args(2).toInt
+      mesInicio = args(3).toInt
+      anoFim = args(4).toInt
+      mesFim = args(5).toInt
+    }
+
     // Inicializa a sessão do Spark
     val spark = SparkSession.builder()
       .appName("AuditoriaDocumentosFiscais")
@@ -18,20 +36,17 @@ object Auditoria{
       AgrupamentoParquetPorDia.main(Array())
 
       // Processa os documentos
-      processarTodosDocumentos(spark)
+      processarTodosDocumentos(spark, year, month)
 
       // Processa NFE e NFCE
-      processarNFeNFCE(spark)
+      processarNFeNFCE(spark, anoInicio, mesInicio, anoFim, mesFim)
 
     } finally {
       spark.close()
     }
   }
 
-  private def processarTodosDocumentos(spark: SparkSession): Unit = {
-    val year = "2025"
-    val month = "06"
-
+  private def processarTodosDocumentos(spark: SparkSession, year: String, month: String): Unit = {
     // Lista de configurações para cada tipo de documento
     val documentosConfig = List(
       ("/datalake/bronze/sources/dbms/dec/diario/bpe/", "/datalake/prata/sources/dbms/dec/bpe/BPe/", None, None),
@@ -96,19 +111,19 @@ object Auditoria{
     }
   }
 
-  private def processarNFeNFCE(spark: SparkSession): Unit = {
+  private def processarNFeNFCE(spark: SparkSession, anoInicio: Int, mesInicio: Int, anoFim: Int, mesFim: Int): Unit = {
     // Configura a compactação LZ4
     spark.conf.set("spark.sql.parquet.compression.codec", "lz4")
 
     // Para NFE
     println("\nProcessando NFE:")
-    AuditoriaDet.identificarChavesFaltantesNoPrata(spark, "nfe", 2025, 6, 2025, 6)
+    AuditoriaDet.identificarChavesFaltantesNoPrata(spark, "nfe", anoInicio, mesInicio, anoFim, mesFim)
     AuditoriaDet.identificarAusencias(spark, "nfe")
     AuditoriaDet.verificarDuplicidade(spark, "nfe")
 
     // Para NFCE
     println("\nProcessando NFCE:")
-    AuditoriaDet.identificarChavesFaltantesNoPrata(spark, "nfce", 2025, 6, 2025, 6)
+    AuditoriaDet.identificarChavesFaltantesNoPrata(spark, "nfce", anoInicio, mesInicio, anoFim, mesFim)
     AuditoriaDet.identificarAusencias(spark, "nfce")
     AuditoriaDet.verificarDuplicidade(spark, "nfce")
   }

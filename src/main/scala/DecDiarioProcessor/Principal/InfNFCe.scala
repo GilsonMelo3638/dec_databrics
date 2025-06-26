@@ -38,37 +38,35 @@ object InfNFCe {
 
     val spark = SparkSession.builder()
       .appName("ExtractInfNFe")
-      .config("spark.sql.broadcastTimeout", "600") // Timeout para operações de broadcast
-      .config("spark.executor.memory", "16g") // Memória do executor
-      .config("spark.driver.memory", "8g") // Memória do driver
-      .config("spark.executor.memoryOverhead", "4096") // Overhead de memória do executor
-      .config("spark.yarn.executor.memoryOverhead", "4096") // Overhead de memória no YARN
-      .config("spark.network.timeout", "600s") // Tempo de timeout da rede
-      .config("spark.executor.heartbeatInterval", "30s") // Evita perda de executores
-      .config("spark.sql.autoBroadcastJoinThreshold", "-1") // Desabilita broadcast automático
-      .config("spark.sql.shuffle.partitions", "800") // Aumenta partições no shuffle
-      .config("spark.default.parallelism", "800") // Melhora paralelismo
-      .config("spark.shuffle.service.enabled", "true") // Ativa serviço de shuffle
-      .config("spark.shuffle.file.buffer", "1m") // Buffer maior para reduzir I/O
-      .config("spark.reducer.maxSizeInFlight", "96m") // Reduz pressão no shuffle
-      .config("spark.memory.fraction", "0.6") // Ajusta a fração de memória para execução
-      .config("spark.memory.storageFraction", "0.5") // Ajusta fração de memória para armazenamento
-      .config("spark.dynamicAllocation.enabled", "true") // Ativa alocação dinâmica
-      .config("spark.dynamicAllocation.minExecutors", "10") // Mínimo de executores
-      .config("spark.dynamicAllocation.maxExecutors", "40") // Máximo de executores
-      .config("spark.dynamicAllocation.initialExecutors", "20") // Melhor distribuição inicial
-      .config("spark.sql.hive.filesourcePartitionFileCacheSize", "524288000") // Cache de partições Hive
-      .config("spark.storage.replication", "2") // Mantém duas réplicas
-      .enableHiveSupport() // Ativa suporte ao Hive
+      .config("spark.sql.broadcastTimeout", "600")
+      .config("spark.executor.memory", "16g")
+      .config("spark.driver.memory", "8g")
+      .config("spark.executor.memoryOverhead", "4096")
+      .config("spark.yarn.executor.memoryOverhead", "4096")
+      .config("spark.network.timeout", "600s")
+      .config("spark.executor.heartbeatInterval", "30s")
+      .config("spark.sql.autoBroadcastJoinThreshold", "-1")
+      .config("spark.sql.shuffle.partitions", "800")
+      .config("spark.default.parallelism", "800")
+      .config("spark.shuffle.service.enabled", "true")
+      .config("spark.shuffle.file.buffer", "1m")
+      .config("spark.reducer.maxSizeInFlight", "96m")
+      .config("spark.memory.fraction", "0.6")
+      .config("spark.memory.storageFraction", "0.5")
+      .config("spark.dynamicAllocation.enabled", "true")
+      .config("spark.dynamicAllocation.minExecutors", "10")
+      .config("spark.dynamicAllocation.maxExecutors", "40")
+      .config("spark.dynamicAllocation.initialExecutors", "20")
+      .config("spark.sql.hive.filesourcePartitionFileCacheSize", "524288000")
+      .config("spark.storage.replication", "2")
+      .enableHiveSupport()
       .getOrCreate()
 
     import spark.implicits._
 
-    // Definindo intervalo de dias: diasAntesInicio (10 dias atrás) até diasAntesFim (ontem)
+    // Definindo intervalo de dias
     val diasAntesInicio = LocalDate.now.minusDays(15)
     val diasAntesFim = LocalDate.now.minusDays(1)
-
-    // Formatação para ano, mês e dia
     val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
 
     // Iterando pelas datas no intervalo
@@ -88,14 +86,11 @@ object InfNFCe {
       println(s"Caminho de origem: $parquetPath")
       println(s"Caminho de destino: $parquetPathProcessado")
 
-      // Verificar se o diretório existe antes de processar
       val hadoopConf = spark.sparkContext.hadoopConfiguration
       val fs = FileSystem.get(hadoopConf)
       val parquetPathExists = fs.exists(new Path(parquetPath))
 
-      val parquetPathContentExists = fs.exists(new Path(parquetPath))
-
-      if (parquetPathContentExists) {
+      if (parquetPathExists) {
         val parquetPathContent = fs.listStatus(new Path(parquetPath))
         val parquetFiles = parquetPathContent.filter(_.getPath.getName.endsWith(".parquet"))
 
@@ -112,7 +107,7 @@ object InfNFCe {
           } else {
             println(s"Verificação bem-sucedida: Total ($totalCount) e distintos ($distinctCount) são iguais no caminho: $parquetPath")
           }
-          // 2. Selecionar a coluna que contém o XML (ex: "XML_DOCUMENTO_CLOB")
+
           val xmlDF = parquetDF.select(
             $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
             $"NSU".cast("string").as("NSU"),
@@ -120,59 +115,23 @@ object InfNFCe {
             $"DHEMI",
             $"IP_TRANSMISSOR"
           )
-          // 3. Usar `from_xml` para ler o XML da coluna usando o esquema definido
+
           val schema = NFCeSchema.createSchema()
           val parsedDF = xmlDF.withColumn("parsed", from_xml($"xml", schema))
 
-          // 4. Selecionar os campos desejados
-          implicit val sparkSession: SparkSession = spark // Passando o SparkSession implicitamente
-          val selectedDF = NFCeProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
+          implicit val sparkSession: SparkSession = spark
+          val selectedDF = NFCeProcessor.generateSelectedDF(parsedDF)
           val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
-          // Obtendo as variações únicas de 'chave_particao' e coletando para uma lista
-          val chaveParticoesUnicas = selectedDFComParticao
-            .select("chave_particao")
-            .distinct()
-            .as[String]
-            .collect()
-
-          // Criando uma função para processar cada partição separadamente
-          def processarParticao(chaveParticao: String): Unit = {
-            val caminhoParticao = s"$destino/chave_particao=$chaveParticao"
-
-            val particaoExiste = try {
-              val particaoDF = spark.read.parquet(caminhoParticao).select("chave")
-              !particaoDF.isEmpty
-            } catch {
-              case _: Exception => false
-            }
-
-            val dfFiltrado = if (particaoExiste) {
-              println(s"[INFO] Partição $chaveParticao já existe. Filtrando novas chaves...")
-              val particaoDF = spark.read.parquet(caminhoParticao).select("chave").distinct()
-              selectedDFComParticao
-                .filter(col("chave_particao") === chaveParticao)
-                .join(particaoDF, Seq("chave"), "left_anti")
-            } else {
-              println(s"[INFO] Partição $chaveParticao não existe. Criando nova partição...")
-              selectedDFComParticao.filter(col("chave_particao") === chaveParticao)
-            }
-
-            //            val qtdRegistros = dfFiltrado.count()
-            //            println(s"[INFO] Partição $chaveParticao - Quantidade de registros a serem salvos: $qtdRegistros")
-
-            dfFiltrado.write
-              .mode("append")
-              .format("parquet")
-              .option("compression", "lz4")
-              .option("parquet.block.size", 500 * 1024 * 1024)
-              .save(caminhoParticao)
-
-            println(s"[INFO] Finalizado processamento da partição: $chaveParticao")
-          }
-
-          // Iterando sobre cada partição e processando
-          chaveParticoesUnicas.foreach(processarParticao)
+          // Particionar e processar sem coletar
+          selectedDFComParticao
+            .write
+            .partitionBy("chave_particao")
+            .mode("append")
+            .format("parquet")
+            .option("compression", "lz4")
+            .option("parquet.block.size", 500 * 1024 * 1024)
+            .save(destino)
 
           println(s"Gravação concluída para $anoMesDia")
 
@@ -192,8 +151,10 @@ object InfNFCe {
             println(s"Arquivos movidos de $parquetPath para $parquetPathProcessado com sucesso.")
           }
         } else {
-          println(s"Diretório de origem $parquetPath não encontrado.")
+          println(s"Nenhum arquivo Parquet encontrado em $parquetPath")
         }
+      } else {
+        println(s"Diretório de origem $parquetPath não encontrado.")
       }
     }
   }

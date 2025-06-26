@@ -13,7 +13,7 @@ object particaoDiariaPorAno {
       .getOrCreate()
 
     try {
-      val basePath = "/datalake/bronze/sources/dbms/dec/"
+      val basePath = "/datalake/bronze/sources/dbms/dec/202505"
       val inputBase = s"${basePath}nfe_evento/"
       val outputPath = "/datalake/bronze/sources/dbms/legado/dec/nfe_evento_diario/"
 

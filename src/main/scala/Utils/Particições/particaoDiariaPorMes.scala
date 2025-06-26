@@ -13,14 +13,14 @@ object particaoDiariaPorMes {
       .getOrCreate()
 
     try {
-      val inputBase = "/datalake/bronze/sources/dbms/dec/cte/"
-      val outputPath = "/datalake/bronze/sources/dbms/legado/dec/cte_diario/"
+      val inputBase = "/datalake/bronze/sources/dbms/dec/nfe_evento/"
+      val outputPath = "/datalake/bronze/sources/dbms/legado/dec/nfe_evento_diario/"
 
       // Parâmetros flexíveis para o período de processamento
       val startYear = 2025
       val endYear = 2025
-      val startMonth = 1
-      val endMonth = 3
+      val startMonth = 5
+      val endMonth = 5
 
       processPeriod(spark, inputBase, outputPath, startYear, endYear, startMonth, endMonth)
       println("✅ Processamento concluído com sucesso!")

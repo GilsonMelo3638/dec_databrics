@@ -109,37 +109,8 @@ object InfNFe {
 
           // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'chave'
           val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
-
-          // Obtendo as variações únicas de 'chave_particao'
-          val chaveParticoesUnicas = selectedDFComParticao
-            .select("chave_particao")
-            .distinct()
-            .collect()
-            .map(_.getString(0))
-
-          // Iterando sobre as variações únicas de chave_particao
-          val dadosParaSalvar = chaveParticoesUnicas.map { chaveParticao =>
-            val caminhoParticao = s"$destino/chave_particao=$chaveParticao"
-
-            val particaoExiste = try {
-              val particaoDF = spark.read.parquet(caminhoParticao).select("chave")
-              !particaoDF.isEmpty
-            } catch {
-              case _: Exception => false
-            }
-
-            if (particaoExiste) {
-              val particaoDF = spark.read.parquet(caminhoParticao).select("chave").distinct()
-              selectedDFComParticao
-                .filter(col("chave_particao") === chaveParticao)
-                .join(particaoDF, Seq("chave"), "left_anti")
-            } else {
-              selectedDFComParticao.filter(col("chave_particao") === chaveParticao)
-            }
-          }.reduce(_ union _)
-
           // Salvando o DataFrame final filtrado em partições
-          dadosParaSalvar
+          selectedDFComParticao
             .write
             .mode("append")
             .format("parquet")
