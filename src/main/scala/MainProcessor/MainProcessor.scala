@@ -2,6 +2,7 @@ package MainProcessor
 
 import DecDiarioProcessor.Principal.{InfNFCe, InfNFe, nfceDet, nfeDet}
 import Extrator.{diarioNFCe, diarioNFe}
+import Utils.TabelasExternas.ExternalTableCreator
 import org.apache.spark.sql.SparkSession
 
 object MainProcessor {
@@ -64,6 +65,8 @@ object MainProcessor {
                 processador = RepartitionJob.RepartitionProcessor,
                 args = args
             )
+
+            ExternalTableCreator.main(Array())
 
             println("=== Processamento concluído com sucesso ===")
         } catch {

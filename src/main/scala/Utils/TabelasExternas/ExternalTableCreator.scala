@@ -15,9 +15,9 @@ object ExternalTableCreator {
     .set("spark.hadoop.hive.server2.authentication.ldap.baseDN", "OU=USUARIOS,DC=fazenda,DC=net")
     .set("spark.hadoop.hive.server2.custom.authentication.username", ldapUsername)
     .set("spark.hadoop.hive.server2.custom.authentication.password", ldapPassword)
-    // Adiciona configuração para atualização automática de metadados
     .set("spark.sql.hive.metastorePartitionPruning", "true")
     .set("spark.sql.hive.convertMetastoreParquet", "true")
+    .set("spark.sql.sources.partitionOverwriteMode", "dynamic") // Adicionado para melhor tratamento de partições
 
   // Cria o SparkSession com suporte ao Hive
   private val spark = SparkSession.builder()
@@ -27,30 +27,64 @@ object ExternalTableCreator {
 
   def createExternalTables(documento: String, parquetPath: String, tables: List[String]): Unit = {
     tables.foreach { table =>
-      val df = spark.read.parquet(s"$parquetPath/$table")
-      val schemaWithoutPartition = df.schema.filter(_.name != "chave_particao")
-      val schemaSql = schemaWithoutPartition.map(field => s"`${field.name}` ${field.dataType.simpleString.toUpperCase}").mkString(",\n")
-      val partitionColumn = "chave_particao STRING"
+      val fullTableName = s"seec_prdc_documento_fiscal.dec_exadata_${documento}_$table"
 
-      val createTableSql = s"""
-      CREATE EXTERNAL TABLE IF NOT EXISTS seec_prdc_documento_fiscal.dec_exadata_${documento}_$table (
-          $schemaSql
-      )
-      PARTITIONED BY ($partitionColumn)
-      STORED AS PARQUET
-      LOCATION '${parquetPath}/$table'
-      """
+      // Verifica se a tabela já existe
+      val tableExists = spark.catalog.tableExists(fullTableName)
 
-      spark.sql(createTableSql)
+      if (!tableExists) {
+        // Se a tabela não existe, cria com schema inferido dos dados
+        val df = spark.read.parquet(s"$parquetPath/$table")
+        val schemaWithoutPartition = df.schema.filter(_.name != "chave_particao")
+        val schemaSql = schemaWithoutPartition.map(field => s"`${field.name}` ${field.dataType.simpleString.toUpperCase}").mkString(",\n")
+        val partitionColumn = "chave_particao STRING"
 
-      // Primeiro fazemos o repair table para garantir que todas as partições sejam reconhecidas
-      spark.sql(s"MSCK REPAIR TABLE seec_prdc_documento_fiscal.dec_exadata_${documento}_$table")
+        val createTableSql = s"""
+          CREATE EXTERNAL TABLE IF NOT EXISTS $fullTableName (
+              $schemaSql
+          )
+          PARTITIONED BY ($partitionColumn)
+          STORED AS PARQUET
+          LOCATION '${parquetPath}/$table'
+        """
+        spark.sql(createTableSql)
+      }
 
-      // Em seguida, forçamos o refresh da tabela para garantir que os metadados estejam atualizados
-      spark.sql(s"REFRESH TABLE seec_prdc_documento_fiscal.dec_exadata_${documento}_$table")
+      // SEMPRE atualiza as partições, independente de ser criação nova ou não
+      updateTablePartitions(fullTableName)
+    }
+  }
 
-      // Opcional: podemos também invalidar o cache para garantir que consultas subsequentes usem os dados mais recentes
-      spark.catalog.refreshTable(s"seec_prdc_documento_fiscal.dec_exadata_${documento}_$table")
+  def updateTablePartitions(fullTableName: String): Unit = {
+    try {
+      println(s"Atualizando partições para a tabela: $fullTableName")
+
+      // 1. Primeiro fazemos o repair table para garantir que todas as partições sejam reconhecidas
+      spark.sql(s"MSCK REPAIR TABLE $fullTableName")
+
+      // 2. Força o refresh completo da tabela
+      spark.sql(s"REFRESH TABLE $fullTableName")
+
+      // 3. Invalida o cache para garantir que consultas subsequentes usem os dados mais recentes
+      spark.catalog.refreshTable(fullTableName)
+
+      // 4. Opcional: Verifica o número de partições (para logging)
+      val partitions = spark.sql(s"SHOW PARTITIONS $fullTableName").count()
+      println(s"Tabela $fullTableName atualizada com sucesso. Número de partições: $partitions")
+    } catch {
+      case e: Exception =>
+        println(s"Erro ao atualizar partições da tabela $fullTableName: ${e.getMessage}")
+        e.printStackTrace()
+    }
+  }
+
+  // Nova função para atualização em lote de todas as tabelas
+  def updateAllTables(datasets: List[(String, String, List[String])]): Unit = {
+    datasets.foreach { case (documento, parquetPath, tables) =>
+      tables.foreach { table =>
+        val fullTableName = s"seec_prdc_documento_fiscal.dec_exadata_${documento}_$table"
+        updateTablePartitions(fullTableName)
+      }
     }
   }
 
@@ -64,9 +98,13 @@ object ExternalTableCreator {
       ("cte", "hdfs:///datalake/prata/sources/dbms/dec/cte", List("CTe", "GVTe", "CTeOS", "CTeSimp", "cancelamento"))
     )
 
+    // Cria ou atualiza todas as tabelas
     datasets.foreach { case (documento, parquetPath, tables) =>
       createExternalTables(documento, parquetPath, tables)
     }
+
+    // Se quiser chamar apenas a atualização, usar:
+    // updateAllTables(datasets)
   }
 }
 
