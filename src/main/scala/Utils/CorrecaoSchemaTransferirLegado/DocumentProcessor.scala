@@ -20,7 +20,7 @@ abstract class DocumentProcessor {
   def main(args: Array[String]): Unit = {
     // Valores padrão
     var year = 2025
-    var month = 5
+    var month = 7
     var numPartitions = defaultPartitions
 
     // Processar argumentos se fornecidos
@@ -162,10 +162,10 @@ object NFe extends DocumentProcessor {
   }
 }
 
-// Exemplo de como executar:
-BPe.main(Array("2025", "6"))       // Ano, mês
-CTe.main(Array("2025", "6", "5")) // Ano, mês, número de partições
-MDFe.main(Array("2025", "6", "2")) // Ano, mês, número de partições
-NF3e.main(Array("2025", "6", "2")) // Ano, mês, número de partições
-NFCe.main(Array("2025", "6", "10")) // Ano, mês, número de partições
-NFe.main(Array("2025", "6", "5")) // Ano, mês, número de partições
+//// Exemplo de como executar:
+BPe.main(Array("2025", "7"))       // Ano, mês
+CTe.main(Array("2025", "7", "5")) // Ano, mês, número de partições
+MDFe.main(Array("2025", "7", "2")) // Ano, mês, número de partições
+NF3e.main(Array("2025", "7", "2")) // Ano, mês, número de partições
+NFCe.main(Array("2025", "7", "10")) // Ano, mês, número de partições
+NFe.main(Array("2025", "7", "5")) // Ano, mês, número de partições

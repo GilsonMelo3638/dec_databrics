@@ -83,7 +83,7 @@ object diarioNFCe {
     val splitByColumn = "NSU"
 
     // Número de partições (equivalente ao --num-mappers do Sqoop)
-    val numPartitions = 600
+    val numPartitions = 40
 
     // Query SQL base
     val baseQuery =

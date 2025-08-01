@@ -94,7 +94,7 @@ object diarioGenericoCancelamento {
           val splitByColumn = colSplit
 
           // Número de partições (equivalente ao --num-mappers do Sqoop)
-          val numPartitions = 50
+          val numPartitions = 10
 
           // Query SQL base
           val baseQuery =

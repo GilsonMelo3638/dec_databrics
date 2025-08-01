@@ -13,7 +13,7 @@ object ContadorDocumentosLegado {
     val tipos = Seq("nfe_diario", "nfce_diario", "bpe_diario", "cte_diario", "mdfe_diario", "nf3e_diario")
     val basePath = "/datalake/bronze/sources/dbms/legado/dec/"
     val ano = "2025"
-    val mes = "06"
+    val mes = "07"
 
     var totalCount = 0L
 

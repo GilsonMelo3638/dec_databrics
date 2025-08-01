@@ -135,4 +135,4 @@ object NF3e {
   }
 }
 
-//NF3eProcDiarioProcessor.main(Array())
+//NF3e.main(Array())
