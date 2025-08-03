@@ -37,7 +37,8 @@ object SqoopProcessorApp {
         ("BPe", "NSU"),
         ("CTe", "NSUSVD"),
         ("MDFe", "NSU"),
-        ("NF3e", "NSU")
+        ("NF3e", "NSU"),
+        ("NFCom", "NSU")
       )
 
       // Executa os processadores para cada tipo de documento
@@ -61,6 +62,7 @@ object SqoopProcessorApp {
       CTeSimpProcessor.main(Array())
       CTeOSProcessor.main(Array())
       GVTeProcessor.main(Array())
+      NFComProcessor.main(Array())
 
       // Executa o RepartitionXlmPequenosMediosProcessor como último processo
       try {

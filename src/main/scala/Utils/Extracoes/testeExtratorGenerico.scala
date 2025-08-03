@@ -51,7 +51,7 @@ object testeExtratorGenerico {
     val numPartitions = 200
 
     // Define o intervalo de dias (de -2 até -4)
-    val dias = List(-9, -8, -7, -6, -5, -4, -3, -2 )
+    val dias = List(-1 )
 
     // Loop para processar cada dia
     dias.foreach { dia =>
@@ -128,17 +128,29 @@ object testeExtratorGenerico {
 //WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
 //"""
 
-        s"""
-SELECT NSU,
-REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//bpeProc', 'xmlns=\"http://www.portalfiscal.inf.br/bpe\"') AS CLOB), CHR(10), ' '), CHR(13), ' ') AS XML_DOCUMENTO_CLOB,
-     f.CSTAT, f.CHAVE, f.IP_TRANSMISSOR,
-     TO_CHAR(f.DHRECBTO, 'DD/MM/YYYY HH24:MI:SS') AS DHRECBTO,
-     TO_CHAR(f.DHEMI, 'DD/MM/YYYY HH24:MI:SS') AS DHEMI,
-     TO_CHAR(f.DHPROC, 'DD/MM/YYYY HH24:MI:SS') AS DHPROC,
-     f.EMITENTE, f.UF_EMITENTE, f.DESTINATARIO, f.UF_DESTINATARIO
-FROM DEC_DFE_BPE f
-WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
-"""
+//        s"""
+//SELECT NSU,
+//REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//bpeProc', 'xmlns=\"http://www.portalfiscal.inf.br/bpe\"') AS CLOB), CHR(10), ' '), CHR(13), ' ') AS XML_DOCUMENTO_CLOB,
+//     f.CSTAT, f.CHAVE, f.IP_TRANSMISSOR,
+//     TO_CHAR(f.DHRECBTO, 'DD/MM/YYYY HH24:MI:SS') AS DHRECBTO,
+//     TO_CHAR(f.DHEMI, 'DD/MM/YYYY HH24:MI:SS') AS DHEMI,
+//     TO_CHAR(f.DHPROC, 'DD/MM/YYYY HH24:MI:SS') AS DHPROC,
+//     f.EMITENTE, f.UF_EMITENTE, f.DESTINATARIO, f.UF_DESTINATARIO
+//FROM DEC_DFE_BPE f
+//WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
+//"""
+
+      s"""
+        SELECT NSU,
+    REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//NFComProc', 'xmlns=\"http://www.portalfiscal.inf.br/nfcom\"') AS CLOB), CHR(10), ' '), CHR(13), ' ') AS XML_DOCUMENTO_CLOB,
+               f.CSTAT, f.CHAVE, f.IP_TRANSMISSOR,
+               TO_CHAR(f.DHRECBTO, 'DD/MM/YYYY HH24:MI:SS') AS DHRECBTO,
+               TO_CHAR(f.DHEMI, 'DD/MM/YYYY HH24:MI:SS') AS DHEMI,
+               TO_CHAR(f.DHPROC, 'DD/MM/YYYY HH24:MI:SS') AS DHPROC,
+               f.EMITENTE, f.UF_EMITENTE, f.DESTINATARIO, f.UF_DESTINATARIO
+        FROM DEC_DFE_NFCOM f
+        WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
+      """
 
       // Obtém os valores mínimo e máximo da coluna de particionamento como java.math.BigDecimal
       val minMaxQuery = s"SELECT MIN($splitByColumn) AS min, MAX($splitByColumn) AS max FROM ($baseQuery)"

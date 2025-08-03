@@ -163,9 +163,9 @@ object NFe extends DocumentProcessor {
 }
 
 //// Exemplo de como executar:
-BPe.main(Array("2025", "7"))       // Ano, mês
-CTe.main(Array("2025", "7", "5")) // Ano, mês, número de partições
-MDFe.main(Array("2025", "7", "2")) // Ano, mês, número de partições
-NF3e.main(Array("2025", "7", "2")) // Ano, mês, número de partições
-NFCe.main(Array("2025", "7", "10")) // Ano, mês, número de partições
-NFe.main(Array("2025", "7", "5")) // Ano, mês, número de partições
+//BPe.main(Array("2025", "7"))       // Ano, mês
+//CTe.main(Array("2025", "7", "5")) // Ano, mês, número de partições
+//MDFe.main(Array("2025", "7", "2")) // Ano, mês, número de partições
+//NF3e.main(Array("2025", "7", "2")) // Ano, mês, número de partições
+//NFCe.main(Array("2025", "7", "10")) // Ano, mês, número de partições
+//NFe.main(Array("2025", "7", "5")) // Ano, mês, número de partições

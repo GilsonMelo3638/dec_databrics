@@ -270,6 +270,15 @@ object NF3eProcessor extends DocumentProcessor("nf3e", "NF3e", "NSU", "NSU") {
   }
 }
 
+object NFComProcessor extends DocumentProcessor("nfcom", "NFCom", "NSU", "NSU") {
+  override def createSchema(): org.apache.spark.sql.types.StructType = Schemas.NFComSchema.createSchema()
+
+  // Aceitar SparkSession implicitamente
+  override def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = { // Importar implicits aqui
+    Processors.NFComProcessor.generateSelectedDF(parsedDF)
+  }
+}
+
 object NFeProcessor extends DocumentProcessor("nfe", "NFe", "NSUDF", "NSUDF") {
   override def createSchema(): org.apache.spark.sql.types.StructType = Schemas.NFeSchema.createSchema()
 

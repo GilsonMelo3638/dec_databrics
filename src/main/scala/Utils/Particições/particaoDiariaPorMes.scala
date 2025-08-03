@@ -19,8 +19,8 @@ object particaoDiariaPorMes {
       // Parâmetros flexíveis para o período de processamento
       val startYear = 2025
       val endYear = 2025
-      val startMonth = 7
-      val endMonth = 7
+      val startMonth = 8
+      val endMonth = 8
 
       processPeriod(spark, inputBase, outputPath, startYear, endYear, startMonth, endMonth)
       println("✅ Processamento concluído com sucesso!")

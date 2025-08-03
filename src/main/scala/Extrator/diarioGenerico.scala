@@ -48,6 +48,7 @@ object diarioGenerico {
         case "CTe" => s"$targetDirBase/cte/processado/$anoMesDia"
         case "MDFe" => s"$targetDirBase/mdfe/processado/$anoMesDia"
         case "NF3e" => s"$targetDirBase/nf3e/processado/$anoMesDia"
+        case "NFCom" => s"$targetDirBase/nfcom/processado/$anoMesDia"
         case _ => throw new IllegalArgumentException(s"Tipo de documento não suportado: $documentType")
       }
 
@@ -130,6 +131,19 @@ object diarioGenerico {
                TO_CHAR(f.DHPROC, 'DD/MM/YYYY HH24:MI:SS') AS DHPROC,
                f.EMITENTE, f.UF_EMITENTE, f.DESTINATARIO, f.UF_DESTINATARIO
         FROM DEC_DFE_NF3E f
+        WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
+      """
+
+        case "NFCom" =>
+          s"""
+        SELECT NSU,
+    REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//NFComProc', 'xmlns=\"http://www.portalfiscal.inf.br/nfcom\"') AS CLOB), CHR(10), ' '), CHR(13), ' ') AS XML_DOCUMENTO_CLOB,
+               f.CSTAT, f.CHAVE, f.IP_TRANSMISSOR,
+               TO_CHAR(f.DHRECBTO, 'DD/MM/YYYY HH24:MI:SS') AS DHRECBTO,
+               TO_CHAR(f.DHEMI, 'DD/MM/YYYY HH24:MI:SS') AS DHEMI,
+               TO_CHAR(f.DHPROC, 'DD/MM/YYYY HH24:MI:SS') AS DHPROC,
+               f.EMITENTE, f.UF_EMITENTE, f.DESTINATARIO, f.UF_DESTINATARIO
+        FROM DEC_DFE_NFCOM f
         WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
       """
         case _ =>
