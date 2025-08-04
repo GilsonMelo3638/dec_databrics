@@ -10,12 +10,14 @@ object UltimaPastaHDFS {
       "/datalake/bronze/sources/dbms/dec/processamento/mdfe/processado",
       "/datalake/bronze/sources/dbms/dec/processamento/nf3e/processado",
       "/datalake/bronze/sources/dbms/dec/processamento/cte/processado",
+      "/datalake/bronze/sources/dbms/dec/processamento/nfcom/processado",
       "/datalake/bronze/sources/dbms/dec/processamento/nfce_cancelamento/processado",
       "/datalake/bronze/sources/dbms/dec/processamento/bpe_cancelamento/processado",
       "/datalake/bronze/sources/dbms/dec/processamento/nf3e_cancelamento/processado",
       "/datalake/bronze/sources/dbms/dec/processamento/nfe_cancelamento/processado",
       "/datalake/bronze/sources/dbms/dec/processamento/mdfe_cancelamento/processado",
-      "/datalake/bronze/sources/dbms/dec/processamento/cte_cancelamento/processado"
+      "/datalake/bronze/sources/dbms/dec/processamento/cte_cancelamento/processado",
+      "/datalake/bronze/sources/dbms/dec/processamento/nfe_evento/processado",
     )
 
     diretorios.foreach { dir =>

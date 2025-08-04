@@ -140,7 +140,6 @@ object NFComSchema {
                 .add("xProd", StringType, true)
                 .add("cClass", StringType, true)
                 .add("CFOP", StringType, true)
-                .add("cClass", StringType, true)
                 .add("CNPJLD", StringType, true)
                 .add("uMed", StringType, true)
                 .add("qFaturada", DoubleType, true)

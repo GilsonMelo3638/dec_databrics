@@ -58,7 +58,7 @@ object NFComProcessor {
       $"parsed.NFCom.infNFCom.dest.indIEDest".as("dest_indiedest"),
       $"parsed.NFCom.infNFCom.dest.IE".as("dest_ie"),
       $"parsed.NFCom.infNFCom.dest.IM".as("dest_im"),
-      $"parsed.NFCom.infNFCom.dest.enderDest.CEP".as("dest_ender_cep"),
+      $"parsed.NFCom.infNFCom.dest.enderDest.CEP".as("enderdest_cep"),
       $"parsed.NFCom.infNFCom.dest.enderDest.UF".as("enderdest_uf"),
       $"parsed.NFCom.infNFCom.dest.enderDest.cMun".as("enderdest_cmun"),
       $"parsed.NFCom.infNFCom.dest.enderDest.cPais".as("enderdest_cpais"),
