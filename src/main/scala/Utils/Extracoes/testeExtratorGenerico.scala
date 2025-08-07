@@ -38,7 +38,7 @@ object testeExtratorGenerico {
 
     // Coluna para particionamento (equivalente ao --split-by do Sqoop)
     val splitByColumn = "NSU"
-    val documento = "bpe"
+    val documento = "nfcom"
 
     // Configurações de conexão com o banco de dados Oracle
     val jdbcUrl = "jdbc:oracle:thin:@codvm01-scan1.gdfnet.df:1521/ORAPRD23"
