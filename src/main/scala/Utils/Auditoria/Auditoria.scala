@@ -57,12 +57,12 @@ object Auditoria {
       ("/datalake/bronze/sources/dbms/dec/diario/cte/", "/datalake/prata/sources/dbms/dec/cte/GVTe/", Some(64), None, "CHAVE"),
       ("/datalake/bronze/sources/dbms/dec/diario/nf3e/", "/datalake/prata/sources/dbms/dec/nf3e/NF3e/", None, None, "CHAVE"),
       ("/datalake/bronze/sources/dbms/dec/diario/nfcom/", "/datalake/prata/sources/dbms/dec/nfcom/NFCom/", None, None, "CHAVE"),
-      ("/datalake/bronze/sources/dbms/dec/diario/bpe_cancelamento/", "/datalake/prata/sources/dbms/dec/bpe/cancelamento/", None, None, "CHAVE"),
-      ("/datalake/bronze/sources/dbms/dec/diario/nf3e_cancelamento/", "/datalake/prata/sources/dbms/dec/nf3e/cancelamento/", None, None, "CHAVE"),
-      ("/datalake/bronze/sources/dbms/dec/diario/nfce_cancelamento/", "/datalake/prata/sources/dbms/dec/nfce/cancelamento/", None, None, "CHAVE"),
-      ("/datalake/bronze/sources/dbms/dec/diario/mdfe_cancelamento/", "/datalake/prata/sources/dbms/dec/mdfe/cancelamento/", None, None, "CHAVE"),
-      ("/datalake/bronze/sources/dbms/dec/diario/nfe_cancelamento/", "/datalake/prata/sources/dbms/dec/nfe/cancelamento/", None, None, "CHAVE"),
-      ("/datalake/bronze/sources/dbms/dec/diario/cte_cancelamento/", "/datalake/prata/sources/dbms/dec/cte/cancelamento/", None, None, "CHAVE"),
+      ("/datalake/bronze/sources/dbms/dec/diario/bpe_cancelamento/", "/datalake/prata/sources/dbms/dec/bpe/cancelamento/", None, None, "NSU"),
+      ("/datalake/bronze/sources/dbms/dec/diario/nf3e_cancelamento/", "/datalake/prata/sources/dbms/dec/nf3e/cancelamento/", None, None, "NSU"),
+      ("/datalake/bronze/sources/dbms/dec/diario/nfce_cancelamento/", "/datalake/prata/sources/dbms/dec/nfce/cancelamento/", None, None, "NSU"),
+      ("/datalake/bronze/sources/dbms/dec/diario/mdfe_cancelamento/", "/datalake/prata/sources/dbms/dec/mdfe/cancelamento/", None, None, "NSU"),
+      ("/datalake/bronze/sources/dbms/dec/diario/nfe_cancelamento/", "/datalake/prata/sources/dbms/dec/nfe/cancelamento/", None, None, "NSUDF"),
+      ("/datalake/bronze/sources/dbms/dec/diario/cte_cancelamento/", "/datalake/prata/sources/dbms/dec/cte/cancelamento/", None, None, "NSUSVD"),
       ("/datalake/bronze/sources/dbms/dec/diario/nfe/", "/datalake/prata/sources/dbms/dec/nfe/infNFe/", None, None, "CHAVE"),
       ("/datalake/bronze/sources/dbms/dec/diario/nfce/", "/datalake/prata/sources/dbms/dec/nfce/infNFCe/", None, None, "CHAVE"),
       ("/datalake/bronze/sources/dbms/dec/diario/nfe_evento/", "/datalake/prata/sources/dbms/dec/nfe/evento/", None, None, "NSUDF")
@@ -70,10 +70,11 @@ object Auditoria {
 
     // Processa cada documento
     documentosConfig.foreach { case (bronzePath, prataPath, modelo, filtroXML, colunaVerificacao) =>
-      if (colunaVerificacao == "NSUDF") {
-        processarDocumentoComNSUDF(spark, bronzePath, prataPath, year, month, modelo, filtroXML)
-      } else {
-        processarDocumento(spark, bronzePath, prataPath, year, month, modelo, filtroXML, colunaVerificacao)
+      colunaVerificacao match {
+        case "NSUDF" => processarDocumentoComNSUDF(spark, bronzePath, prataPath, year, month, modelo, filtroXML)
+        case "NSU" => processarDocumentoComNSU(spark, bronzePath, prataPath, year, month, modelo, filtroXML)
+        case "NSUSVD" => processarDocumentoComNSUSVD(spark, bronzePath, prataPath, year, month, modelo, filtroXML)
+        case _ => processarDocumento(spark, bronzePath, prataPath, year, month, modelo, filtroXML, colunaVerificacao)
       }
     }
   }
@@ -152,6 +153,84 @@ object Auditoria {
       val nsudfsNaoExistentes = bronzeDF.except(prataDF)
       println(s"NSUDFs do bronze que não existem no prata para year=${year}/month=${month}:")
       nsudfsNaoExistentes.show(100, false)
+    } else {
+      println(s"O caminho $bronzePath não existe.")
+    }
+  }
+
+  private def processarDocumentoComNSU(
+                                        spark: SparkSession,
+                                        bronzeBasePath: String,
+                                        prataPath: String,
+                                        year: String,
+                                        month: String,
+                                        modelo: Option[Int] = None,
+                                        filtroXML: Option[String] = None
+                                      ): Unit = {
+    println(s"\nProcessando documento com NSU: $prataPath")
+
+    val prataDF = spark.read.parquet(prataPath).select("nsu")
+    val nsusRepetidosPrata = prataDF.groupBy("nsu").count().filter(col("count") > 1)
+
+    println(s"NSUs repetidos (quantidade > 1) no prata:")
+    nsusRepetidosPrata.show(10, false)
+
+    val bronzePath = s"${bronzeBasePath}year=${year}/month=${month}"
+    val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
+    val pathExists = fs.exists(new Path(bronzePath))
+
+    if (pathExists) {
+      var bronzeDF = spark.read.parquet(bronzePath)
+      if (modelo.isDefined) {
+        bronzeDF = bronzeDF.filter(col("MODELO") === modelo.get)
+      }
+      if (filtroXML.isDefined) {
+        bronzeDF = bronzeDF.filter(col("XML_DOCUMENTO_CLOB").rlike(filtroXML.get))
+      }
+      bronzeDF = bronzeDF.select(col("NSU").alias("nsu")).distinct()
+
+      val nsusNaoExistentes = bronzeDF.except(prataDF)
+      println(s"NSUs do bronze que não existem no prata para year=${year}/month=${month}:")
+      nsusNaoExistentes.show(100, false)
+    } else {
+      println(s"O caminho $bronzePath não existe.")
+    }
+  }
+
+  private def processarDocumentoComNSUSVD(
+                                           spark: SparkSession,
+                                           bronzeBasePath: String,
+                                           prataPath: String,
+                                           year: String,
+                                           month: String,
+                                           modelo: Option[Int] = None,
+                                           filtroXML: Option[String] = None
+                                         ): Unit = {
+    println(s"\nProcessando documento com NSUSVD: $prataPath")
+
+    val prataDF = spark.read.parquet(prataPath).select("nsusvd")
+    val nsusvdRepetidosPrata = prataDF.groupBy("nsusvd").count().filter(col("count") > 1)
+
+    println(s"NSUSVDs repetidos (quantidade > 1) no prata:")
+    nsusvdRepetidosPrata.show(10, false)
+
+    val bronzePath = s"${bronzeBasePath}year=${year}/month=${month}"
+    val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
+    val pathExists = fs.exists(new Path(bronzePath))
+
+    if (pathExists) {
+      var bronzeDF = spark.read.parquet(bronzePath)
+      if (modelo.isDefined) {
+        bronzeDF = bronzeDF.filter(col("MODELO") === modelo.get)
+      }
+      if (filtroXML.isDefined) {
+        bronzeDF = bronzeDF.filter(col("XML_DOCUMENTO_CLOB").rlike(filtroXML.get))
+      }
+      bronzeDF = bronzeDF.select(col("NSUSVD").alias("nsusvd")).distinct()
+
+      val nsusvdNaoExistentes = bronzeDF.except(prataDF)
+      println(s"NSUSVDs do bronze que não existem no prata para year=${year}/month=${month}:")
+      nsusvdNaoExistentes.show(100, false)
     } else {
       println(s"O caminho $bronzePath não existe.")
     }
