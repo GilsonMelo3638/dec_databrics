@@ -2,7 +2,7 @@ package Schemas
 
 import org.apache.spark.sql.types._
 
-object MDFeEventoSchema {
+object NFComEventoSchema {
   def createSchema(): StructType = {
     new StructType()
       .add("_dhConexao", StringType, nullable = true)
@@ -10,16 +10,16 @@ object MDFeEventoSchema {
       .add("_nPortaCon", StringType, nullable = true)
       .add("_versao", StringType, nullable = true)
       .add("_xmlns", StringType, nullable = true)
-      .add("eventoMDFe", new StructType()
+      .add("eventoNFCom", new StructType()
         .add("_versao", StringType, nullable = true)
         .add("infEvento", new StructType()
           .add("CNPJ", StringType, nullable = true)
           .add("_Id", StringType, nullable = true)
           .add("cOrgao", StringType, nullable = true)
-          .add("chMDFe", StringType, nullable = true)
+          .add("chNFCom", StringType, nullable = true)
           .add("detEvento", new StructType()
             .add("_versaoEvento", StringType, nullable = true)
-            .add("evCancMDFe", new StructType()
+            .add("evCancNFCom", new StructType()
               .add("descEvento", StringType, nullable = true)
               .add("nProt", StringType, nullable = true)
               .add("xJust", StringType, nullable = true)
@@ -31,13 +31,13 @@ object MDFeEventoSchema {
           .add("tpEvento", StringType, nullable = true)
         )
       )
-      .add("retEventoMDFe", new StructType()
+      .add("retEventoNFCom", new StructType()
         .add("_versao", StringType, nullable = true)
         .add("infEvento", new StructType()
           .add("_Id", StringType, nullable = true)
           .add("cOrgao", StringType, nullable = true)
           .add("cStat", StringType, nullable = true)
-          .add("chMDFe", StringType, nullable = true)
+          .add("chNFCom", StringType, nullable = true)
           .add("dhRegEvento", StringType, nullable = true)
           .add("nProt", StringType, nullable = true)
           .add("nSeqEvento", StringType, nullable = true)

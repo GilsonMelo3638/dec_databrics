@@ -2,7 +2,7 @@ package MainProcessor
 
 import DecDiarioProcessor.Principal.{InfNFCe, InfNFe, nfceDet, nfeDet}
 import Extrator.{diarioNFCe, diarioNFe}
-import Utils.TabelasExternas.ExternalTableCreator
+import Utils.TabelasExternas.ExternalTableCreatorMain
 import org.apache.spark.sql.SparkSession
 
 object MainProcessor {
@@ -66,7 +66,7 @@ object MainProcessor {
                 args = args
             )
 
-            ExternalTableCreator.main(Array())
+            ExternalTableCreatorMain.main(Array())
 
             println("=== Processamento concluído com sucesso ===")
         } catch {

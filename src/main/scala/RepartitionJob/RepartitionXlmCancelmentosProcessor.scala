@@ -53,7 +53,8 @@ object RepartitionXlmCancelmentosProcessor {
       ("/datalake/prata/sources/dbms/dec/nfe/cancelamento", 2, 2),
       ("/datalake/prata/sources/dbms/dec/nfce/cancelamento", 2, 2),
       ("/datalake/prata/sources/dbms/dec/cte/cancelamento", 2, 2),
-      ("/datalake/prata/sources/dbms/dec/bpe/cancelamento", 2, 2)
+      ("/datalake/prata/sources/dbms/dec/bpe/cancelamento", 2, 2),
+      ("/datalake/prata/sources/dbms/dec/nfcom/cancelamento", 2, 2)
     )
 
     // Processar todas as configurações

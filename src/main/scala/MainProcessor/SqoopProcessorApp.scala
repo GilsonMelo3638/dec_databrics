@@ -3,6 +3,7 @@ package MainProcessor
 import Abstract.Principal._
 import Extrator.diarioGenerico
 import RepartitionJob.RepartitionXlmPequenosMediosProcessor
+import Utils.TabelasExternas.ExternalTableCreatorApp
 import org.apache.spark.sql.SparkSession
 
 import java.util.Properties
@@ -63,6 +64,7 @@ object SqoopProcessorApp {
       CTeOSProcessor.main(Array())
       GVTeProcessor.main(Array())
       NFComProcessor.main(Array())
+      ExternalTableCreatorApp.main(Array())
 
       // Executa o RepartitionXlmPequenosMediosProcessor como último processo
       try {

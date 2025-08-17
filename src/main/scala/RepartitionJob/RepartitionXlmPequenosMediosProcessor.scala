@@ -56,7 +56,8 @@ object RepartitionXlmPequenosMediosProcessor {
       ("/datalake/prata/sources/dbms/dec/cte/GVTe", 2, 2),
       ("/datalake/prata/sources/dbms/dec/bpe/BPe", 5, 5),
       ("/datalake/prata/sources/dbms/dec/mdfe/MDFe", 4, 4),
-      ("/datalake/prata/sources/dbms/dec/nf3e/NF3e", 4, 4)
+      ("/datalake/prata/sources/dbms/dec/nf3e/NF3e", 4, 4),
+      ("/datalake/prata/sources/dbms/dec/nfcom/NFCom", 4, 4)
     )
 
     // Processar todas as configurações

@@ -1,7 +1,7 @@
 package Abstract.Cancelamento
 
-import Processors.{BPeEventoProcessor, MDFeEventoProcessor, NF3eEventoProcessor, NFCeEventoProcessor, NFeEventoProcessor, CTeEventoProcessor}
-import Schemas.{BPeEventoSchema, MDFeEventoSchema, NF3eEventoSchema, NFCeEventoSchema, NFeEventoSchema, CTeEventoSchema}
+import Processors.{BPeEventoProcessor, MDFeEventoProcessor, NF3eEventoProcessor, NFComEventoProcessor, NFCeEventoProcessor, NFeEventoProcessor, CTeEventoProcessor}
+import Schemas.{BPeEventoSchema, MDFeEventoSchema, NF3eEventoSchema, NFComEventoSchema, NFCeEventoSchema, NFeEventoSchema, CTeEventoSchema}
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
@@ -202,6 +202,26 @@ object NF3e extends DecCancelamentoDiarioProcessor(
 
   override def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = {
     NF3eEventoProcessor.generateSelectedDF(parsedDF)
+  }
+}
+
+object NFCom extends DecCancelamentoDiarioProcessor(
+  "nfcom", "nfcom_cancelamento", "cancelamento", NFComEventoSchema.createSchema()
+) {
+  override def selectColumns(parquetDF: org.apache.spark.sql.DataFrame): org.apache.spark.sql.DataFrame = {
+    // Importação dos implicits do Spark
+    import parquetDF.sparkSession.implicits._
+    parquetDF.select(
+      $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
+      $"NSU".cast("string").as("NSU"),
+      $"DHPROC",
+      $"DHEVENTO",
+      $"IP_TRANSMISSOR"
+    )
+  }
+
+  override def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = {
+    NFComEventoProcessor.generateSelectedDF(parsedDF)
   }
 }
 

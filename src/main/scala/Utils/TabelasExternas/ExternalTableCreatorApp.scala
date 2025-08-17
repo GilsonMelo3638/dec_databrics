@@ -3,7 +3,7 @@ package Utils.TabelasExternas
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
-object ExternalTableCreatorMain {
+object ExternalTableCreatorApp {
   // Configuração de autenticação LDAP para Hive
   private val ldapUsername = "svc_bigdata"
   private val ldapPassword = "@svc.bigdata1"
@@ -93,8 +93,6 @@ object ExternalTableCreatorMain {
 
   def main(args: Array[String]): Unit = {
     val datasets = List(
-      ("nfe", "hdfs:///datalake/prata/sources/dbms/dec/nfe", List("infNFe", "det", "cancelamento", "evento")),
-      ("nfce", "hdfs:///datalake/prata/sources/dbms/dec/nfce", List("infNFCe", "det", "cancelamento")),
       ("bpe", "hdfs:///datalake/prata/sources/dbms/dec/bpe", List("BPe", "cancelamento")),
       ("mdfe", "hdfs:///datalake/prata/sources/dbms/dec/mdfe", List("MDFe", "cancelamento")),
       ("nf3e", "hdfs:///datalake/prata/sources/dbms/dec/nf3e", List("NF3e", "cancelamento")),

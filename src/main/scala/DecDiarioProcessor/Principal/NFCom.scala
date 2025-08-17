@@ -1,7 +1,7 @@
 package DecDiarioProcessor.Principal
 
-import Processors.MDFeProcessor
-import Schemas.MDFeSchema
+import Processors.NFComProcessor
+import Schemas.NFComSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
@@ -11,17 +11,17 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-object MDFe {
+object NFCom {
   // Variáveis externas para o tipo de documento
-  val tipoDocumento = "mdfe"
-  val prataDocumento = "MDFe"
+  val tipoDocumento = "nfcom"
+  val prataDocumento = "NFCom"
 
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder().appName("ExtractDiarioMDFe").enableHiveSupport().getOrCreate()
+    val spark = SparkSession.builder().appName("ExtractDiarioNFCom").enableHiveSupport().getOrCreate()
     import spark.implicits._
 
     // Obter o esquema da classe BPeSchema
-    val schema = MDFeSchema.createSchema()
+    val schema = NFComSchema.createSchema()
 
     // Gerar a lista dos últimos 10 dias no formato YYYYMMDD, começando do dia anterior
     val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
@@ -77,7 +77,7 @@ object MDFe {
 
           // 4. Gera o DataFrame selectedDF usando a nova classe
           implicit val sparkSession: SparkSession = spark // Passando o SparkSession implicitamente
-          val selectedDF = MDFeProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
+          val selectedDF = NFComProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
           val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
 //          // Imprimir no console as variações e a contagem de 'chave_particao'
@@ -135,4 +135,4 @@ object MDFe {
   }
 }
 
-//MDFeProcDiarioProcessor.main(Array())
+//NFCom.main(Array())

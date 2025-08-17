@@ -11,8 +11,10 @@ object AgrupamentoParquetPorDia {
       .getOrCreate()
 
     // Definir os tipos de documentos e seus diretórios
-    val tiposDocumentos = Seq("bpe", "cte", "mdfe", "nf3e", "nfcom", "nfe_cancelamento", "nfce_cancelamento",
-      "cte_cancelamento", "nf3e_cancelamento", "bpe_cancelamento", "mdfe_cancelamento","nfe_evento", "nfe", "nfce")
+    val tiposDocumentos = Seq("bpe", "cte", "mdfe", "nf3e", "nfcom",
+      "nfe_cancelamento", "nfce_cancelamento", "cte_cancelamento",
+      "nf3e_cancelamento", "bpe_cancelamento", "mdfe_cancelamento",
+      "nfcom_cancelamento", "nfe_evento", "nfe", "nfce")
 
     // Diretório base de origem e destino
     val baseOrigem = "/datalake/bronze/sources/dbms/dec/processamento/"

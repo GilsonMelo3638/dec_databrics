@@ -45,6 +45,7 @@ object diarioGenericoCancelamento {
       ("procEventoNFe", "nfe", "NFCE", "nfce_cancelamento", "NSU"),
       ("procEventoBPe", "bpe", "BPE", "bpe_cancelamento", "NSU"),
       ("procEventoMDFe", "mdfe", "MDFE", "mdfe_cancelamento", "NSU"),
+      ("procEventoNFCom", "nfcom", "NFCOM", "nfcom_cancelamento", "NSU"),
       ("procEventoCTe", "cte", "CTE_SVD", "cte_cancelamento", "NSUSVD")
     )
 
