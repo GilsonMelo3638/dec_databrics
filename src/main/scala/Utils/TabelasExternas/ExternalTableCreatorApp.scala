@@ -3,7 +3,7 @@ package Utils.TabelasExternas
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
-object ExternalTableCreator {
+object ExternalTableCreatorMain {
   // Configuração de autenticação LDAP para Hive
   private val ldapUsername = "svc_bigdata"
   private val ldapPassword = "@svc.bigdata1"
@@ -29,28 +29,31 @@ object ExternalTableCreator {
     tables.foreach { table =>
       val fullTableName = s"seec_prdc_documento_fiscal.dec_exadata_${documento}_$table"
 
-      // Verifica se a tabela já existe
-      val tableExists = spark.catalog.tableExists(fullTableName)
-
-      if (!tableExists) {
-        // Se a tabela não existe, cria com schema inferido dos dados
-        val df = spark.read.parquet(s"$parquetPath/$table")
-        val schemaWithoutPartition = df.schema.filter(_.name != "chave_particao")
-        val schemaSql = schemaWithoutPartition.map(field => s"`${field.name}` ${field.dataType.simpleString.toUpperCase}").mkString(",\n")
-        val partitionColumn = "chave_particao STRING"
-
-        val createTableSql = s"""
-          CREATE EXTERNAL TABLE IF NOT EXISTS $fullTableName (
-              $schemaSql
-          )
-          PARTITIONED BY ($partitionColumn)
-          STORED AS PARQUET
-          LOCATION '${parquetPath}/$table'
-        """
-        spark.sql(createTableSql)
+      // Verifica se a tabela já existe e a remove se existir
+      if (spark.catalog.tableExists(fullTableName)) {
+        println(s"Tabela $fullTableName já existe. Removendo antes de recriar...")
+        spark.sql(s"DROP TABLE IF EXISTS $fullTableName")
       }
 
-      // SEMPRE atualiza as partições, independente de ser criação nova ou não
+      // Cria a tabela com schema inferido dos dados
+      val df = spark.read.parquet(s"$parquetPath/$table")
+      val schemaWithoutPartition = df.schema.filter(_.name != "chave_particao")
+      val schemaSql = schemaWithoutPartition.map(field => s"`${field.name}` ${field.dataType.simpleString.toUpperCase}").mkString(",\n")
+      val partitionColumn = "chave_particao STRING"
+
+      val createTableSql = s"""
+        CREATE EXTERNAL TABLE $fullTableName (
+            $schemaSql
+        )
+        PARTITIONED BY ($partitionColumn)
+        STORED AS PARQUET
+        LOCATION '${parquetPath}/$table'
+      """
+
+      spark.sql(createTableSql)
+      println(s"Tabela $fullTableName criada com sucesso.")
+
+      // Atualiza as partições após a criação
       updateTablePartitions(fullTableName)
     }
   }
