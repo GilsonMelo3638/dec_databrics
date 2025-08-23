@@ -97,7 +97,7 @@ object ExternalTableCreatorApp {
       ("mdfe", "hdfs:///datalake/prata/sources/dbms/dec/mdfe", List("MDFe", "cancelamento")),
       ("nf3e", "hdfs:///datalake/prata/sources/dbms/dec/nf3e", List("NF3e", "cancelamento")),
       ("cte", "hdfs:///datalake/prata/sources/dbms/dec/cte", List("CTe", "GVTe", "CTeOS", "CTeSimp", "cancelamento")),
-      ("nfcom", "hdfs:///datalake/prata/sources/dbms/dec/nfcom", List("NFCom"))
+      ("nfcom", "hdfs:///datalake/prata/sources/dbms/dec/nfcom", List("NFCom", "cancelamento"))
     )
 
     // Cria ou atualiza todas as tabelas
@@ -110,4 +110,4 @@ object ExternalTableCreatorApp {
   }
 }
 
-//ExternalTableCreator.main(Array())
+//ExternalTableCreatorApp.main(Array())

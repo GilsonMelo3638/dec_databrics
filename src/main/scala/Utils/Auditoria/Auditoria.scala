@@ -61,6 +61,7 @@ object Auditoria {
       ("/datalake/bronze/sources/dbms/dec/diario/nf3e_cancelamento/", "/datalake/prata/sources/dbms/dec/nf3e/cancelamento/", None, None, "NSU"),
       ("/datalake/bronze/sources/dbms/dec/diario/nfce_cancelamento/", "/datalake/prata/sources/dbms/dec/nfce/cancelamento/", None, None, "NSU"),
       ("/datalake/bronze/sources/dbms/dec/diario/mdfe_cancelamento/", "/datalake/prata/sources/dbms/dec/mdfe/cancelamento/", None, None, "NSU"),
+      ("/datalake/bronze/sources/dbms/dec/diario/nfcom_cancelamento/", "/datalake/prata/sources/dbms/dec/nfcom/cancelamento/", None, None, "NSU"),
       ("/datalake/bronze/sources/dbms/dec/diario/nfe_cancelamento/", "/datalake/prata/sources/dbms/dec/nfe/cancelamento/", None, None, "NSUDF"),
       ("/datalake/bronze/sources/dbms/dec/diario/cte_cancelamento/", "/datalake/prata/sources/dbms/dec/cte/cancelamento/", None, None, "NSUSVD"),
       ("/datalake/bronze/sources/dbms/dec/diario/nfe/", "/datalake/prata/sources/dbms/dec/nfe/infNFe/", None, None, "CHAVE"),

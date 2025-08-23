@@ -168,11 +168,11 @@ object NFComProcessor {
       $"parsed.NFCom.infNFComSupl.qrCodNFCom".as("infnfcomsupl_qrcodnfcom"),
 
       // Campos do root
-      $"parsed._dhConexao",
-      $"parsed._ipTransmissor",
-      $"parsed._nPortaCon",
-      $"parsed._versao",
-      $"parsed._xmlns",
+      $"parsed._dhConexao".as("dhconexao"),
+      $"parsed._ipTransmissor".as("ipTransmissor"),
+      $"parsed._nPortaCon".as("nPortaCon"),
+      $"parsed._versao".as("versao"),
+      $"parsed._xmlns".as("xmlns"),
 
       // Campos de protNFCom
       $"parsed.protNFCom._versao".as("protnfcom_versao"),
