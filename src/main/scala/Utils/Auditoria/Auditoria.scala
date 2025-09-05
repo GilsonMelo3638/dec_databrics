@@ -9,11 +9,11 @@ object Auditoria {
   def main(args: Array[String]): Unit = {
     // Default values if not provided in args
     var year = "2025"
-    var month = "08"
+    var month = "09"
     var anoInicio = 2025
-    var mesInicio = 8
+    var mesInicio = 9
     var anoFim = 2025
-    var mesFim = 8
+    var mesFim = 9
 
     // Parse arguments if provided
     if (args.length >= 6) {
@@ -66,7 +66,8 @@ object Auditoria {
       ("/datalake/bronze/sources/dbms/dec/diario/cte_cancelamento/", "/datalake/prata/sources/dbms/dec/cte/cancelamento/", None, None, "NSUSVD"),
       ("/datalake/bronze/sources/dbms/dec/diario/nfe/", "/datalake/prata/sources/dbms/dec/nfe/infNFe/", None, None, "CHAVE"),
       ("/datalake/bronze/sources/dbms/dec/diario/nfce/", "/datalake/prata/sources/dbms/dec/nfce/infNFCe/", None, None, "CHAVE"),
-      ("/datalake/bronze/sources/dbms/dec/diario/nfe_evento/", "/datalake/prata/sources/dbms/dec/nfe/evento/", None, None, "NSUDF")
+      ("/datalake/bronze/sources/dbms/dec/diario/nfe_evento/", "/datalake/prata/sources/dbms/dec/nfe/evento/", None, None, "NSUDF"),
+      ("/datalake/bronze/sources/dbms/dec/diario/mdfe_evento/", "/datalake/prata/sources/dbms/dec/mdfe/evento/", None, None, "NSU")
     )
 
     // Processa cada documento

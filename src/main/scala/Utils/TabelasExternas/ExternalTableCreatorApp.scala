@@ -93,11 +93,11 @@ object ExternalTableCreatorApp {
 
   def main(args: Array[String]): Unit = {
     val datasets = List(
-//      ("bpe", "hdfs:///datalake/prata/sources/dbms/dec/bpe", List("BPe", "cancelamento")),
-      ("mdfe", "hdfs:///datalake/prata/sources/dbms/dec/mdfe", List("MDFe", "cancelamento", "evento"))
-//      ("nf3e", "hdfs:///datalake/prata/sources/dbms/dec/nf3e", List("NF3e", "cancelamento")),
-//      ("cte", "hdfs:///datalake/prata/sources/dbms/dec/cte", List("CTe", "GVTe", "CTeOS", "CTeSimp", "cancelamento")),
-//      ("nfcom", "hdfs:///datalake/prata/sources/dbms/dec/nfcom", List("NFCom", "cancelamento"))
+      ("bpe", "hdfs:///datalake/prata/sources/dbms/dec/bpe", List("BPe", "cancelamento")),
+      ("mdfe", "hdfs:///datalake/prata/sources/dbms/dec/mdfe", List("MDFe", "cancelamento", "evento")),
+      ("nf3e", "hdfs:///datalake/prata/sources/dbms/dec/nf3e", List("NF3e", "cancelamento")),
+      ("cte", "hdfs:///datalake/prata/sources/dbms/dec/cte", List("CTe", "GVTe", "CTeOS", "CTeSimp", "cancelamento")),
+      ("nfcom", "hdfs:///datalake/prata/sources/dbms/dec/nfcom", List("NFCom", "cancelamento"))
     )
 
     // Cria ou atualiza todas as tabelas
