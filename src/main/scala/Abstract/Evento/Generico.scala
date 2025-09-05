@@ -1,7 +1,7 @@
 package Abstract.Evento
 
-import Processors.NFeEventoProcessor
-import Schemas.NFeEventoSchema
+import Processors.{MDFeEventoProcessor, NFeEventoProcessor}
+import Schemas.{NFeEventoSchema, MDFeEventoSchema}
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
@@ -142,6 +142,26 @@ object NFeEvento extends DecCancelamentoDiarioProcessor(
 
   override def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = {
     NFeEventoProcessor.generateSelectedDF(parsedDF)
+  }
+}
+
+object MDFeEvento extends DecCancelamentoDiarioProcessor(
+  "mdfe", "mdfe_evento", "evento", MDFeEventoSchema.createSchema()
+) {
+  override def selectColumns(parquetDF: org.apache.spark.sql.DataFrame): org.apache.spark.sql.DataFrame = {
+    // Importação dos implicits do Spark
+    import parquetDF.sparkSession.implicits._
+    parquetDF.select(
+      $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
+      $"NSU".cast("string").as("NSU"), // Coluna específica da NFe
+      $"DHPROC",
+      $"DHEVENTO",
+      $"IP_TRANSMISSOR"
+    )
+  }
+
+  override def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = {
+    MDFeEventoProcessor.generateSelectedDF(parsedDF)
   }
 }
 // NFeEvento.main(Array())

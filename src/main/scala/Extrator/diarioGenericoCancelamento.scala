@@ -52,7 +52,7 @@ object diarioGenericoCancelamento {
     // Loop para processar cada configuração
     for ((tabAbertura, urlDocumento, tabela, dirBronze, colSplit) <- configs) {
       // Loop para gerar intervalos de minusDays de -1 a -15
-      for (daysAgo <- 1 to 23) {
+      for (daysAgo <- 1 to 15) {
         // Obtém a data correspondente ao número de dias atrás no fuso horário desejado
         val data = LocalDate.now(ZoneId.of("America/Sao_Paulo")).minusDays(daysAgo)
 

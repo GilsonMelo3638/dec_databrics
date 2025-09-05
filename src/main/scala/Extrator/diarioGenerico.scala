@@ -160,8 +160,12 @@ object diarioGenerico {
 
       // Cria as partições com base no intervalo de valores da coluna de particionamento
       val step = ((max - min) / numPartitions).toLong
-      val partitionBounds = (min.toLong to max.toLong by step).toList
-
+      val partitionBounds = if (step == 0) {
+        // Se há apenas um valor, cria partições com passo 1
+        (min.toLong to max.toLong by 1L).toList
+      } else {
+        (min.toLong to max.toLong by step).toList
+      }
       // Carrega os dados do Oracle com particionamento
       val df = spark.read.jdbc(
         jdbcUrl,

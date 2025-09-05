@@ -36,18 +36,16 @@ object MDFeProc {
   val anoFim = 2024
   val tipoDocumento = "mdfe"
 
-
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder().appName("ExtractInfNFe").enableHiveSupport().getOrCreate()
+    val spark = SparkSession.builder().appName("ExtractInfMDFe").enableHiveSupport().getOrCreate()
     import spark.implicits._
-
     // Obter o esquema da classe CTeOSSchema
-    val schema = MDFeProcSchema.createSchema() // Lista de anos com base nas variáveis externas
+    val schema = MDFeProcSchema.createSchema()
+    // Lista de anos com base nas variáveis externas
     val anoList = (anoInicio to anoFim).map(_.toString).toList
 
     anoList.foreach { ano =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/$tipoDocumento//201812_202501"
-
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/$tipoDocumento/201812_202501"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $ano: $startTime")

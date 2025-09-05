@@ -40,14 +40,14 @@ object diarioGenericoEvento {
 
     // Lista de configurações para cada tipo de documento
     val configs = List(
-
-      ("procEventoNFe", "nfe", "NFE", "nfe_evento", "NSUDF"),
+      ("procEventoNFe", "nfe", "NFE", "nfe_evento", "NSUDF", 5),  // NFe com 5 partições
+      ("procEventoMDFe", "mdfe", "MDFE", "mdfe_evento", "NSU", 1)   // MDFe com 1 partição
     )
 
     // Loop para processar cada configuração
-    for ((tabAbertura, urlDocumento, tabela, dirBronze, colSplit) <- configs) {
+    for ((tabAbertura, urlDocumento, tabela, dirBronze, colSplit, numRepartitions) <- configs) {
       // Loop para gerar intervalos de minusDays de -1 a -15
-      for (daysAgo <- 1 to 14) {
+      for (daysAgo <- 1 to 15) {
         // Obtém a data correspondente ao número de dias atrás no fuso horário desejado
         val data = LocalDate.now(ZoneId.of("America/Sao_Paulo")).minusDays(daysAgo)
 
@@ -64,7 +64,7 @@ object diarioGenericoEvento {
         val dataFinal = s"$dataFormatada 23:59:59"
 
         // Exibe as variáveis
-        println(s"Processando data: $dataFormatada")
+        println(s"Processando $tabela para data: $dataFormatada")
         println(s"anoMes: $anoMes")
         println(s"anoMesDia: $anoMesDia")
         println(s"dataInicial: $dataInicial")
@@ -89,8 +89,8 @@ object diarioGenericoEvento {
           // Coluna para particionamento (equivalente ao --split-by do Sqoop)
           val splitByColumn = colSplit
 
-          // Número de partições (equivalente ao --num-mappers do Sqoop)
-          val numPartitions = 30
+          // Número de partições JDBC (equivalente ao --num-mappers do Sqoop)
+          val numPartitions = if (tabela == "MDFE") 5 else 30  // Menos partições para MDFe
 
           // Query SQL base
           val baseQuery =
@@ -141,14 +141,14 @@ object diarioGenericoEvento {
                   connectionProperties
                 )
 
-                // Salva os dados no HDFS no formato Parquet com compressão LZ4
-                df.repartition(5)
+                // Salva os dados no HDFS - MDFe com menos repartition
+                df.repartition(numRepartitions)
                   .write
                   .option("compression", "lz4")
                   .option("parquet.block.size", "536870912") // 512 MB
                   .parquet(targetDirProcessar)
 
-                println(s"Processamento concluído para a data $dataFormatada.")
+                println(s"Processamento concluído para $tabela na data $dataFormatada com $numRepartitions partições.")
               } else {
                 // Calcula o passo (step) e garante que seja pelo menos 1
                 val step = Math.max(1, ((max - min) / numPartitions).toLong)
@@ -167,14 +167,14 @@ object diarioGenericoEvento {
                   connectionProperties
                 )
 
-                // Salva os dados no HDFS no formato Parquet com compressão LZ4
-                df.repartition(4)
+                // Salva os dados no HDFS - MDFe com menos repartition
+                df.repartition(numRepartitions)
                   .write
                   .option("compression", "lz4")
                   .option("parquet.block.size", "536870912") // 512 MB
                   .parquet(targetDirProcessar)
 
-                println(s"Processamento concluído para a data $dataFormatada.")
+                println(s"Processamento concluído para $tabela na data $dataFormatada com $numRepartitions partições.")
               }
             }
           }

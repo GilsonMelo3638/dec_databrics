@@ -3,6 +3,8 @@ package Utils.CorrecaoSchemaTransferirLegado
 import org.apache.spark.sql.functions.{col, substring}
 import org.apache.spark.sql.types.{IntegerType, StringType}
 import org.apache.spark.sql.{DataFrame, SparkSession}
+import java.time.{LocalDate, ZoneId}
+import java.time.format.DateTimeFormatter
 
 abstract class DocumentProcessor {
   // Configurações específicas para cada tipo de documento
@@ -18,12 +20,13 @@ abstract class DocumentProcessor {
 
   // Método principal que pode ser chamado via main
   def main(args: Array[String]): Unit = {
-    // Valores padrão
-    var year = 2025
-    var month = 7
+    // Obter mês e ano anterior
+    val previousMonthDate = LocalDate.now(ZoneId.of("America/Sao_Paulo")).minusMonths(1)
+    var year = previousMonthDate.getYear
+    var month = previousMonthDate.getMonthValue
     var numPartitions = defaultPartitions
 
-    // Processar argumentos se fornecidos
+    // Processar argumentos se fornecidos (sobrescrevem os valores padrão)
     if (args.length >= 2) {
       year = args(0).toInt
       month = args(1).toInt
@@ -52,10 +55,22 @@ abstract class DocumentProcessor {
       // Número de partições
       val partitions = numPartitions.getOrElse(defaultPartitions)
 
-      // Ler e processar os dados
-      val df = spark.read.parquet(inputPath)
-      val convertedDF = convertDataTypes(df)
-      processAndPartitionData(convertedDF, outputPath, partitions)
+      // Verificar se o caminho de entrada existe
+      val hadoopConf = spark.sparkContext.hadoopConfiguration
+      val fs = org.apache.hadoop.fs.FileSystem.get(hadoopConf)
+      val inputPathObj = new org.apache.hadoop.fs.Path(inputPath)
+
+      if (fs.exists(inputPathObj)) {
+        // Ler e processar os dados
+        val df = spark.read.parquet(inputPath)
+        val convertedDF = convertDataTypes(df)
+        processAndPartitionData(convertedDF, outputPath, partitions)
+
+        println(s"Processamento concluído para $documentType - $year-${month.formatted("%02d")}")
+      } else {
+        println(s"Caminho de entrada não encontrado: $inputPath")
+        println(s"Pulando processamento para $documentType - $year-${month.formatted("%02d")}")
+      }
 
     } finally {
       spark.stop()
@@ -90,8 +105,7 @@ abstract class DocumentProcessor {
   }
 }
 
-// Implementações específicas para cada tipo de documento
-
+// Implementações específicas para cada tipo de documento (mantidas iguais)
 object BPe extends DocumentProcessor {
   override def documentType: String = "bpe"
   override def defaultPartitions: Int = 10
@@ -139,6 +153,17 @@ object NF3e extends DocumentProcessor {
   }
 }
 
+object NFCom extends DocumentProcessor {
+  override def documentType: String = "nfcom"
+  override def defaultPartitions: Int = 2
+
+  override def convertDataTypes(df: DataFrame): DataFrame = {
+    super.convertDataTypes(df)
+      .withColumn("NSU", col("NSU").cast(StringType))
+      .withColumn("CSTAT", col("CSTAT").cast(StringType))
+  }
+}
+
 object NFCe extends DocumentProcessor {
   override def documentType: String = "nfce"
   override def defaultPartitions: Int = 10
@@ -162,10 +187,15 @@ object NFe extends DocumentProcessor {
   }
 }
 
-//// Exemplo de como executar:
-//BPe.main(Array("2025", "7"))       // Ano, mês
-//CTe.main(Array("2025", "7", "5")) // Ano, mês, número de partições
-//MDFe.main(Array("2025", "7", "2")) // Ano, mês, número de partições
-//NF3e.main(Array("2025", "7", "2")) // Ano, mês, número de partições
-//NFCe.main(Array("2025", "7", "10")) // Ano, mês, número de partições
-//NFe.main(Array("2025", "7", "5")) // Ano, mês, número de partições
+// Exemplo de como executar (agora sem parâmetros para usar o mês anterior):
+//BPe.main(Array())       // Usa mês anterior automaticamente
+//CTe.main(Array())       // Usa mês anterior automaticamente
+//MDFe.main(Array())      // Usa mês anterior automaticamente
+//NF3e.main(Array())      // Usa mês anterior automaticamente
+//NFCom.main(Array())     // Usa mês anterior automaticamente
+//NFCe.main(Array())      // Usa mês anterior automaticamente
+//NFe.main(Array())       // Usa mês anterior automaticamente
+
+// Ou ainda pode sobrescrever com parâmetros específicos:
+// BPe.main(Array("2025", "6")) // Força ano 2025, mês 6
+// CTe.main(Array("2025", "6", "5")) // Força ano 2025, mês 6, com 5 partições

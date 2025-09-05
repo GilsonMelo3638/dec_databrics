@@ -41,7 +41,7 @@ object NFComProcessor {
       $"parsed.NFCom.infNFCom.gSub.gNF.nNF".as("gnf_nnf"),
       $"parsed.NFCom.infNFCom.gSub.gNF.CompetEmis".as("gnf_competemis"),
       $"parsed.NFCom.infNFCom.gSub.gNF.hash115".as("gnf_hash115"),
-      $"parsed.NFCom.infNFCom.gSub.gNF.motSub".as("gnf_motsub"),
+      $"parsed.NFCom.infNFCom.gSub.motSub".as("gSub_motsub"),
 
       // Campos de gCofat
       $"parsed.NFCom.infNFCom.gCofat.chNFComLocal".as("gcofat_chnfcomlocal"),
