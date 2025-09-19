@@ -187,6 +187,7 @@ object NFeProcessor {
       $"parsed.NFe.infNFe.total.ISSQNtot.vBC".as("issqntot_vbc"),
       $"parsed.NFe.infNFe.total.ISSQNtot.vCOFINS".as("issqntot_vcofins"),
       $"parsed.NFe.infNFe.total.ISSQNtot.vISS".as("issqntot_viss"),
+      $"parsed.NFe.infNFe.total.ISSQNtot.vISSRet".as("issqntot_vissret"),
       $"parsed.NFe.infNFe.total.ISSQNtot.vPIS".as("issqntot_vpis"),
       $"parsed.NFe.infNFe.total.ISSQNtot.vServ".as("issqntot_vserv"),
       $"parsed.NFe.infNFe.total.retTrib.vBCIRRF".as("rettrib_vbcirrf"),

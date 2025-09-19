@@ -346,6 +346,7 @@ object NFCeSchema {
               .add("vBC", DoubleType, nullable = true)
               .add("vCOFINS", DoubleType, nullable = true)
               .add("vISS", DoubleType, nullable = true)
+              .add("vISSRet", DoubleType, nullable = true)
               .add("vPIS", DoubleType, nullable = true)
               .add("vServ", DoubleType, nullable = true)
             )
