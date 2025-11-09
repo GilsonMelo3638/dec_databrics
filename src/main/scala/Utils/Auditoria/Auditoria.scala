@@ -9,11 +9,11 @@ object Auditoria {
   def main(args: Array[String]): Unit = {
     // Default values if not provided in args
     var year = "2025"
-    var month = "09"
+    var month = "10"
     var anoInicio = 2025
-    var mesInicio = 9
+    var mesInicio = 10
     var anoFim = 2025
-    var mesFim = 9
+    var mesFim = 10
 
     // Parse arguments if provided
     if (args.length >= 6) {

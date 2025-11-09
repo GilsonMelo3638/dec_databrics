@@ -36,8 +36,8 @@ object ExternalTablesDeleter {
       "dec_exadata_nfce_det", "dec_exadata_nfe_det", "dec_exadata_nfce_infnfce", "dec_exadata_nfe_infnfe",
       "dec_exadata_bpe_bpe", "dec_exadata_bpe_cancelamento", "dec_exadata_cte_cte", "dec_exadata_cte_cteos",
       "dec_exadata_cte_ctesimp", "dec_exadata_cte_gvte", "dec_exadata_cte_cancelamento", "dec_exadata_mdfe_mdfe",
-      "dec_exadata_mdfe_cancelamento", "dec_exadata_nf3e_nf3e", "dec_exadata_nf3e_cancelamento", "dec_exadata_nfcom_cancelamento",
-      "dec_exadata_nfce_cancelamento", "dec_exadata_nfe_cancelamento", "dec_exadata_nfe_evento", "dec_exadata_mdfe_evento"
+      "dec_exadata_mdfe_cancelamento", "dec_exadata_nf3e_nf3e", "dec_exadata_nfcom_nfcom", "dec_exadata_nf3e_cancelamento", "dec_exadata_nfcom_cancelamento",
+      "dec_exadata_nfce_cancelamento", "dec_exadata_nfe_cancelamento", "dec_exadata_nfe_evento", "dec_exadata_nf3e_evento", "dec_exadata_nfcom_evento", "dec_exadata_mdfe_evento"
     )
 
     // Nome do banco de dados

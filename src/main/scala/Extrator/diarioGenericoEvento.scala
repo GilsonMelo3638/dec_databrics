@@ -41,7 +41,9 @@ object diarioGenericoEvento {
     // Lista de configurações para cada tipo de documento
     val configs = List(
       ("procEventoNFe", "nfe", "NFE", "nfe_evento", "NSUDF", 5),  // NFe com 5 partições
-      ("procEventoMDFe", "mdfe", "MDFE", "mdfe_evento", "NSU", 1)   // MDFe com 1 partição
+      ("procEventoMDFe", "mdfe", "MDFE", "mdfe_evento", "NSU", 1) , // MDFe com 1 partição
+      ("procEventoNF3e", "nf3e", "NF3E", "nf3e_evento", "NSU", 1),   // NF3e com 1 partição
+      ("procEventoNFCom", "nfcom", "NFCom", "nfcom_evento", "NSU", 1)   // NF3e com 1 partição
     )
 
     // Loop para processar cada configuração

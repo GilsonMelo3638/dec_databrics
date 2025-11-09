@@ -20,7 +20,7 @@
 //  --conf "spark.dynamicAllocation.maxExecutors=40" \
 //  --packages com.databricks:spark-xml_2.12:0.13.0 \
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
-package DecLegadoProcessor.Cancelamento
+package DecLegadoProcessor.Evento
 
 import Processors.NF3eEventoProcessor
 import Schemas.NF3eEventoSchema
@@ -35,14 +35,14 @@ object NF3e {
   val ano = 2025
   val mesInicio = 3
   val mesFim = 3
-  val tipoDocumento = "nf3e_cancelamento"
+  val tipoDocumento = "nf3e_evento"
 
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder().appName("ExtractLegadoCancelamentoBPe").enableHiveSupport().getOrCreate()
+    val spark = SparkSession.builder().appName("ExtractLegadoEventoNF3e").enableHiveSupport().getOrCreate()
     import spark.implicits._
 
     // Obter o esquema da classe CTeOSSchema
-    val schema = NF3eEventoSchema.createSchema()
+    val schema =  NF3eEventoSchema.createSchema()
     // Lista de meses com base nas variáveis externas
     val anoMesList = (mesInicio to mesFim).map { month =>
       f"$ano${month}%02d"
@@ -105,4 +105,4 @@ object NF3e {
   }
 }
 
-//NF3eCancelamentoLegadoProcessor.main(Array())
+//NF3e.main(Array())

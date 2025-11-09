@@ -38,7 +38,7 @@ object testeExtratorGenerico {
 
     // Coluna para particionamento (equivalente ao --split-by do Sqoop)
     val splitByColumn = "NSU"
-    val documento = "nf3e"
+    val documento = "nfcom"
 
     // Configurações de conexão com o banco de dados Oracle
     val jdbcUrl = "jdbc:oracle:thin:@codvm01-scan1.gdfnet.df:1521/ORAPRD23"
@@ -51,7 +51,7 @@ object testeExtratorGenerico {
     val numPartitions = 200
 
     // Define o intervalo de dias (de -2 até -4)
-    val dias = List(-8, -15, -22, -29)
+    val dias = List(-1)
 
     // Loop para processar cada dia
     dias.foreach { dia =>
@@ -116,17 +116,17 @@ object testeExtratorGenerico {
 //    WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
 //  """
 
-      s"""
-SELECT NSU,
-REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//nf3eProc', 'xmlns=\"http://www.portalfiscal.inf.br/nf3e\"') AS CLOB), CHR(10), ' '), CHR(13), ' ') AS XML_DOCUMENTO_CLOB,
-     f.CSTAT, f.CHAVE, f.IP_TRANSMISSOR,
-     TO_CHAR(f.DHRECBTO, 'DD/MM/YYYY HH24:MI:SS') AS DHRECBTO,
-     TO_CHAR(f.DHEMI, 'DD/MM/YYYY HH24:MI:SS') AS DHEMI,
-     TO_CHAR(f.DHPROC, 'DD/MM/YYYY HH24:MI:SS') AS DHPROC,
-     f.EMITENTE, f.UF_EMITENTE, f.DESTINATARIO, f.UF_DESTINATARIO
-FROM DEC_DFE_NF3E f
-WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
-"""
+//      s"""
+//SELECT NSU,
+//REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//nf3eProc', 'xmlns=\"http://www.portalfiscal.inf.br/nf3e\"') AS CLOB), CHR(10), ' '), CHR(13), ' ') AS XML_DOCUMENTO_CLOB,
+//     f.CSTAT, f.CHAVE, f.IP_TRANSMISSOR,
+//     TO_CHAR(f.DHRECBTO, 'DD/MM/YYYY HH24:MI:SS') AS DHRECBTO,
+//     TO_CHAR(f.DHEMI, 'DD/MM/YYYY HH24:MI:SS') AS DHEMI,
+//     TO_CHAR(f.DHPROC, 'DD/MM/YYYY HH24:MI:SS') AS DHPROC,
+//     f.EMITENTE, f.UF_EMITENTE, f.DESTINATARIO, f.UF_DESTINATARIO
+//FROM DEC_DFE_NF3E f
+//WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
+//"""
 
 //        s"""
 //SELECT NSU,
@@ -140,17 +140,17 @@ WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DAT
 //WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
 //"""
 
-//      s"""
-//        SELECT NSU,
-//    REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//NFComProc', 'xmlns=\"http://www.portalfiscal.inf.br/nfcom\"') AS CLOB), CHR(10), ' '), CHR(13), ' ') AS XML_DOCUMENTO_CLOB,
-//               f.CSTAT, f.CHAVE, f.IP_TRANSMISSOR,
-//               TO_CHAR(f.DHRECBTO, 'DD/MM/YYYY HH24:MI:SS') AS DHRECBTO,
-//               TO_CHAR(f.DHEMI, 'DD/MM/YYYY HH24:MI:SS') AS DHEMI,
-//               TO_CHAR(f.DHPROC, 'DD/MM/YYYY HH24:MI:SS') AS DHPROC,
-//               f.EMITENTE, f.UF_EMITENTE, f.DESTINATARIO, f.UF_DESTINATARIO
-//        FROM DEC_DFE_NFCOM f
-//        WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
-//      """
+      s"""
+        SELECT NSU,
+    REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//NFComProc', 'xmlns=\"http://www.portalfiscal.inf.br/nfcom\"') AS CLOB), CHR(10), ' '), CHR(13), ' ') AS XML_DOCUMENTO_CLOB,
+               f.CSTAT, f.CHAVE, f.IP_TRANSMISSOR,
+               TO_CHAR(f.DHRECBTO, 'DD/MM/YYYY HH24:MI:SS') AS DHRECBTO,
+               TO_CHAR(f.DHEMI, 'DD/MM/YYYY HH24:MI:SS') AS DHEMI,
+               TO_CHAR(f.DHPROC, 'DD/MM/YYYY HH24:MI:SS') AS DHPROC,
+               f.EMITENTE, f.UF_EMITENTE, f.DESTINATARIO, f.UF_DESTINATARIO
+        FROM DEC_DFE_NFCOM f
+        WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
+      """
 
       // Obtém os valores mínimo e máximo da coluna de particionamento como java.math.BigDecimal
       val minMaxQuery = s"SELECT MIN($splitByColumn) AS min, MAX($splitByColumn) AS max FROM ($baseQuery)"
@@ -185,7 +185,7 @@ WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DAT
         )
 
         // Define o caminho de destino no HDFS
-        val targetDir = s"/datalake/bronze/sources/dbms/dec/processamento/$documento/processado/$anoMesDia"
+        val targetDir = s"/datalake/bronze/sources/dbms/dec/processamento/$documento/processar/$anoMesDia"
 
         // Salva os dados no HDFS no formato Parquet com compressão LZ4
         df.write

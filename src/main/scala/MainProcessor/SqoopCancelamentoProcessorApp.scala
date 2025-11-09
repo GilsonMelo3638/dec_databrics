@@ -1,7 +1,7 @@
 package MainProcessor
 
 import Abstract.Cancelamento.{BPe, CTe, MDFe, NF3e, NFCe, NFCom, NFe}
-import Abstract.Evento.{NFeEvento, MDFeEvento}
+import Abstract.Evento.{NFeEvento, MDFeEvento, NF3eEvento, NFComEvento}
 import Extrator.{diarioGenericoCancelamento, diarioGenericoEvento}
 import RepartitionJob.RepartitionXlmCancelmentosProcessor
 
@@ -19,6 +19,8 @@ object SqoopCancelamentoProcessorApp {
     diarioGenericoEvento.main(args)
     NFeEvento.main(Array())
     MDFeEvento.main(Array())
+    NF3eEvento.main(Array())
+    NFComEvento.main(Array())
 
     // Executa o RepartitionXlmPequenosMediosProcessor como último processo
     try {

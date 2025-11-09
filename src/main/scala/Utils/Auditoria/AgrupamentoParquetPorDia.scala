@@ -14,7 +14,8 @@ object AgrupamentoParquetPorDia {
     val tiposDocumentos = Seq("bpe", "cte", "mdfe", "nf3e", "nfcom",
       "nfe_cancelamento", "nfce_cancelamento", "cte_cancelamento",
       "nf3e_cancelamento", "bpe_cancelamento", "mdfe_cancelamento",
-      "nfcom_cancelamento", "nfe_evento", "nfe", "nfce")
+      "nfcom_cancelamento", "nfe_evento", "nf3e_evento", "nfcom_evento",
+      "nfe", "nfce")
 
     // Diretório base de origem e destino
     val baseOrigem = "/datalake/bronze/sources/dbms/dec/processamento/"

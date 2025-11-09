@@ -20,36 +20,36 @@
 //  --conf "spark.dynamicAllocation.maxExecutors=40" \
 //  --packages com.databricks:spark-xml_2.12:0.13.0 \
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
-package DecLegadoProcessor.Cancelamento
+package DecLegadoProcessor.Evento
 
-import Processors.NF3eEventoProcessor
-import Schemas.NF3eEventoSchema
+import Processors.NFComEventoProcessor
+import Schemas.NFComEventoSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
 import java.time.LocalDateTime
 
-object NF3e {
+object NFCom {
   // Variáveis externas para o intervalo de meses e ano de processamento
   val ano = 2025
   val mesInicio = 3
   val mesFim = 3
-  val tipoDocumento = "nf3e_cancelamento"
+  val tipoDocumento = "nfcom_evento"
 
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder().appName("ExtractLegadoCancelamentoBPe").enableHiveSupport().getOrCreate()
+    val spark = SparkSession.builder().appName("ExtractLegadoEventoNFCom").enableHiveSupport().getOrCreate()
     import spark.implicits._
 
     // Obter o esquema da classe CTeOSSchema
-    val schema = NF3eEventoSchema.createSchema()
+    val schema =  NFComEventoSchema.createSchema()
     // Lista de meses com base nas variáveis externas
     val anoMesList = (mesInicio to mesFim).map { month =>
       f"$ano${month}%02d"
     }.toList
 
     anoMesList.foreach { anoMes =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/nf3e_evento/201901_202511"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/nfcom_evento/202501_202510"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $anoMes: $startTime")
@@ -72,7 +72,7 @@ object NF3e {
 
       // 4. Gera o DataFrame selectedDF usando a nova classe
       implicit val sparkSession: SparkSession = spark // Passando o SparkSession implicitamente
-      val selectedDF = NF3eEventoProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
+      val selectedDF = NFComEventoProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
       val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
       // Imprimir no console as variações e a contagem de 'chave_particao'
@@ -96,7 +96,7 @@ object NF3e {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/nf3e/evento")
+        .save("/datalake/prata/sources/dbms/dec/nfcom/evento")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()
@@ -105,4 +105,4 @@ object NF3e {
   }
 }
 
-//NF3eCancelamentoLegadoProcessor.main(Array())
+//NFCom.main(Array())

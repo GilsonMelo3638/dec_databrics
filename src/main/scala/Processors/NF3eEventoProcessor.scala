@@ -23,6 +23,7 @@ object NF3eEventoProcessor {
       $"parsed.eventoNF3e.infEvento.chNF3e".as("infEvento_chNF3e"),
       $"parsed.eventoNF3e.infEvento.detEvento._versaoEvento".as("detEvento_versaoEvento"),
       $"parsed.eventoNF3e.infEvento.detEvento.evCancNF3e.descEvento".as("evCancNF3e_descEvento"),
+      $"parsed.eventoNF3e.infEvento.detEvento.evCancNF3e.chNF3eSubstituta".as("chNF3eSubstituta"),
       $"parsed.eventoNF3e.infEvento.detEvento.evCancNF3e.nProt".as("evCancNF3e_nProt"),
       $"parsed.eventoNF3e.infEvento.detEvento.evCancNF3e.xJust".as("evCancNF3e_xJust"),
       $"parsed.eventoNF3e.infEvento.dhEvento".as("infEvento_dhEvento"),
