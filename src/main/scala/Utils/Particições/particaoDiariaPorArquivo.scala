@@ -13,8 +13,8 @@ object particaoDiariaPorArquivo {
       .getOrCreate()
 
     try {
-      val inputPath = "/datalake/bronze/sources/dbms/dec/nf3e/202307_202501"
-      val outputPath = "/datalake/bronze/sources/dbms/legado/dec/nf3e_diario/"
+      val inputPath = "/datalake/bronze/sources/dbms/dec/cte_cancelamento/201912_202502"
+      val outputPath = "/datalake/bronze/sources/dbms/legado/dec/cte_cancelamento_diario/"
 
       processSingleDirectory(spark, inputPath, outputPath)
       println("✅ Processamento concluído com sucesso!")
@@ -35,7 +35,7 @@ object particaoDiariaPorArquivo {
           .withColumn("day", substring(col("DHPROC"), 1, 2))
 
         // Número fixo de partições baseado no tamanho esperado
-        val numPartitions = 2 // Ajuste conforme necessário
+        val numPartitions = 1 // Ajuste conforme necessário
 
         partitionedDF.repartition(numPartitions)
           .write
