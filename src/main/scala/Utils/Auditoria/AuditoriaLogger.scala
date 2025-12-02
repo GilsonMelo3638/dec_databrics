@@ -60,6 +60,33 @@ object HDFSLogger {
     }
   }
 
+  def logDataFrame(df: org.apache.spark.sql.DataFrame, limit: Int = 10, message: String = ""): Unit = {
+    if (message.nonEmpty) {
+      log(message)
+    }
+
+    try {
+      val data = df.take(limit)
+      val totalCount = df.count()
+
+      if (data.nonEmpty) {
+        log(s"DataFrame com ${df.columns.length} colunas: ${df.columns.mkString(", ")}")
+        log("Cabeçalho: " + df.columns.mkString(" | "))
+        log("Dados:")
+        data.foreach { row =>
+          log(row.mkString(" | "))
+        }
+        log(s"Total de registros no DataFrame: $totalCount")
+        log(s"Exibindo ${math.min(limit, totalCount)} registros de $totalCount")
+      } else {
+        log("DataFrame vazio")
+      }
+    } catch {
+      case e: Exception =>
+        log(s"ERRO ao logar DataFrame: ${e.getMessage}")
+    }
+  }
+
   def close(): Unit = {
     outputStream.foreach { stream =>
       try {
@@ -83,11 +110,11 @@ object AuditoriaLogger {
   def main(args: Array[String]): Unit = {
     // Default values if not provided in args
     var year = "2025"
-    var month = "11"
+    var month = "12"
     var anoInicio = 2025
-    var mesInicio = 11
+    var mesInicio = 12
     var anoFim = 2025
-    var mesFim = 11
+    var mesFim = 12
 
     // Parse arguments if provided
     if (args.length >= 6) {
@@ -207,6 +234,9 @@ object AuditoriaLogger {
       val chavesRepetidasPrata = prataDF.groupBy(colunaVerificacao.toLowerCase).count().filter(col("count") > 1)
 
       HDFSLogger.log(s"${colunaVerificacao}s repetidas (quantidade > 1) no prata:")
+      HDFSLogger.logDataFrame(chavesRepetidasPrata, 10, s"${colunaVerificacao}s repetidas no prata")
+
+      // Mostra também no console
       chavesRepetidasPrata.show(10, false)
 
       val bronzePath = s"${bronzeBasePath}year=${year}/month=${month}"
@@ -225,6 +255,9 @@ object AuditoriaLogger {
 
         val chavesNaoExistentes = bronzeDF.except(prataDF)
         HDFSLogger.log(s"${colunaVerificacao}s do bronze que não existem no prata para year=${year}/month=${month}:")
+        HDFSLogger.logDataFrame(chavesNaoExistentes, 100, s"${colunaVerificacao}s do bronze que não existem no prata")
+
+        // Mostra também no console
         chavesNaoExistentes.show(100, false)
 
         val countChavesNaoExistentes = chavesNaoExistentes.count()
@@ -254,6 +287,9 @@ object AuditoriaLogger {
       val nsudfsRepetidosPrata = prataDF.groupBy("nsudf").count().filter(col("count") > 1)
 
       HDFSLogger.log(s"NSUDFs repetidos (quantidade > 1) no prata:")
+      HDFSLogger.logDataFrame(nsudfsRepetidosPrata, 10, "NSUDFs repetidos no prata")
+
+      // Mostra também no console
       nsudfsRepetidosPrata.show(10, false)
 
       val bronzePath = s"${bronzeBasePath}year=${year}/month=${month}"
@@ -272,6 +308,9 @@ object AuditoriaLogger {
 
         val nsudfsNaoExistentes = bronzeDF.except(prataDF)
         HDFSLogger.log(s"NSUDFs do bronze que não existem no prata para year=${year}/month=${month}:")
+        HDFSLogger.logDataFrame(nsudfsNaoExistentes, 100, "NSUDFs do bronze que não existem no prata")
+
+        // Mostra também no console
         nsudfsNaoExistentes.show(100, false)
 
         val countNsudfsNaoExistentes = nsudfsNaoExistentes.count()
@@ -301,6 +340,9 @@ object AuditoriaLogger {
       val nsusRepetidosPrata = prataDF.groupBy("nsu").count().filter(col("count") > 1)
 
       HDFSLogger.log(s"NSUs repetidos (quantidade > 1) no prata:")
+      HDFSLogger.logDataFrame(nsusRepetidosPrata, 10, "NSUs repetidos no prata")
+
+      // Mostra também no console
       nsusRepetidosPrata.show(10, false)
 
       val bronzePath = s"${bronzeBasePath}year=${year}/month=${month}"
@@ -319,6 +361,9 @@ object AuditoriaLogger {
 
         val nsusNaoExistentes = bronzeDF.except(prataDF)
         HDFSLogger.log(s"NSUs do bronze que não existem no prata para year=${year}/month=${month}:")
+        HDFSLogger.logDataFrame(nsusNaoExistentes, 100, "NSUs do bronze que não existem no prata")
+
+        // Mostra também no console
         nsusNaoExistentes.show(100, false)
 
         val countNsusNaoExistentes = nsusNaoExistentes.count()
@@ -348,6 +393,9 @@ object AuditoriaLogger {
       val nsusvdRepetidosPrata = prataDF.groupBy("nsusvd").count().filter(col("count") > 1)
 
       HDFSLogger.log(s"NSUSVDs repetidos (quantidade > 1) no prata:")
+      HDFSLogger.logDataFrame(nsusvdRepetidosPrata, 10, "NSUSVDs repetidos no prata")
+
+      // Mostra também no console
       nsusvdRepetidosPrata.show(10, false)
 
       val bronzePath = s"${bronzeBasePath}year=${year}/month=${month}"
@@ -366,6 +414,9 @@ object AuditoriaLogger {
 
         val nsusvdNaoExistentes = bronzeDF.except(prataDF)
         HDFSLogger.log(s"NSUSVDs do bronze que não existem no prata para year=${year}/month=${month}:")
+        HDFSLogger.logDataFrame(nsusvdNaoExistentes, 100, "NSUSVDs do bronze que não existem no prata")
+
+        // Mostra também no console
         nsusvdNaoExistentes.show(100, false)
 
         val countNsusvdNaoExistentes = nsusvdNaoExistentes.count()
@@ -404,4 +455,4 @@ object AuditoriaLogger {
     }
   }
 }
-// AuditoriaLogger.main(Array())
+//AuditoriaLogger.main(Array())

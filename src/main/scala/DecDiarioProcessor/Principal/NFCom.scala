@@ -26,7 +26,7 @@ object NFCom {
     // Gerar a lista dos últimos 10 dias no formato YYYYMMDD, começando do dia anterior
     val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
     val dataAtual = LocalDateTime.now()
-    val ultimos10Dias = (1 to 10).map { diasAtras =>
+    val ultimos10Dias = (1 to 20).map { diasAtras =>
       dataAtual.minus(diasAtras, ChronoUnit.DAYS).format(dateFormatter)
     }.toList
 

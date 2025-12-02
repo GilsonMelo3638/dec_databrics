@@ -51,7 +51,7 @@ object testeExtratorGenerico {
     val numPartitions = 200
 
     // Define o intervalo de dias (de -2 até -4)
-    val dias = List(-1)
+    val dias = List(-18)
 
     // Loop para processar cada dia
     dias.foreach { dia =>

@@ -13,7 +13,7 @@ object ContadorDocumentosProcessado {
     val tipos = Seq("nfe", "nfce", "bpe", "cte", "mdfe", "nf3e", "nfcom")
     val basePath = "/datalake/bronze/sources/dbms/dec/diario"
     val ano = "2025"
-    val mes = "10"
+    val mes = "11"
 
     var totalCount = 0L
 

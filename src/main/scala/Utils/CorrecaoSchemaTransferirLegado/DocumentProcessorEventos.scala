@@ -6,7 +6,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.{LocalDate, ZoneId}
 
-abstract class DocumentProcessor {
+abstract class DocumentProcessorEventos {
   // Configurações específicas para cada tipo de documento
   def documentType: String
   def defaultPartitions: Int
@@ -107,18 +107,16 @@ abstract class DocumentProcessor {
 
 // Implementações específicas para cada tipo de documento (mantidas iguais)
 
-object MDFeEvento extends DocumentProcessor {
+object MDFeEvento extends DocumentProcessorEventos {
   override def documentType: String = "mdfe_evento"
   override def defaultPartitions: Int = 2
 
   override def convertDataTypes(df: DataFrame): DataFrame = {
-    super.convertDataTypes(df)
-      .withColumn("NSU", col("NSU").cast(StringType))
-      .withColumn("CSTAT", col("CSTAT").cast(StringType))
+    super.convertDataTypes(df).withColumn("NSU", col("NSU").cast(StringType)).withColumn("CSTAT", col("CSTAT").cast(StringType))
   }
 }
 
-object NF3eEvento extends DocumentProcessor {
+object NF3eEvento extends DocumentProcessorEventos {
   override def documentType: String = "nf3e_evento"
   override def defaultPartitions: Int = 2
 
@@ -129,7 +127,7 @@ object NF3eEvento extends DocumentProcessor {
   }
 }
 
-object NFComEvento extends DocumentProcessor {
+object NFComEvento extends DocumentProcessorEventos {
   override def documentType: String = "nfcom_evento"
   override def defaultPartitions: Int = 2
 
@@ -140,7 +138,7 @@ object NFComEvento extends DocumentProcessor {
   }
 }
 
-object NFeEvento extends DocumentProcessor {
+object NFeEvento extends DocumentProcessorEventos {
   override def documentType: String = "nfe_evento"
   override def defaultPartitions: Int = 5
 
@@ -151,7 +149,7 @@ object NFeEvento extends DocumentProcessor {
   }
 }
 
-object NFeCancelamento extends DocumentProcessor {
+object NFeCancelamento extends DocumentProcessorEventos {
   override def documentType: String = "nfe_cancelamento"
   override def defaultPartitions: Int = 1
 
@@ -162,7 +160,7 @@ object NFeCancelamento extends DocumentProcessor {
   }
 }
 
-object NFCeCancelamento extends DocumentProcessor {
+object NFCeCancelamento extends DocumentProcessorEventos {
   override def documentType: String = "nfce_cancelamento"
   override def defaultPartitions: Int = 2
 
@@ -173,7 +171,7 @@ object NFCeCancelamento extends DocumentProcessor {
   }
 }
 
-object BPeCancelamento extends DocumentProcessor {
+object BPeCancelamento extends DocumentProcessorEventos {
   override def documentType: String = "bpe_cancelamento"
   override def defaultPartitions: Int = 1
 
@@ -184,7 +182,7 @@ object BPeCancelamento extends DocumentProcessor {
   }
 }
 
-object NFComCancelamento extends DocumentProcessor {
+object NFComCancelamento extends DocumentProcessorEventos {
   override def documentType: String = "nfcom_cancelamento"
   override def defaultPartitions: Int = 1
 
@@ -195,7 +193,7 @@ object NFComCancelamento extends DocumentProcessor {
   }
 }
 
-object NF3eCancelamento extends DocumentProcessor {
+object NF3eCancelamento extends DocumentProcessorEventos {
   override def documentType: String = "nf3e_cancelamento"
   override def defaultPartitions: Int = 1
 
@@ -206,7 +204,7 @@ object NF3eCancelamento extends DocumentProcessor {
   }
 }
 
-object CTeCancelamento extends DocumentProcessor {
+object CTeCancelamento extends DocumentProcessorEventos {
   override def documentType: String = "cte_cancelamento"
   override def defaultPartitions: Int = 1
 
@@ -217,7 +215,7 @@ object CTeCancelamento extends DocumentProcessor {
   }
 }
 
-object MDFeCancelamento extends DocumentProcessor {
+object MDFeCancelamento extends DocumentProcessorEventos {
   override def documentType: String = "mdfe_cancelamento"
   override def defaultPartitions: Int = 1
 
@@ -231,17 +229,17 @@ object MDFeCancelamento extends DocumentProcessor {
 
 // Exemplo de como executar (agora sem parâmetros para usar o mês anterior):
 
-MDFeEvento.main(Array())      // Usa mês anterior automaticamente
-NF3eEvento.main(Array())      // Usa mês anterior automaticamente
-NFComEvento.main(Array())     // Usa mês anterior automaticamente
-NFeEvento.main(Array())       // Usa mês anterior automaticamente
-NFeCancelamento.main(Array())       // Usa mês anterior automaticamente
-NFCeCancelamento.main(Array())       // Usa mês anterior automaticamente
-BPeCancelamento.main(Array())       // Usa mês anterior automaticamente
-NFComCancelamento.main(Array())       // Usa mês anterior automaticamente
-NF3eCancelamento.main(Array())       // Usa mês anterior automaticamente
-CTeCancelamento.main(Array())       // Usa mês anterior automaticamente
-MDFeCancelamento.main(Array())       // Usa mês anterior automaticamente
+//MDFeEvento.main(Array())      // Usa mês anterior automaticamente
+//NF3eEvento.main(Array())      // Usa mês anterior automaticamente
+//NFComEvento.main(Array())     // Usa mês anterior automaticamente
+//NFeEvento.main(Array())       // Usa mês anterior automaticamente
+//NFeCancelamento.main(Array())       // Usa mês anterior automaticamente
+//NFCeCancelamento.main(Array())       // Usa mês anterior automaticamente
+//BPeCancelamento.main(Array())       // Usa mês anterior automaticamente
+//NFComCancelamento.main(Array())       // Usa mês anterior automaticamente
+//NF3eCancelamento.main(Array())       // Usa mês anterior automaticamente
+//CTeCancelamento.main(Array())       // Usa mês anterior automaticamente
+//MDFeCancelamento.main(Array())       // Usa mês anterior automaticamente
 
 // Ou ainda pode sobrescrever com parâmetros específicos:
 // BPe.main(Array("2025", "6")) // Força ano 2025, mês 6
