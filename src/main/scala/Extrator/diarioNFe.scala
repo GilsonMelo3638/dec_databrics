@@ -88,17 +88,33 @@ object diarioNFe {
     // Query SQL base
     val baseQuery =
       s"""
-    SELECT NSUDF,
-           REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//nfeProc', 'xmlns=\"http://www.portalfiscal.inf.br/nfe\"') AS CLOB), CHR(10), ' '), CHR(13), ' ') AS XML_DOCUMENTO_CLOB,
-           f.NSUAN,f.CSTAT, f.CHAVE, f.IP_TRANSMISSOR,
-           TO_CHAR(f.DHRECBTO, 'DD/MM/YYYY HH24:MI:SS') AS DHRECBTO,
-           TO_CHAR(f.DHEMI, 'DD/MM/YYYY HH24:MI:SS') AS DHEMI,
-           TO_CHAR(f.DHPROC, 'DD/MM/YYYY HH24:MI:SS') AS DHPROC,
-           f.EMITENTE, f.UF_EMITENTE, f.DESTINATARIO, f.UF_DESTINATARIO
+    SELECT
+        NSUDF,
+        REGEXP_REPLACE(
+            REPLACE(REPLACE(
+                XMLSERIALIZE(
+                    DOCUMENT f.XML_DOCUMENTO.EXTRACT('//nfeProc', 'xmlns="http://www.portalfiscal.inf.br/nfe"')
+                    AS CLOB
+                ), CHR(10), ' '
+            ), CHR(13), ' '),
+            '<!--[^>]*-->',
+            ''
+        ) AS XML_DOCUMENTO_CLOB,
+        f.NSUAN,
+        f.CSTAT,
+        f.CHAVE,
+        f.IP_TRANSMISSOR,
+        TO_CHAR(f.DHRECBTO, 'DD/MM/YYYY HH24:MI:SS') AS DHRECBTO,
+        TO_CHAR(f.DHEMI,  'DD/MM/YYYY HH24:MI:SS') AS DHEMI,
+        TO_CHAR(f.DHPROC, 'DD/MM/YYYY HH24:MI:SS') AS DHPROC,
+        f.EMITENTE,
+        f.UF_EMITENTE,
+        f.DESTINATARIO,
+        f.UF_DESTINATARIO
     FROM DEC_DFE_NFE f
-    WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS') AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
+    WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS')
+                      AND TO_DATE('$dataFinal',   'DD/MM/YYYY HH24:MI:SS')
   """
-
     // Obtém os valores mínimo e máximo da coluna de particionamento como java.math.BigDecimal
     val minMaxQuery = s"SELECT MIN($splitByColumn) AS min, MAX($splitByColumn) AS max FROM ($baseQuery)"
     val minMaxDF = spark.read.jdbc(jdbcUrl, s"($minMaxQuery) tmp", connectionProperties)

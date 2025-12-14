@@ -379,4 +379,4 @@ object RelatorioTotalizacaoDFEComValidacao {
     spark.stop()
   }
 }
-RelatorioTotalizacaoDFE.main(Array())
+//RelatorioTotalizacaoDFE.main(Array())

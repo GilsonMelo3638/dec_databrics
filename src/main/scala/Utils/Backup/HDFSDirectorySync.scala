@@ -13,7 +13,7 @@ object HDFSDirectorySync{
     // Configurações básicas
     val sourceRoot = "/datalake/prata/sources/dbms/dec"
     val destRoot = "/datalake/prata/backup_producao"
-    val referenceDate = LocalDate.of(2025, 11, 30) // Data de referência para sincronização
+    val referenceDate = LocalDate.of(2025, 12, 14) // Data de referência para sincronização
 
     // Todos os diretórios que precisam ser sincronizados
     val directoriesToSync = Map(
