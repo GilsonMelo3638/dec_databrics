@@ -10,7 +10,7 @@ object SchemaNFCom {
     val spark = SparkSession.builder.appName("ExtractNFComProc").enableHiveSupport().getOrCreate()
     // Diretório dos arquivos Parquet
     // Carregar o DataFrame a partir do diretório Parquet, assumindo que o XML completo está em 'XML_DOCUMENTO_CLOB'
-    val df = spark.read.format("xml").option("rowTag", "NFComProc").load("/datalake/bronze/sources/dbms/dec/nfcom/202504_202507")
+    val df = spark.read.format("xml").option("rowTag", "nfcomProc").load("/datalake/bronze/sources/dbms/dec/nfcom/202301")
     // Agora você pode acessar infNFe
 
     df.printSchema()

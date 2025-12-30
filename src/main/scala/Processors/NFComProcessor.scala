@@ -147,10 +147,28 @@ object NFComProcessor {
       $"parsed.NFCom.infNFCom.infAdic.infCpl".as("infadic_infcpl"),
 
       // Campos de total
-      $"parsed.NFCom.infNFCom.total.ICMSTot.vBC".as("icmstot_vbc"),
+      // IBSCBSTot
+      $"parsed.NFCom.infNFCom.total.IBSCBSTot.gCBS.vCBS".as("ibscbstot_gcbs_vcbs"),
+      $"parsed.NFCom.infNFCom.total.IBSCBSTot.gCBS.vDevTrib".as("ibscbstot_gcbs_vdevtrib"),
+      $"parsed.NFCom.infNFCom.total.IBSCBSTot.gCBS.vDif".as("ibscbstot_gcbs_vdif"),
+      $"parsed.NFCom.infNFCom.total.IBSCBSTot.gEstornoCred.vCBSEstCred".as("ibscbstot_gestornocred_vcbsestcred"),
+      $"parsed.NFCom.infNFCom.total.IBSCBSTot.gEstornoCred.vIBSEstCred".as("ibscbstot_gestornocred_vibsestcred"),
+      $"parsed.NFCom.infNFCom.total.IBSCBSTot.gIBS.gIBSMun.vDevTrib".as("ibscbstot_gibs_gibsmun_vdevtrib"),
+      $"parsed.NFCom.infNFCom.total.IBSCBSTot.gIBS.gIBSMun.vDif".as("ibscbstot_gibs_gibsmun_vdif"),
+      $"parsed.NFCom.infNFCom.total.IBSCBSTot.gIBS.gIBSMun.vIBSMun".as("ibscbstot_gibs_gibsmun_vibsmun"),
+      $"parsed.NFCom.infNFCom.total.IBSCBSTot.gIBS.gIBSUF.vDevTrib".as("ibscbstot_gibs_gibsuf_vdevtrib"),
+      $"parsed.NFCom.infNFCom.total.IBSCBSTot.gIBS.gIBSUF.vDif".as("ibscbstot_gibs_gibsuf_vdif"),
+      $"parsed.NFCom.infNFCom.total.IBSCBSTot.gIBS.gIBSUF.vIBSUF".as("ibscbstot_gibs_gibsuf_vibsuf"),
+      $"parsed.NFCom.infNFCom.total.IBSCBSTot.gIBS.vIBS".as("ibscbstot_gibs_vibs"),
+      $"parsed.NFCom.infNFCom.total.IBSCBSTot.vBCIBSCBS".as("ibscbstot_vbcibscbs"),
+
+      // ICMSTot
+       $"parsed.NFCom.infNFCom.total.ICMSTot.vBC".as("icmstot_vbc"),
       $"parsed.NFCom.infNFCom.total.ICMSTot.vFCP".as("icmstot_vfcp"),
       $"parsed.NFCom.infNFCom.total.ICMSTot.vICMS".as("icmstot_vicms"),
       $"parsed.NFCom.infNFCom.total.ICMSTot.vICMSDeson".as("icmstot_vicmsdeson"),
+
+      // Totais gerais
       $"parsed.NFCom.infNFCom.total.vCOFINS".as("total_vcofins"),
       $"parsed.NFCom.infNFCom.total.vDesc".as("total_vdesc"),
       $"parsed.NFCom.infNFCom.total.vFUNTTEL".as("total_vfunttel"),
@@ -159,10 +177,15 @@ object NFComProcessor {
       $"parsed.NFCom.infNFCom.total.vOutro".as("total_voutro"),
       $"parsed.NFCom.infNFCom.total.vPIS".as("total_vpis"),
       $"parsed.NFCom.infNFCom.total.vProd".as("total_vprod"),
+
+      // vRetTribTot
       $"parsed.NFCom.infNFCom.total.vRetTribTot.vIRRF".as("vrettribtot_virrf"),
       $"parsed.NFCom.infNFCom.total.vRetTribTot.vRetCSLL".as("vrettribtot_vretcsll"),
       $"parsed.NFCom.infNFCom.total.vRetTribTot.vRetCofins".as("vrettribtot_vretcofins"),
       $"parsed.NFCom.infNFCom.total.vRetTribTot.vRetPIS".as("vrettribtot_vretpis"),
+
+      // Campo adicional vTotDFe
+      $"parsed.NFCom.infNFCom.total.vTotDFe".as("total_vtotdfe"),
 
       // Campos de infNFComSupl
       $"parsed.NFCom.infNFComSupl.qrCodNFCom".as("infnfcomsupl_qrcodnfcom"),

@@ -1,8 +1,11 @@
 package Auditoria
 
 import scala.sys.process._
+
 object UltimaPastaHDFS {
+
   def main(args: Array[String]): Unit = {
+
     val diretorios = Seq(
       "/datalake/bronze/sources/dbms/dec/processamento/nfce/processado",
       "/datalake/bronze/sources/dbms/dec/processamento/nfe/processado",
@@ -25,20 +28,51 @@ object UltimaPastaHDFS {
     )
 
     diretorios.foreach { dir =>
-    val comando = s"hdfs dfs -ls $dir"
-      val resultado = comando.!!
+      try {
+        val comandoListarPastas = s"hdfs dfs -ls $dir"
+        val resultado = comandoListarPastas.!!
 
-      val pastas = resultado.split("\n")
-        .map(_.split(" ").lastOption.getOrElse(""))
-        .filter(_.startsWith(dir))
-        .map(_.stripPrefix(dir + "/"))
-        .filter(_.nonEmpty)
-        .sorted.reverse
+        val pastas = resultado.split("\n")
+          .filter(_.startsWith("d")) // só diretórios
+          .map(_.trim.split("\\s+").last)
+          .sorted
+          .reverse
 
-      val ultimaPasta = pastas.headOption.getOrElse("Nenhuma pasta encontrada")
-      println(s"Última pasta em $dir: $ultimaPasta")
+        pastas.headOption match {
+          case Some(ultimaPasta) =>
+            println(s"Última pasta em $dir: $ultimaPasta")
+
+            // Agora verifica se tem arquivos dentro
+            val comandoListarArquivos = s"hdfs dfs -ls $ultimaPasta"
+            val conteudo = comandoListarArquivos.!!
+
+            val arquivos = conteudo.split("\n")
+              .filter(_.startsWith("-")) // arquivos regulares
+
+            if (arquivos.isEmpty) {
+              println(
+                s"""🚨 ALERTA:
+                   |A última pasta está VAZIA!
+                   |Diretório base: $dir
+                   |Última pasta: $ultimaPasta
+                   |Possível falha de processamento ou ingestão.
+                   |""".stripMargin
+              )
+
+              // Se quiser falhar o job, descomenta:
+              // sys.error(s"Última pasta vazia: $ultimaPasta")
+            }
+
+          case None =>
+            println(s"⚠️ ALERTA: Nenhuma pasta encontrada em $dir")
+        }
+
+      } catch {
+        case e: Exception =>
+          println(s"❌ ERRO ao processar diretório $dir: ${e.getMessage}")
+      }
     }
   }
 }
-//UltimaPastaHDFS.main(Array())
 
+// UltimaPastaHDFS.main(Array())

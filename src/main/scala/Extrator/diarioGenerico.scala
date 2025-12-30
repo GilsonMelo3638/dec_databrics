@@ -137,7 +137,10 @@ object diarioGenerico {
         case "NFCom" =>
           s"""
         SELECT NSU,
-    REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//NFComProc', 'xmlns=\"http://www.portalfiscal.inf.br/nfcom\"') AS CLOB), CHR(10), ' '), CHR(13), ' ') AS XML_DOCUMENTO_CLOB,
+          COALESCE(
+                      REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//NFComProc', 'xmlns=\"http://www.portalfiscal.inf.br/nfcom\"') AS CLOB), CHR(10), ' '), CHR(13), ' '),
+                      REPLACE(REPLACE(XMLSERIALIZE(document f.XML_DOCUMENTO.extract('//nfcomProc', 'xmlns=\"http://www.portalfiscal.inf.br/nfcom\"') AS CLOB), CHR(10), ' '), CHR(13), ' ')
+                  ) AS XML_DOCUMENTO_CLOB,
                f.CSTAT, f.CHAVE, f.IP_TRANSMISSOR,
                TO_CHAR(f.DHRECBTO, 'DD/MM/YYYY HH24:MI:SS') AS DHRECBTO,
                TO_CHAR(f.DHEMI, 'DD/MM/YYYY HH24:MI:SS') AS DHEMI,

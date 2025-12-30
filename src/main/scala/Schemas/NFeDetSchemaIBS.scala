@@ -40,6 +40,9 @@ object NFeDetSchemaIBS {
             )
           )
           .add("det", ArrayType(new StructType()
+            .add("DFeReferenciado", new StructType()
+              .add("chaveAcesso", StringType, nullable = true)
+              .add("nItem", StringType, nullable = true)
             .add("_nItem", StringType, nullable = true)
             .add("prod", new StructType()
               .add("CFOP", StringType, nullable = true)
@@ -56,7 +59,6 @@ object NFeDetSchemaIBS {
               .add("indEscala", StringType, nullable = true)
               .add("indTot", StringType, nullable = true)
               .add("tpCredPresIBSZFM", StringType, nullable = true)
-              .add("indBemMovelUsado", StringType, nullable = true)
               .add("nFCI", StringType, nullable = true)
               .add("nItemPed", StringType, nullable = true)
               .add("qCom", DoubleType, nullable = true)
@@ -184,6 +186,7 @@ object NFeDetSchemaIBS {
               ))
             )
             .add("imposto", new StructType()
+              .add("vItem", DoubleType, nullable = true)
               .add("ICMS", new StructType()
                 .add("ICMS00", new StructType()
                   .add("CST", StringType, nullable = true)
@@ -724,6 +727,6 @@ object NFeDetSchemaIBS {
             )
           ))
         )
-      )
+      ))
   }
 }
