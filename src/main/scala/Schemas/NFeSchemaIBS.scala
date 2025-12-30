@@ -24,6 +24,7 @@ object NFeSchemaIBS {
             .add("dPrevEntrega", StringType, nullable = true)
             .add("dhEmi", StringType, nullable = true)
             .add("cDV", StringType, nullable = true)
+            .add("indBemMovelUsado", StringType, nullable = true)
             .add("cMunFG", StringType, nullable = true)
             .add("cMunFGIBS", StringType, nullable = true)
             .add("cNF", StringType, nullable = true)
