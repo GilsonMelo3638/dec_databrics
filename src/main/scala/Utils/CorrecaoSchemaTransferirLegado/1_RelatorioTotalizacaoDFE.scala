@@ -1,13 +1,14 @@
-
 package Utils.CorrecaoSchemaTransferirLegado
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-
 import java.time.format.DateTimeFormatter
 import java.util.Properties
 
 object RelatorioTotalizacaoDFE {
+  // Datas para o relatório - VARIÁVEIS CENTRALIZADAS E ÚNICAS
+  val DATA_INICIO = "01/12/2025"
+  val DATA_FIM = "31/12/2025"
 
   def main(args: Array[String]): Unit = {
     // Inicializa a sessão do Spark
@@ -24,6 +25,10 @@ object RelatorioTotalizacaoDFE {
     connectionProperties.put("user", "admhadoop")
     connectionProperties.put("password", ".admhadoop#")
     connectionProperties.put("driver", "oracle.jdbc.driver.OracleDriver")
+
+    // Formatar as datas para o padrão do Oracle
+    val dataInicial = s"$DATA_INICIO 00:00:00"
+    val dataFinal = s"$DATA_FIM 23:59:59"
 
     // Lista de tabelas e suas descrições para o relatório - CORRIGIDA
     val tabelas = Seq(
@@ -47,15 +52,7 @@ object RelatorioTotalizacaoDFE {
       ("ADMDEC.DEC_DFE_MDFE_EVENTO", "Eventos de MDF-e")
     )
 
-    // Data para o relatório (pode ser ajustada para receber como parâmetro)
-    val dataInicio = "01/11/2025"
-    val dataFim = "30/11/2025"
-
-    // Formatar as datas para o padrão do Oracle
-    val dataInicial = s"$dataInicio 00:00:00"
-    val dataFinal = s"$dataFim 23:59:59"
-
-    println(s"Gerando relatório de totalização para o período: $dataInicio a $dataFim")
+    println(s"Gerando relatório de totalização para o período: $DATA_INICIO a $DATA_FIM")
     println("=" * 80)
 
     // DataFrame para armazenar os resultados
@@ -64,13 +61,12 @@ object RelatorioTotalizacaoDFE {
     // Executar queries para cada tabela
     for ((tabela, descricao) <- tabelas) {
       try {
-        val query =
-          s"""
+        val query = s"""
           SELECT COUNT(chave) as TOTAL
           FROM $tabela
           WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS')
           AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
-          """
+        """
 
         println(s"Executando query para: $descricao")
         println(s"Query: ${query.take(100)}...")
@@ -98,11 +94,10 @@ object RelatorioTotalizacaoDFE {
         val novoResultado = Seq((tabela, descricao, total)).toDF("tabela", "descricao", "quantidade")
         resultadosDF = resultadosDF.union(novoResultado)
 
-        println(s"  → Total: $total registros")
-
+        println(s" → Total: $total registros")
       } catch {
         case e: Exception =>
-          println(s"  → Erro ao consultar $descricao: ${e.getMessage}")
+          println(s" → Erro ao consultar $descricao: ${e.getMessage}")
           e.printStackTrace()
           // Adicionar registro com erro
           val erroResultado = Seq((tabela, s"$descricao (ERRO: ${e.getMessage.take(50)}...)", -1L))
@@ -125,12 +120,22 @@ object RelatorioTotalizacaoDFE {
 
     val totalTabelas = resultadosDF.count()
 
+    // ADIÇÃO: Remover o prefixo "ADMDEC.DEC_DFE_" da coluna tabela para exibição
+    val resultadosExibicao = resultadosDF.withColumn(
+      "tabela_simplificada",
+      regexp_replace($"tabela", "ADMDEC\\.DEC_DFE_", "")
+    ).select(
+      $"tabela_simplificada".as("tabela"),
+      $"descricao",
+      $"quantidade"
+    )
+
     // Exibir relatório formatado
-    println("\nResultados detalhados:")
-    resultadosDF.orderBy($"quantidade".desc).show(truncate = false)
+    println("\nResultados detalhados (ordem alfabética de tabela):")
+    resultadosExibicao.orderBy($"tabela".asc).show(truncate = false)
 
     println("\n" + "=" * 80)
-    println(s"PERÍODO ANALISADO: $dataInicio a $dataFim")
+    println(s"PERÍODO ANALISADO: $DATA_INICIO a $DATA_FIM")
     println(s"TOTAL DE TABELAS CONSULTADAS: $totalTabelas")
     println(s"TOTAL GERAL DE REGISTROS: $totalGeral")
     println("=" * 80)
@@ -141,14 +146,31 @@ object RelatorioTotalizacaoDFE {
 
     // Caminhos para salvar o relatório
     val hdfsBasePath = "/datalake/bronze/sources/dbms/dec/relatorios"
-    val csvPath = s"$hdfsBasePath/csv/totalizacao_${dataInicio.replace("/", "")}_${dataFim.replace("/", "")}_$timestamp"
-    val parquetPath = s"$hdfsBasePath/parquet/totalizacao_${dataInicio.replace("/", "")}_${dataFim.replace("/", "")}_$timestamp"
-    val jsonPath = s"$hdfsBasePath/json/totalizacao_${dataInicio.replace("/", "")}_${dataFim.replace("/", "")}_$timestamp"
+    // Usar as mesmas variáveis de data
+    val dataInicioSemBarras = DATA_INICIO.replace("/", "")
+    val dataFimSemBarras = DATA_FIM.replace("/", "")
+    val csvPath = s"$hdfsBasePath/csv/totalizacao_${dataInicioSemBarras}_${dataFimSemBarras}_$timestamp"
+    val parquetPath = s"$hdfsBasePath/parquet/totalizacao_${dataInicioSemBarras}_${dataFimSemBarras}_$timestamp"
+    val jsonPath = s"$hdfsBasePath/json/totalizacao_${dataInicioSemBarras}_${dataFimSemBarras}_$timestamp"
 
-    // Adicionar colunas de metadados
-    val relatorioCompleto = resultadosDF
-      .withColumn("data_inicio", lit(dataInicio))
-      .withColumn("data_fim", lit(dataFim))
+    // ADIÇÃO: Criar versão simplificada para salvar (opcional - manter original também)
+    val relatorioSimplificado = resultadosDF.withColumn(
+      "tabela_simplificada",
+      regexp_replace($"tabela", "ADMDEC\\.DEC_DFE_", "")
+    ).withColumn(
+      "tabela_original",
+      $"tabela"  // Manter a tabela original também
+    ).select(
+      $"tabela_simplificada".as("tabela"),
+      $"tabela_original",
+      $"descricao",
+      $"quantidade"
+    )
+
+    // Adicionar colunas de metadados ao relatório simplificado
+    val relatorioCompleto = relatorioSimplificado
+      .withColumn("data_inicio", lit(DATA_INICIO))
+      .withColumn("data_fim", lit(DATA_FIM))
       .withColumn("data_geracao", current_timestamp())
       .withColumn("total_geral", lit(totalGeral))
 
@@ -162,37 +184,36 @@ object RelatorioTotalizacaoDFE {
       .option("delimiter", ";")
       .mode("overwrite")
       .csv(csvPath)
-    println(s"  • CSV: $csvPath")
+    println(s" • CSV: $csvPath")
 
     // Parquet
     relatorioCompleto.write
       .mode("overwrite")
       .parquet(parquetPath)
-    println(s"  • Parquet: $parquetPath")
+    println(s" • Parquet: $parquetPath")
 
     // JSON
     relatorioCompleto.coalesce(1)
       .write
       .mode("overwrite")
       .json(jsonPath)
-    println(s"  • JSON: $jsonPath")
+    println(s" • JSON: $jsonPath")
 
-    // Gerar relatório resumido por categoria
+    // Gerar relatório resumido por categoria usando a tabela simplificada
     println("\n" + "=" * 80)
     println("RESUMO POR CATEGORIA DE DOCUMENTO")
     println("=" * 80)
 
     // Categorizar os documentos
-    val relatorioCategorizado = resultadosDF
-      .withColumn("categoria",
-        when($"descricao".contains("NF-e"), "NF-e")
-          .when($"descricao".contains("NFC-e"), "NFC-e")
-          .when($"descricao".contains("NF3-e"), "NF3-e")
-          .when($"descricao".contains("NFCom"), "NFCom")
-          .when($"descricao".contains("MDF-e"), "MDF-e")
-          .when($"descricao".contains("CT-e"), "CT-e")
-          .when($"descricao".contains("BPE"), "BPE")
-          .otherwise("Outros")
+    val relatorioCategorizado = relatorioSimplificado
+      .withColumn("categoria", when($"descricao".contains("NF-e"), "NF-e")
+        .when($"descricao".contains("NFC-e"), "NFC-e")
+        .when($"descricao".contains("NF3-e"), "NF3-e")
+        .when($"descricao".contains("NFCom"), "NFCom")
+        .when($"descricao".contains("MDF-e"), "MDF-e")
+        .when($"descricao".contains("CT-e"), "CT-e")
+        .when($"descricao".contains("BPE"), "BPE")
+        .otherwise("Outros")
       )
       .groupBy("categoria")
       .agg(
@@ -204,7 +225,7 @@ object RelatorioTotalizacaoDFE {
     relatorioCategorizado.show(truncate = false)
 
     // Salvar o relatório categorizado
-    val categoriaPath = s"$hdfsBasePath/parquet/resumo_categorias_${dataInicio.replace("/", "")}_${dataFim.replace("/", "")}_$timestamp"
+    val categoriaPath = s"$hdfsBasePath/parquet/resumo_categorias_${dataInicioSemBarras}_${dataFimSemBarras}_$timestamp"
     relatorioCategorizado.write
       .mode("overwrite")
       .parquet(categoriaPath)
@@ -220,8 +241,8 @@ object RelatorioTotalizacaoDFE {
 
     // Exemplos de consultas que podem ser feitas
     println("\nExemplos de consultas disponíveis:")
-    println("  • spark.sql(\"SELECT * FROM relatorio_totalizacao WHERE quantidade > 0 ORDER BY quantidade DESC\").show()")
-    println("  • spark.sql(\"SELECT categoria, SUM(total_categoria) as total FROM resumo_categorias GROUP BY categoria\").show()")
+    println(" • spark.sql(\"SELECT tabela, descricao, quantidade FROM relatorio_totalizacao WHERE quantidade > 0 ORDER BY quantidade DESC\").show()")
+    println(" • spark.sql(\"SELECT categoria, SUM(total_categoria) as total FROM resumo_categorias GROUP BY categoria\").show()")
 
     spark.stop()
   }
@@ -229,6 +250,9 @@ object RelatorioTotalizacaoDFE {
 
 // Versão alternativa que verifica quais tabelas existem antes de consultar
 object RelatorioTotalizacaoDFEComValidacao {
+  // Usa as mesmas datas do objeto principal para garantir consistência
+  val DATA_INICIO = RelatorioTotalizacaoDFE.DATA_INICIO
+  val DATA_FIM = RelatorioTotalizacaoDFE.DATA_FIM
 
   def verificarTabelaExiste(spark: SparkSession, jdbcUrl: String, properties: Properties, tabela: String): Boolean = {
     try {
@@ -236,8 +260,7 @@ object RelatorioTotalizacaoDFEComValidacao {
       spark.read.jdbc(jdbcUrl, s"($query) tmp", properties)
       true
     } catch {
-      case e: Exception =>
-        false
+      case e: Exception => false
     }
   }
 
@@ -255,6 +278,10 @@ object RelatorioTotalizacaoDFEComValidacao {
     connectionProperties.put("user", "admhadoop")
     connectionProperties.put("password", ".admhadoop#")
     connectionProperties.put("driver", "oracle.jdbc.driver.OracleDriver")
+
+    // Formatar as datas para o padrão do Oracle
+    val dataInicial = s"$DATA_INICIO 00:00:00"
+    val dataFinal = s"$DATA_FIM 23:59:59"
 
     // Lista de possíveis tabelas
     val possiveisTabelas = Seq(
@@ -301,13 +328,7 @@ object RelatorioTotalizacaoDFEComValidacao {
       "ADMDEC.DEC_DFE_MDFE_EVENTO" -> "Eventos de MDF-e"
     )
 
-    // Datas para o relatório
-    val dataInicio = "01/11/2025"
-    val dataFim = "30/11/2025"
-    val dataInicial = s"$dataInicio 00:00:00"
-    val dataFinal = s"$dataFim 23:59:59"
-
-    println(s"Verificando tabelas disponíveis no banco de dados...")
+    println(s"Verificando tabelas disponíveis no banco de dados para o período: $DATA_INICIO a $DATA_FIM")
     println("=" * 80)
 
     var resultadosDF = Seq.empty[(String, String, Long)].toDF("tabela", "descricao", "quantidade")
@@ -327,15 +348,13 @@ object RelatorioTotalizacaoDFEComValidacao {
     // Agora consultar apenas as tabelas que existem
     for (tabela <- tabelasExistentes) {
       val descricao = descricoes.getOrElse(tabela, tabela)
-
       try {
-        val query =
-          s"""
+        val query = s"""
           SELECT COUNT(chave) as TOTAL
           FROM $tabela
           WHERE DHPROC BETWEEN TO_DATE('$dataInicial', 'DD/MM/YYYY HH24:MI:SS')
           AND TO_DATE('$dataFinal', 'DD/MM/YYYY HH24:MI:SS')
-          """
+        """
 
         println(s"\nConsultando: $descricao")
 
@@ -361,22 +380,31 @@ object RelatorioTotalizacaoDFEComValidacao {
         val novoResultado = Seq((tabela, descricao, total)).toDF("tabela", "descricao", "quantidade")
         resultadosDF = resultadosDF.union(novoResultado)
 
-        println(s"  → Total encontrado: $total registros")
-
+        println(s" → Total encontrado: $total registros")
       } catch {
         case e: Exception =>
-          println(s"  → Erro na consulta: ${e.getMessage}")
+          println(s" → Erro na consulta: ${e.getMessage}")
       }
     }
+
+    // ADIÇÃO: Remover o prefixo "ADMDEC.DEC_DFE_" da coluna tabela para exibição
+    val resultadosExibicao = resultadosDF.withColumn(
+      "tabela_simplificada",
+      regexp_replace($"tabela", "ADMDEC\\.DEC_DFE_", "")
+    ).select(
+      $"tabela_simplificada".as("tabela"),
+      $"descricao",
+      $"quantidade"
+    )
 
     // Exibir resultados
     println("\n" + "=" * 80)
     println("RELATÓRIO FINAL")
     println("=" * 80)
-
-    resultadosDF.orderBy($"quantidade".desc).show(truncate = false)
+    resultadosExibicao.orderBy($"tabela".asc).show(truncate = false)
 
     spark.stop()
   }
 }
+
 //RelatorioTotalizacaoDFE.main(Array())

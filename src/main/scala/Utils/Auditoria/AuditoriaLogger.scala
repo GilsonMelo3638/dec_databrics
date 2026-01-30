@@ -109,12 +109,12 @@ object HDFSLogger {
 object AuditoriaLogger {
   def main(args: Array[String]): Unit = {
     // Default values if not provided in args
-    var year = "2025"
-    var month = "12"
-    var anoInicio = 2025
-    var mesInicio = 12
-    var anoFim = 2025
-    var mesFim = 12
+    var year = "2026"
+    var month = "1"
+    var anoInicio = 2026
+    var mesInicio = 11
+    var anoFim = 2026
+    var mesFim = 1
 
     // Parse arguments if provided
     if (args.length >= 6) {
@@ -195,6 +195,7 @@ object AuditoriaLogger {
       ("/datalake/bronze/sources/dbms/dec/diario/nfe/", "/datalake/prata/sources/dbms/dec/nfe/infNFe/", None, None, "CHAVE"),
       ("/datalake/bronze/sources/dbms/dec/diario/nfce/", "/datalake/prata/sources/dbms/dec/nfce/infNFCe/", None, None, "CHAVE"),
       ("/datalake/bronze/sources/dbms/dec/diario/nfe_evento/", "/datalake/prata/sources/dbms/dec/nfe/evento/", None, None, "NSUDF"),
+      ("/datalake/bronze/sources/dbms/dec/diario/bpe_evento/", "/datalake/prata/sources/dbms/dec/bpe/evento/", None, None, "NSU"),
       ("/datalake/bronze/sources/dbms/dec/diario/mdfe_evento/", "/datalake/prata/sources/dbms/dec/mdfe/evento/", None, None, "NSU"),
       ("/datalake/bronze/sources/dbms/dec/diario/nf3e_evento/", "/datalake/prata/sources/dbms/dec/nf3e/evento/", None, None, "NSU"),
       ("/datalake/bronze/sources/dbms/dec/diario/nfcom_evento/", "/datalake/prata/sources/dbms/dec/nfcom/evento/", None, None, "NSU")

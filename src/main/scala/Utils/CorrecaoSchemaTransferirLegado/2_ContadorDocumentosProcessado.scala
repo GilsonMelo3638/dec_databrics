@@ -10,10 +10,14 @@ object ContadorDocumentosProcessado {
       .appName("Contador de Documentos DEC")
       .getOrCreate()
 
-    val tipos = Seq("nfe", "nfce", "bpe", "cte", "mdfe", "nf3e", "nfcom")
+    val tipos = Seq(
+      "nfe", "nfce", "bpe", "cte", "mdfe", "nf3e", "nfcom",
+      "nfe_cancelamento", "nfce_cancelamento", "bpe_cancelamento", "cte_cancelamento", "mdfe_cancelamento", "nf3e_cancelamento", "nfcom_cancelamento",
+      "nfe_evento", "mdfe_evento", "nf3e_evento", "nfcom_evento"
+    )
     val basePath = "/datalake/bronze/sources/dbms/dec/diario"
     val ano = "2025"
-    val mes = "11"
+    val mes = "12"
 
     var totalCount = 0L
 

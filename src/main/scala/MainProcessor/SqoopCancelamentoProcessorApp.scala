@@ -1,7 +1,7 @@
 package MainProcessor
 
 import Abstract.Cancelamento.{BPe, CTe, MDFe, NF3e, NFCe, NFCom, NFe}
-import Abstract.Evento.{NFeEvento, MDFeEvento, NF3eEvento, NFComEvento}
+import Abstract.Evento.{NFeEvento, BPeEvento, MDFeEvento, NF3eEvento, NFComEvento}
 import Extrator.{diarioGenericoCancelamento, diarioGenericoEvento}
 import RepartitionJob.RepartitionXlmCancelmentosProcessor
 
@@ -18,6 +18,7 @@ object SqoopCancelamentoProcessorApp {
     CTe.main(Array())
     diarioGenericoEvento.main(args)
     NFeEvento.main(Array())
+    BPeEvento.main(Array())
     MDFeEvento.main(Array())
     NF3eEvento.main(Array())
     NFComEvento.main(Array())

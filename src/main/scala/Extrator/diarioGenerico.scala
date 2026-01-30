@@ -68,7 +68,7 @@ object diarioGenerico {
       }
 
       // Número de partições (equivalente ao --num-mappers do Sqoop)
-      val numPartitions = 50
+      val numPartitions = 20
 
       // Query SQL base
       val baseQuery = documentType match {

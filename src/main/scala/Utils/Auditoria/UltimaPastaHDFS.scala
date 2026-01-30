@@ -22,6 +22,7 @@ object UltimaPastaHDFS {
       "/datalake/bronze/sources/dbms/dec/processamento/cte_cancelamento/processado",
       "/datalake/bronze/sources/dbms/dec/processamento/nfcom_cancelamento/processado",
       "/datalake/bronze/sources/dbms/dec/processamento/nfe_evento/processado",
+      "/datalake/bronze/sources/dbms/dec/processamento/bpe_evento/processado",
       "/datalake/bronze/sources/dbms/dec/processamento/mdfe_evento/processado",
       "/datalake/bronze/sources/dbms/dec/processamento/nf3e_evento/processado",
       "/datalake/bronze/sources/dbms/dec/processamento/nfcom_evento/processado"

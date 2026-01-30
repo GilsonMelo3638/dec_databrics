@@ -2,7 +2,7 @@ package Utils.CorrecaoSchemaTransferirLegado
 
 import org.apache.spark.sql.SparkSession
 
-object ContadorDocumentosLegado {
+object ContadorDocumentosDiario {
 
   def main(args: Array[String]): Unit = {
 
@@ -10,14 +10,14 @@ object ContadorDocumentosLegado {
       .appName("Contador de Documentos DEC")
       .getOrCreate()
 
-    val tipos = Seq("nfe_diario", "nfce_diario", "nf3e_diario", "nfcom_diario","bpe_diario", "cte_diario", "mdfe_diario",
-      "nfe_cancelamento_diario", "nfce_cancelamento_diario", "bpe_cancelamento_diario", "cte_cancelamento_diario",
-      "mdfe_cancelamento_diario", "nfcom_cancelamento_diario", "nf3e_cancelamento_diario",
-      "nfe_evento_diario", "nfcom_evento_diario","mdfe_evento_diario", "nf3e_evento_diario"
+    val tipos = Seq(
+      "nfe", "nfce", "bpe", "cte", "mdfe", "nf3e", "nfcom",
+      "nfe_cancelamento", "nfce_cancelamento", "bpe_cancelamento", "cte_cancelamento", "mdfe_cancelamento", "nf3e_cancelamento", "nfcom_cancelamento",
+      "nfe_evento", "mdfe_evento", "nf3e_evento", "nfcom_evento"
     )
-    val basePath = "/datalake/bronze/sources/dbms/legado/dec/"
+    val basePath = "/datalake/bronze/sources/dbms/dec/diario"
     val ano = "2025"
-    val mes = "11"
+    val mes = "12"
 
     var totalCount = 0L
 
@@ -43,4 +43,4 @@ object ContadorDocumentosLegado {
     spark.stop()
   }
 }
-//ContadorDocumentosLegado.main(Array())
+//ContadorDocumentosProcessado.main(Array())

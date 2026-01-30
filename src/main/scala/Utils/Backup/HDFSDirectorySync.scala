@@ -13,17 +13,17 @@ object HDFSDirectorySync{
     // Configurações básicas
     val sourceRoot = "/datalake/prata/sources/dbms/dec"
     val destRoot = "/datalake/prata/backup_producao"
-    val referenceDate = LocalDate.of(2025, 12, 28) // Data de referência para sincronização
+    val referenceDate = LocalDate.of(2026, 1, 25) // Data de referência para sincronização
 
     // Todos os diretórios que precisam ser sincronizados
     val directoriesToSync = Map(
-      "bpe" -> List("BPe", "cancelamento"),
+      "bpe" -> List("BPe", "cancelamento", "evento"),
       "cte" -> List("CTe",  "CTeOS", "CTeSimp", "GVTe", "cancelamento"),
-      "mdfe" -> List("MDFe", "cancelamento"),
-      "nf3e" -> List("NF3e", "cancelamento"),
-      "nfcom" -> List("NFCom", "cancelamento"),
+      "mdfe" -> List("MDFe", "cancelamento", "evento"),
+      "nf3e" -> List("NF3e", "cancelamento", "evento"),
+      "nfcom" -> List("NFCom", "cancelamento", "evento"),
       "nfe" -> List("infNFe", "det", "evento", "cancelamento"),
-      "nfce" -> List("infNFCe", "det", "cancelamento")
+      "nfce" -> List("infNFCe", "det", "cancelamento", "evento")
     )
 
     val conf = new Configuration()
