@@ -110,11 +110,11 @@ object AuditoriaLogger {
   def main(args: Array[String]): Unit = {
     // Default values if not provided in args
     var year = "2026"
-    var month = "1"
+    var month = "2"
     var anoInicio = 2026
-    var mesInicio = 11
+    var mesInicio = 2
     var anoFim = 2026
-    var mesFim = 1
+    var mesFim = 2
 
     // Parse arguments if provided
     if (args.length >= 6) {

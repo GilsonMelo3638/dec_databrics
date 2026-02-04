@@ -66,8 +66,8 @@ object nfceDet {
       val dia = f"${currentDate.getDayOfMonth}%02d"
       val anoMesDia = s"$ano$mes$dia"
 
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_det/$anoMesDia"
-      val parquetPathProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processado/$anoMesDia"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/nfce/processar_det/20260104"
+      val parquetPathProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processado/"
       val destino = s"/datalake/prata/sources/dbms/dec/$tipoDocumento/det/"
 
       println(s"Processando para: Ano: $ano, Mês: $mes, Dia: $dia")

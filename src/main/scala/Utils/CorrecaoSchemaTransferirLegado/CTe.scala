@@ -15,8 +15,8 @@
 //    spark.conf.set("spark.sql.parquet.compression.codec", "lz4")
 //
 //    // Caminhos de entrada e saída
-//    val inputPath = "/datalake/bronze/sources/dbms/dec/diario/cte/year=2025/month=04"
-//    val outputPath = "/datalake/bronze/sources/dbms/legado/dec/cte_diario/"
+//    val inputPath = "/datalake/bronze/sources/dbms/dec/cte_evento/2024_2"
+//    val outputPath = "/datalake/bronze/sources/dbms/legado/dec/cte_evento_diario/"
 //
 //    // Número de partições (ajuste conforme necessário)
 //    val numPartitions = 4
@@ -41,8 +41,6 @@
 //    df.withColumn("NSUSVD", col("NSUSVD").cast(StringType))
 //      .withColumn("NSUAUT", col("NSUAUT").cast(StringType))
 //      .withColumn("CSTAT", col("CSTAT").cast(StringType))
-//      .withColumn("MODELO", col("MODELO").cast(StringType))
-//      .withColumn("TPEMIS", col("TPEMIS").cast(StringType))
 //      .withColumnRenamed("day", "original_day") // Renomeia a coluna day existente
 //  }
 //

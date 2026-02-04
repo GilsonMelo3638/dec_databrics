@@ -7,8 +7,8 @@ import java.util.Properties
 
 object RelatorioTotalizacaoDFE {
   // Datas para o relatório - VARIÁVEIS CENTRALIZADAS E ÚNICAS
-  val DATA_INICIO = "01/12/2025"
-  val DATA_FIM = "31/12/2025"
+  val DATA_INICIO = "01/01/2026"
+  val DATA_FIM = "31/01/2026"
 
   def main(args: Array[String]): Unit = {
     // Inicializa a sessão do Spark
