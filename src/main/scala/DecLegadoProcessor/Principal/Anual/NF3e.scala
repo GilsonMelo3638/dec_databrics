@@ -48,7 +48,7 @@ object NF3e {
     val anoList = (anoInicio to anoFim).map(_.toString).toList
 
     anoList.foreach { ano =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/nf3e/year=2025/month=12/day=28"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/nf3e/year=2026/month=02"
 
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()

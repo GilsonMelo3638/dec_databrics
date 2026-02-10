@@ -93,8 +93,13 @@ object ExternalTableCreatorMain {
 
   def main(args: Array[String]): Unit = {
     val datasets = List(
-      ("nfe", "hdfs:///datalake/prata/sources/dbms/dec/nfe", List("infNFe", "det", "cancelamento", "evento")),
-      ("nfce", "hdfs:///datalake/prata/sources/dbms/dec/nfce", List("infNFCe", "det", "cancelamento"))
+      ("nfe", "hdfs:///datalake/prata/sources/dbms/dec/nfe", List("infNFe",
+        "det",
+        "cancelamento",
+        "evento")),
+      ("nfce", "hdfs:///datalake/prata/sources/dbms/dec/nfce", List("infNFCe",
+        "det",
+        "cancelamento"))
     )
 
     // Cria ou atualiza todas as tabelas

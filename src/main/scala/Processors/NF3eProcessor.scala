@@ -1,11 +1,11 @@
 package Processors
 
-import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object NF3eProcessor {
   def generateSelectedDF(parsedDF: DataFrame)(implicit spark: SparkSession): DataFrame = {
-    import spark.implicits._ // Habilita o uso de $"coluna"
+    import spark.implicits._
 
     parsedDF.select(
       $"NSU",
@@ -17,9 +17,8 @@ object NF3eProcessor {
       ).as("DHPROC_FORMATADO"),
       $"DHEMI",
       $"IP_TRANSMISSOR",
-      $"parsed.NF3e.infNF3e.NFdet.det".as("nfdet_det"), // Array intacto
-      $"parsed.NF3e.infNF3e.NFdet._Id".as("nfdet_id"),
-      $"parsed.NF3e.infNF3e.NFdet._versao".as("nfdet_versao"),
+      $"parsed.NF3e.infNF3e.NFdet.det".as("nfdet_det"),
+      $"parsed.NF3e.infNF3e._Id".as("nfdet_id"),
       $"parsed.NF3e.infNF3e.acessante.idAcesso".as("acessante_idacesso"),
       $"parsed.NF3e.infNF3e.acessante.idCodCliente".as("acessante_idcodcliente"),
       $"parsed.NF3e.infNF3e.acessante.latGPS".as("acessante_latgps"),
@@ -36,6 +35,9 @@ object NF3eProcessor {
       $"parsed.NF3e.infNF3e.dest.IE".as("dest_ie"),
       $"parsed.NF3e.infNF3e.dest.NB".as("dest_nb"),
       $"parsed.NF3e.infNF3e.dest.cNIS".as("dest_cnis"),
+      $"parsed.NF3e.infNF3e.dest.idOutros".as("dest_idoutros"),
+      $"parsed.NF3e.infNF3e.dest.indIEDest".as("dest_indiedest"),
+      $"parsed.NF3e.infNF3e.dest.xNome".as("dest_xnome"),
       $"parsed.NF3e.infNF3e.dest.enderDest.CEP".as("enderdest_cep"),
       $"parsed.NF3e.infNF3e.dest.enderDest.UF".as("enderdest_uf"),
       $"parsed.NF3e.infNF3e.dest.enderDest.cMun".as("enderdest_cmun"),
@@ -44,11 +46,10 @@ object NF3eProcessor {
       $"parsed.NF3e.infNF3e.dest.enderDest.xCpl".as("enderdest_xcpl"),
       $"parsed.NF3e.infNF3e.dest.enderDest.xLgr".as("enderdest_xlgr"),
       $"parsed.NF3e.infNF3e.dest.enderDest.xMun".as("enderdest_xmun"),
-      $"parsed.NF3e.infNF3e.dest.idOutros".as("dest_idoutros"),
-      $"parsed.NF3e.infNF3e.dest.indIEDest".as("dest_indiedest"),
-      $"parsed.NF3e.infNF3e.dest.xNome".as("dest_xnome"),
       $"parsed.NF3e.infNF3e.emit.CNPJ".as("emit_cnpj"),
       $"parsed.NF3e.infNF3e.emit.IE".as("emit_ie"),
+      $"parsed.NF3e.infNF3e.emit.xFant".as("emit_xfant"),
+      $"parsed.NF3e.infNF3e.emit.xNome".as("emit_xnome"),
       $"parsed.NF3e.infNF3e.emit.enderEmit.CEP".as("enderemit_cep"),
       $"parsed.NF3e.infNF3e.emit.enderEmit.UF".as("enderemit_uf"),
       $"parsed.NF3e.infNF3e.emit.enderEmit.cMun".as("enderemit_cmun"),
@@ -58,9 +59,7 @@ object NF3eProcessor {
       $"parsed.NF3e.infNF3e.emit.enderEmit.xCpl".as("enderemit_xcpl"),
       $"parsed.NF3e.infNF3e.emit.enderEmit.xLgr".as("enderemit_xlgr"),
       $"parsed.NF3e.infNF3e.emit.enderEmit.xMun".as("enderemit_xmun"),
-      $"parsed.NF3e.infNF3e.emit.xFant".as("emit_xfant"),
-      $"parsed.NF3e.infNF3e.emit.xNome".as("emit_xnome"),
-      $"parsed.NF3e.infNF3e.gANEEL.gHistFat".as("ganeel_ghistfat"), // Array intacto
+      $"parsed.NF3e.infNF3e.gANEEL.gHistFat".as("ganeel_ghistfat"),
       $"parsed.NF3e.infNF3e.gFat.CompetFat".as("gfat_competfat"),
       $"parsed.NF3e.infNF3e.gFat.codBarras".as("gfat_codbarras"),
       $"parsed.NF3e.infNF3e.gFat.codDebAuto".as("gfat_coddebauto"),
@@ -69,7 +68,7 @@ object NF3eProcessor {
       $"parsed.NF3e.infNF3e.gFat.dVencFat".as("gfat_dvencfat"),
       $"parsed.NF3e.infNF3e.gFat.gPIX.urlQRCodePIX".as("gpix_urlqrcodepix"),
       $"parsed.NF3e.infNF3e.gFat.nFat".as("gfat_nfat"),
-      $"parsed.NF3e.infNF3e.gGrContrat".as("ggrcontrat"), // Array intacto
+      $"parsed.NF3e.infNF3e.gGrContrat".as("ggrcontrat"),
       $"parsed.NF3e.infNF3e.gMed._nMed".as("gmed_nmed"),
       $"parsed.NF3e.infNF3e.gMed.dMedAnt".as("gmed_dmedant"),
       $"parsed.NF3e.infNF3e.gMed.dMedAtu".as("gmed_dmedatu"),
@@ -93,6 +92,8 @@ object NF3eProcessor {
       $"parsed.NF3e.infNF3e.ide.dhCont".as("ide_dhcont"),
       $"parsed.NF3e.infNF3e.ide.dhEmi".as("ide_dhemi"),
       $"parsed.NF3e.infNF3e.ide.finNF3e".as("ide_finnf3e"),
+      $"parsed.NF3e.infNF3e.ide.gCompraGov.pRedutor".as("ide_gcompragov_predutor"),
+      $"parsed.NF3e.infNF3e.ide.gCompraGov.tpEnteGov".as("ide_gcompragov_tpentegov"),
       $"parsed.NF3e.infNF3e.ide.mod".as("ide_mod"),
       $"parsed.NF3e.infNF3e.ide.nNF".as("ide_nnf"),
       $"parsed.NF3e.infNF3e.ide.nSiteAutoriz".as("ide_nsiteautoriz"),
@@ -101,6 +102,19 @@ object NF3eProcessor {
       $"parsed.NF3e.infNF3e.ide.tpEmis".as("ide_tpemis"),
       $"parsed.NF3e.infNF3e.ide.verProc".as("ide_verproc"),
       $"parsed.NF3e.infNF3e.ide.xJust".as("ide_xjust"),
+
+      // Total
+      $"parsed.NF3e.infNF3e.total.IBSCBSTot.gCBS.vCBS".as("gcbs_vcbs"),
+      $"parsed.NF3e.infNF3e.total.IBSCBSTot.gCBS.vDevTrib".as("gcbs_vdevtrib"),
+      $"parsed.NF3e.infNF3e.total.IBSCBSTot.gCBS.vDif".as("gcbs_vdif"),
+      $"parsed.NF3e.infNF3e.total.IBSCBSTot.gIBS.gIBSMun.vDevTrib".as("gibs_gibsmun_vdevtrib"),
+      $"parsed.NF3e.infNF3e.total.IBSCBSTot.gIBS.gIBSMun.vDif".as("gibs_gibsmun_vdif"),
+      $"parsed.NF3e.infNF3e.total.IBSCBSTot.gIBS.gIBSMun.vIBSMun".as("gibs_gibsmun_vibsmun"),
+      $"parsed.NF3e.infNF3e.total.IBSCBSTot.gIBS.gIBSUF.vDevTrib".as("gibs_gibsup_vdevtrib"),
+      $"parsed.NF3e.infNF3e.total.IBSCBSTot.gIBS.gIBSUF.vDif".as("gibs_gibsup_vdif"),
+      $"parsed.NF3e.infNF3e.total.IBSCBSTot.gIBS.gIBSUF.vIBSUF".as("gibs_gibsup_vibsup"),
+      $"parsed.NF3e.infNF3e.total.IBSCBSTot.gIBS.vIBS".as("gibs_vibs"),
+      $"parsed.NF3e.infNF3e.total.IBSCBSTot.vBCIBSCBS".as("ibscbstot_vbcibscbs"),
       $"parsed.NF3e.infNF3e.total.ICMSTot.vBC".as("icmstot_vbc"),
       $"parsed.NF3e.infNF3e.total.ICMSTot.vBCST".as("icmstot_vbcst"),
       $"parsed.NF3e.infNF3e.total.ICMSTot.vFCP".as("icmstot_vfcp"),
@@ -118,6 +132,7 @@ object NF3eProcessor {
       $"parsed.NF3e.infNF3e.total.vRetTribTot.vRetCSLL".as("vrettribtot_vretcsll"),
       $"parsed.NF3e.infNF3e.total.vRetTribTot.vRetCofins".as("vrettribtot_vretcofins"),
       $"parsed.NF3e.infNF3e.total.vRetTribTot.vRetPIS".as("vrettribtot_vretpis"),
+      $"parsed.NF3e.infNF3e.total.vTotDFe".as("total_vtotdfe"),
       $"parsed.NF3e.infNF3eSupl.qrCodNF3e".as("infnf3esupl_qrcodnf3e"),
       $"parsed._dhConexao".as("dhconexao"),
       $"parsed._ipTransmissor".as("iptransmissor"),
