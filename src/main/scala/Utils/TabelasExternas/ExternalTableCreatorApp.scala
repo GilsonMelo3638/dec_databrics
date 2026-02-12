@@ -106,7 +106,8 @@ object ExternalTableCreatorApp {
      //   "GVTe",
         "CTeOS",
         "CTeSimp",
-        "cancelamento")),
+        "cancelamento",
+        "evento")),
       ("nfcom", "hdfs:///datalake/prata/sources/dbms/dec/nfcom", List("NFCom",
         "cancelamento",
         "evento"))

@@ -1,4 +1,4 @@
-//package Utils.CorrecaoSchemaTransferirLegado
+package Utils.CorrecaoSchemaTransferirLegado
 //
 //import org.apache.spark.sql.functions.{col, substring}
 //import org.apache.spark.sql.types.{IntegerType, StringType}
@@ -15,7 +15,7 @@
 //    spark.conf.set("spark.sql.parquet.compression.codec", "lz4")
 //
 //    // Caminhos de entrada e saída
-//    val inputPath = "/datalake/bronze/sources/dbms/dec/cte_evento/2024_2"
+//    val inputPath = "/datalake/bronze/sources/dbms/dec/cte_evento/202601"
 //    val outputPath = "/datalake/bronze/sources/dbms/legado/dec/cte_evento_diario/"
 //
 //    // Número de partições (ajuste conforme necessário)

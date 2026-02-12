@@ -301,6 +301,7 @@ object RelatorioTotalizacaoDFEComValidacao {
       "ADMDEC.DEC_DFE_BPE_CANCELAMENTO",
       "ADMDEC.DEC_DFE_CTE_SVD",
       "ADMDEC.DEC_DFE_CTE_SVD_CANCELAMENTO",
+      "ADMDEC.DEC_DFE_CTE_SVD_EVENTO",
       "ADMDEC.DEC_DFE_MDFE",
       "ADMDEC.DEC_DFE_MDFE_CANCELAMENTO",
       "ADMDEC.DEC_DFE_MDFE_EVENTO"
@@ -323,6 +324,7 @@ object RelatorioTotalizacaoDFEComValidacao {
       "ADMDEC.DEC_DFE_BPE_CANCELAMENTO" -> "Cancelamentos de BPE",
       "ADMDEC.DEC_DFE_CTE_SVD" -> "CT-e SVD (Conhecimento de Transporte Eletrônico)",
       "ADMDEC.DEC_DFE_CTE_SVD_CANCELAMENTO" -> "Cancelamentos de CT-e SVD",
+      "ADMDEC.DEC_DFE_CTE_SVD_EVENTO" -> "Eventos de CT-e SVD",
       "ADMDEC.DEC_DFE_MDFE" -> "MDF-e (Manifesto de Documentos Fiscais Eletrônicos)",
       "ADMDEC.DEC_DFE_MDFE_CANCELAMENTO" -> "Cancelamentos de MDF-e",
       "ADMDEC.DEC_DFE_MDFE_EVENTO" -> "Eventos de MDF-e"

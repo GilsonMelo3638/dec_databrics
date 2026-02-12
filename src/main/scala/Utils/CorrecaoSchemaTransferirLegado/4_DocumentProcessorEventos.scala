@@ -107,6 +107,15 @@ abstract class DocumentProcessorEventos {
 
 // Implementações específicas para cada tipo de documento (mantidas iguais)
 
+object CTeEvento extends DocumentProcessorEventos {
+  override def documentType: String = "cte_evento"
+  override def defaultPartitions: Int = 5
+
+  override def convertDataTypes(df: DataFrame): DataFrame = {
+    super.convertDataTypes(df).withColumn("NSUSVD", col("NSUSVD").cast(StringType)).withColumn("CSTAT", col("CSTAT").cast(StringType))
+  }
+}
+
 
 object BPeEvento extends DocumentProcessorEventos {
   override def documentType: String = "bpe_evento"
@@ -240,6 +249,7 @@ object MDFeCancelamento extends DocumentProcessorEventos {
 
 // Exemplo de como executar (agora sem parâmetros para usar o mês anterior):
 
+//CTeEvento.main(Array())      // Usa mês anterior automaticamente
 //BPeEvento.main(Array())      // Usa mês anterior automaticamente
 //MDFeEvento.main(Array())      // Usa mês anterior automaticamente
 //NF3eEvento.main(Array())      // Usa mês anterior automaticamente

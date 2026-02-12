@@ -18,7 +18,7 @@ object HDFSDirectorySync{
     // Todos os diretórios que precisam ser sincronizados
     val directoriesToSync = Map(
       "bpe" -> List("BPe", "cancelamento", "evento"),
-      "cte" -> List("CTe",  "CTeOS", "CTeSimp", "GVTe", "cancelamento"),
+      "cte" -> List("CTe",  "CTeOS", "CTeSimp", "GVTe", "cancelamento", "evento"),
       "mdfe" -> List("MDFe", "cancelamento", "evento"),
       "nf3e" -> List("NF3e", "cancelamento", "evento"),
       "nfcom" -> List("NFCom", "cancelamento", "evento"),

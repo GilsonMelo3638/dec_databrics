@@ -102,8 +102,6 @@ object NF3eProcessor {
       $"parsed.NF3e.infNF3e.ide.tpEmis".as("ide_tpemis"),
       $"parsed.NF3e.infNF3e.ide.verProc".as("ide_verproc"),
       $"parsed.NF3e.infNF3e.ide.xJust".as("ide_xjust"),
-
-      // Total
       $"parsed.NF3e.infNF3e.total.IBSCBSTot.gCBS.vCBS".as("gcbs_vcbs"),
       $"parsed.NF3e.infNF3e.total.IBSCBSTot.gCBS.vDevTrib".as("gcbs_vdevtrib"),
       $"parsed.NF3e.infNF3e.total.IBSCBSTot.gCBS.vDif".as("gcbs_vdif"),
