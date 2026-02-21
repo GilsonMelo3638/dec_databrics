@@ -22,7 +22,7 @@
 //  hdfs://sepladbigdata/app/dec/NFeDetPrata-0.0.1-SNAPSHOT.jar
 package DecLegadoProcessor.Principal.Faltantes
 
-import Schemas.NFeDetSchema
+import Schemas.NFeDetSchemaIBS
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
@@ -46,14 +46,14 @@ object nfeDetIBS {
       .getOrCreate()
       import spark.implicits._
       // Obter o esquema da classe CTeOSSchema
-      val schema = NFeDetSchema.createSchema()
+      val schema = NFeDetSchemaIBS.createSchema()
     // Lista de meses com base nas variáveis externas
     val anoMesList = (mesInicio to mesFim).map { month =>
       f"$ano${month}%02d"
     }.toList
 
     anoMesList.foreach { anoMes =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/nfe/faltantes/year=2025/month=05"
+      val parquetPath = s"/datalake/bronze/sources/dbms/legado/dec/nfe_diario/"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $anoMes: $startTime")
@@ -609,12 +609,12 @@ object nfeDetIBS {
           $"det.imposto.PIS.PISQtde.qBCProd".as("PIS_PISQtde_qBCProd"),
           $"det.imposto.PIS.PISQtde.vAliqProd".as("PIS_PISQtde_vAliqProd"),
           $"det.imposto.PIS.PISQtde.vPIS".as("PIS_PISQtde_vPIS"),
-          $"det.imposto.PIS.PISST.indSomaPISST".as("PIS_PISST_indSomaPISST"),
-          $"det.imposto.PIS.PISST.vBC".as("PIS_PISST_vBC"),
-          $"det.imposto.PIS.PISST.pPIS".as("PIS_PISST_pPIS"),
-          $"det.imposto.PIS.PISST.qBCProd".as("PIS_PISST_qBCProd"),
-          $"det.imposto.PIS.PISST.vAliqProd".as("PIS_PISST_vAliqProd"),
-          $"det.imposto.PIS.PISST.vPIS".as("PIS_PISST_vPIS"),
+          $"det.imposto.PISST.indSomaPISST".as("PIS_PISST_indSomaPISST"),
+          $"det.imposto.PISST.vBC".as("PIS_PISST_vBC"),
+          $"det.imposto.PISST.pPIS".as("PIS_PISST_pPIS"),
+          $"det.imposto.PISST.qBCProd".as("PIS_PISST_qBCProd"),
+          $"det.imposto.PISST.vAliqProd".as("PIS_PISST_vAliqProd"),
+          $"det.imposto.PISST.vPIS".as("PIS_PISST_vPIS"),
           $"det.imposto.vTotTrib".as("imposto_vTotTrib"),
           $"det.impostoDevol.IPI.vIPIDevol".as("impostoDevol_IPI_vIPIDevol"),
           $"det.impostoDevol.pDevol".as("impostoDevol_pDevol"),
@@ -632,10 +632,10 @@ object nfeDetIBS {
         .agg(count("chave").alias("contagem_chaves"))
         .orderBy("chave_particao")
 
-      // Coletar os dados para exibição no console
-      chaveParticaoContagem.collect().foreach { row =>
-        println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
-      }
+//      // Coletar os dados para exibição no console
+//      chaveParticaoContagem.collect().foreach { row =>
+//        println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
+//      }
 
       // Redistribuir os dados para 40 partições
       val repartitionedDF = selectedDFComParticao.repartition(40)
@@ -647,7 +647,7 @@ object nfeDetIBS {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/nfe/det")
+        .save("/datalake/prata/sources/dbms/dec/nfe/detIBS")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()
@@ -656,7 +656,7 @@ object nfeDetIBS {
   }
 }
 
-//nfeDet.main(Array())
+//nfeDetIBS.main(Array())
 
 
 

@@ -27,6 +27,7 @@ import Schemas.NFComSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
+import org.apache.hadoop.fs.{FileSystem, Path}
 
 import java.time.LocalDateTime
 
@@ -36,7 +37,7 @@ object NFCom {
   val mesInicio = 1
   val mesFim = 1
   val tipoDocumento = "nfcom"
-  val diretorioProcessar = "20260213"
+  val diretorioProcessar = "20260220"
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder().appName("ExtractInNFCom").enableHiveSupport().getOrCreate()
@@ -105,6 +106,28 @@ object NFCom {
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()
       println(s"Gravação concluída: $saveEndTime")
+      // Caminhos origem e destino
+      val origemPath = new Path(s"/datalake/bronze/sources/dbms/dec/processamento/NFCom/processar/$diretorioProcessar")
+      val destinoPath = new Path(s"/datalake/bronze/sources/dbms/dec/processamento/nfcom/processado/$diretorioProcessar")
+
+      val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
+
+      println(s"Movendo diretório de $origemPath para $destinoPath")
+
+      // Se destino já existir → apagar
+      if (fs.exists(destinoPath)) {
+        println(s"Destino já existe. Apagando: $destinoPath")
+        fs.delete(destinoPath, true) // true = delete recursivo
+      }
+
+      // Executar move
+      val moveOk = fs.rename(origemPath, destinoPath)
+
+      if (moveOk) {
+        println(s"Movimentação concluída com sucesso.")
+      } else {
+        println(s"Falha ao mover diretório!")
+      }
     }
   }
 }

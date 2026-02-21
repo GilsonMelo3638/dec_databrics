@@ -720,8 +720,6 @@ object NFeDetSchemaIBS {
                   .add("gEstornoCred", new StructType()
                     .add("vIBSEstCred", DoubleType, nullable = true)
                     .add("vCBSEstCred", DoubleType, nullable = true), nullable = true) , nullable = true))
-
-
             .add("impostoDevol", new StructType() // Nova estrutura
               .add("IPI", new StructType()
                 .add("vIPIDevol", DoubleType, nullable = true)

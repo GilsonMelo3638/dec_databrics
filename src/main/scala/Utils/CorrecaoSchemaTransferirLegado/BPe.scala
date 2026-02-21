@@ -15,7 +15,7 @@
 //    spark.conf.set("spark.sql.parquet.compression.codec", "lz4")
 //
 //    // Caminhos de entrada e saída
-//    val inputPath = "/datalake/bronze/sources/dbms/dec/diario/bpe/year=2025/month=04"
+//    val inputPath = "/datalake/bronze/sources/dbms/legado/dec/bpe_diario_complemento"
 //    val outputPath = "/datalake/bronze/sources/dbms/legado/dec/bpe_diario/"
 //
 //    // Número de partições (ajuste conforme necessário)
