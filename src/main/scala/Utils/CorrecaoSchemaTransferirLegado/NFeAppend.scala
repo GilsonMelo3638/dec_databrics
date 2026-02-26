@@ -4,7 +4,7 @@ import org.apache.spark.sql.functions.{col, substring}
 import org.apache.spark.sql.types.{IntegerType, StringType}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object CTe {
+object NFeAppend {
   def main(args: Array[String]): Unit = {
     // Configuração do Spark
     val spark = SparkSession.builder()
@@ -15,11 +15,11 @@ object CTe {
     spark.conf.set("spark.sql.parquet.compression.codec", "lz4")
 
     // Caminhos de entrada e saída
-    val inputPath = "/datalake/bronze/sources/dbms/dec/cte/202502"
-    val outputPath = "/datalake/bronze/sources/dbms/legado/dec/cte_diario/"
+    val inputPath = "/datalake/bronze/sources/dbms/legado/dec/nfe_diario_complemento"
+    val outputPath = "/datalake/bronze/sources/dbms/legado/dec/nfe_diario/"
 
     // Número de partições (ajuste conforme necessário)
-    val numPartitions = 4
+    val numPartitions = 5
 
     try {
       // Ler os dados de entrada
@@ -38,8 +38,8 @@ object CTe {
 
   // Função para converter tipos de colunas
   def convertDataTypes(df: DataFrame): DataFrame = {
-    df.withColumn("NSUSVD", col("NSUSVD").cast(StringType))
-      .withColumn("NSUAUT", col("NSUAUT").cast(StringType))
+    df.withColumn("NSUDF", col("NSUDF").cast(StringType))
+      .withColumn("NSUAN", col("NSUAN").cast(StringType))
       .withColumn("CSTAT", col("CSTAT").cast(StringType))
       .withColumnRenamed("day", "original_day") // Renomeia a coluna day existente
   }
@@ -76,4 +76,4 @@ object CTe {
     }
   }
 }
-//CTe.main(Array())
+//NFeAppend.main(Array())

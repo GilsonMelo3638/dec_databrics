@@ -2,7 +2,7 @@ package Utils.Auditoria
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-class ParquetDeduplicator(
+class ExcluirDuplicidade(
                            spark: SparkSession,
                            basePath: String = "/datalake/prata/sources/dbms/dec"
                          ) {
@@ -82,7 +82,7 @@ class ParquetDeduplicator(
 
 //val spark = SparkSession.builder().appName("Remover Duplicidades").getOrCreate()
 //
-//val deduplicator = new ParquetDeduplicator(spark)
+//val deduplicator = new ExcluirDuplicidade(spark)
 //
 //val particoes = Seq("2502", "2503")
 //

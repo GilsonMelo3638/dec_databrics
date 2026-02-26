@@ -119,7 +119,7 @@ object BPe extends DocumentProcessor {
 
 object CTe extends DocumentProcessor {
   override def documentType: String = "cte"
-  override def defaultPartitions: Int = 4
+  override def defaultPartitions: Int = 10
 
   override def convertDataTypes(df: DataFrame): DataFrame = {
     super.convertDataTypes(df)
@@ -177,7 +177,7 @@ object NFCe extends DocumentProcessor {
 
 object NFe extends DocumentProcessor {
   override def documentType: String = "nfe"
-  override def defaultPartitions: Int = 5
+  override def defaultPartitions: Int = 10
 
   override def convertDataTypes(df: DataFrame): DataFrame = {
     super.convertDataTypes(df)

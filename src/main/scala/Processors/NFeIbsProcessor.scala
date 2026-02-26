@@ -208,7 +208,7 @@ object NFeIbsProcessor {
       $"parsed.NFe.infNFe.total.IBSCBSTot.gMono.vCBSMonoRet".as("gMono_vCBSMonoRet"),
       $"parsed.NFe.infNFe.total.IBSCBSTot.gEstornoCred.vIBSEstCred".as("gEstornoCred_vIBSEstCred"),
       $"parsed.NFe.infNFe.total.IBSCBSTot.gEstornoCred.vCBSEstCred".as("gEstornoCred_vCBSEstCred"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.vNFTot".as("IBSCBSTot_vNFTot"),
+      $"parsed.NFe.infNFe.total.vNFTot".as("IBSCBSTot_vNFTot"),
       $"parsed.NFe.infNFe.total.ISSQNtot.cRegTrib".as("issqntot_cregtrib"),
       $"parsed.NFe.infNFe.total.ISSQNtot.dCompet".as("issqntot_dcompet"),
       $"parsed.NFe.infNFe.total.ISSQNtot.vBC".as("issqntot_vbc"),
