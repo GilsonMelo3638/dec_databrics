@@ -1,6 +1,6 @@
 package Utils.InferenciaSchema
 
-import org.apache.spark.sql.{SparkSession}
+import org.apache.spark.sql.{SparkSession, DataFrame}
 import org.apache.spark.sql.functions.col
 import org.apache.hadoop.fs.{FileSystem, Path}
 
@@ -16,62 +16,78 @@ object MonitoramentoDocumentoPipeline {
 
     try {
 
-      // 🔹 Variáveis principais
-      val documento = "nf3e"   // <<< ALTERA AQUI SE PRECISAR
+      val documento = "nfe_evento"
+      val tag = "procEventoNFe"
       val ano = "2026"
-      val mes = "02"
 
-      val origemPath =
-        s"/datalake/bronze/sources/dbms/dec/diario/$documento/year=$ano/month=$mes/day=*"
+      val mesInicio = 1
+      val mesFim = 2
 
-      val xmlOnlyPath =
-        s"/tmp/${documento}_xml_only/year=$ano/month=$mes"
+      var dfAcumulado: DataFrame = null
 
-      println(s"Lendo dados de: $origemPath")
+      // ===============================
+      // 🔁 Loop de meses
+      // ===============================
 
-      val df = spark.read.parquet(origemPath)
+      for (mesInt <- mesInicio to mesFim) {
 
-      if (!df.columns.contains("XML_DOCUMENTO_CLOB")) {
-        throw new Exception("Coluna XML_DOCUMENTO_CLOB não encontrada!")
+        val mes = f"$mesInt%02d"
+
+        println("\n" + "=" * 80)
+        println(s"PROCESSANDO MÊS: $ano-$mes")
+        println("=" * 80)
+
+        val origemPath =
+          s"/datalake/bronze/sources/dbms/dec/diario/$documento/year=$ano/month=$mes/day=*"
+
+        val df = spark.read.parquet(origemPath)
+
+        if (df.columns.contains("XML_DOCUMENTO_CLOB")) {
+
+          val dfXml = df
+            .select(col("XML_DOCUMENTO_CLOB"))
+            .filter(col("XML_DOCUMENTO_CLOB").isNotNull)
+
+          val total = dfXml.count()
+          println(s"Total de XMLs mês $mes: $total")
+
+          if (total > 0) {
+            dfAcumulado =
+              if (dfAcumulado == null) dfXml
+              else dfAcumulado.unionByName(dfXml)
+          }
+
+        } else {
+          println("Coluna XML_DOCUMENTO_CLOB não encontrada. Pulando mês.")
+        }
       }
 
-      val dfXml = df
-        .select(col("XML_DOCUMENTO_CLOB"))
-        .filter(col("XML_DOCUMENTO_CLOB").isNotNull)
+      // ===============================
+      // 🔥 Inferência única
+      // ===============================
 
-      val total = dfXml.count()
-      println(s"Total de XMLs ($documento): $total")
-
-      if (total == 0) {
-        println("Nenhum XML encontrado. Encerrando.")
+      if (dfAcumulado == null) {
+        println("Nenhum XML encontrado no período.")
         return
       }
 
-      // 🔹 Salva XMLs em parquet
-      dfXml.write
-        .mode("overwrite")
-        .parquet(xmlOnlyPath)
-
-      println(s"XMLs salvos em: $xmlOnlyPath")
-
-      // ===============================
-      // 🔥 Inferência de Schema
-      // ===============================
+      val totalFinal = dfAcumulado.count()
+      println(s"\nTotal consolidado de XMLs: $totalFinal")
 
       val tempDir =
         s"/tmp/${documento}_xml_temp_${System.currentTimeMillis()}"
 
-      dfXml.write
+      dfAcumulado.write
         .mode("overwrite")
         .text(tempDir)
 
       val xmlDF = spark.read
         .format("xml")
-        .option("rowTag", s"${documento}Proc") // se o rowTag seguir padrão
+        .option("rowTag", tag)
         .option("inferSchema", "true")
         .load(tempDir)
 
-      println(s"Schema inferido para $documento:")
+      println("\nSchema inferido considerando TODOS os meses:")
       xmlDF.printSchema()
 
       // Limpeza
@@ -85,4 +101,4 @@ object MonitoramentoDocumentoPipeline {
   }
 }
 
-MonitoramentoDocumentoPipeline.main(Array())
+// MonitoramentoDocumentoPipeline.main(Array())

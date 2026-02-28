@@ -1,15 +1,35 @@
-# Ignorar todas as pastas e arquivos, exceto o src e o pom.xml
-/*
-!/src/
-!pom.xml
+############################################
+# Build Maven
+############################################
+target/
 
-# Ignorar arquivos JAR no diretório target
-target/*.jar
+############################################
+# IntelliJ IDEA
+############################################
+.idea/
+*.iml
+out/
 
-# Ignorar outras pastas e arquivos específicos
-/Documentation/html/
-/Documentation/man1/
-/t/test-results
-/t/trash directory*
-/__pycache__/
+############################################
+# Logs
+############################################
+*.log
 
+############################################
+# Sistema Operacional
+############################################
+.DS_Store
+Thumbs.db
+
+############################################
+# Arquivos temporários
+############################################
+*.swp
+*.tmp
+*.bak
+
+############################################
+# Cache Scala
+############################################
+.metals/
+.bloop/
