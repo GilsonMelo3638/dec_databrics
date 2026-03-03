@@ -22,7 +22,7 @@
 //  hdfs://sepladbigdata/app/dec/NFeDetPrata-0.0.1-SNAPSHOT.jar
 package DecLegadoProcessor.Principal.Faltantes
 
-import Schemas.NFeDetSchemaIBS
+import Schemas.NFeDetSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
@@ -46,14 +46,14 @@ object nfeDetIBS {
       .getOrCreate()
       import spark.implicits._
       // Obter o esquema da classe CTeOSSchema
-      val schema = NFeDetSchemaIBS.createSchema()
+      val schema = NFeDetSchema.createSchema()
     // Lista de meses com base nas variáveis externas
     val anoMesList = (mesInicio to mesFim).map { month =>
       f"$ano${month}%02d"
     }.toList
 
     anoMesList.foreach { anoMes =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/legado/dec/nfe_diario/"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/nfe/year=2026/month=02"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $anoMes: $startTime")
@@ -626,11 +626,11 @@ object nfeDetIBS {
       // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
       val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
-      // Imprimir no console as variações e a contagem de 'chave_particao'
-      val chaveParticaoContagem = selectedDFComParticao
-        .groupBy("chave_particao")
-        .agg(count("chave").alias("contagem_chaves"))
-        .orderBy("chave_particao")
+//      // Imprimir no console as variações e a contagem de 'chave_particao'
+//      val chaveParticaoContagem = selectedDFComParticao
+//        .groupBy("chave_particao")
+//        .agg(count("chave").alias("contagem_chaves"))
+//        .orderBy("chave_particao")
 
 //      // Coletar os dados para exibição no console
 //      chaveParticaoContagem.collect().foreach { row =>

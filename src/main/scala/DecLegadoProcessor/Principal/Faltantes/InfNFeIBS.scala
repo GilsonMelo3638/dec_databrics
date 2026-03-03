@@ -22,8 +22,8 @@
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
 package DecLegadoProcessor.Principal.Faltantes
 
-import Processors.NFeIbsProcessor
-import Schemas.NFeSchemaIBS
+import Processors.NFeProcessor
+import Schemas.NFeSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
@@ -42,14 +42,14 @@ object InfNFeIBS {
     import spark.implicits._
 
     // Obter o esquema da classe CTeOSSchema
-    val schema = NFeSchemaIBS.createSchema()
+    val schema = NFeSchema.createSchema()
     // Lista de meses com base nas variáveis externas
     val anoMesList = (mesInicio to mesFim).map { month =>
       f"$ano${month}%02d"
     }.toList
 
     anoMesList.foreach { anoMes =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/legado/dec/nfe_diario2"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/nfe/year=2026/month=02"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $anoMes: $startTime")
@@ -72,7 +72,7 @@ object InfNFeIBS {
 
       // 4. Gera o DataFrame selectedDF usando a nova classe
       implicit val sparkSession: SparkSession = spark // Passando o SparkSession implicitamente
-      val selectedDF = NFeIbsProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
+      val selectedDF = NFeProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
       val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
 //      // Imprimir no console as variações e a contagem de 'chave_particao'

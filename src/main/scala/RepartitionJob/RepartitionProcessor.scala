@@ -22,93 +22,118 @@
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
 package RepartitionJob
 
+
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
 
-import java.util.Calendar
+import scala.math.ceil
 
 object RepartitionProcessor {
+
   val spark = SparkSession.builder().getOrCreate()
   val hadoopConf = spark.sparkContext.hadoopConfiguration
   val fs = FileSystem.get(hadoopConf)
 
+  val TARGET_MB = 256.0
+  val TOLERANCE_PERCENT = 0.30   // 10% de tolerância
+  val TOLERANCE_ABSOLUTE = 1     // diferença absoluta de 1 é ignorada
+
   def main(args: Array[String]): Unit = {
-    // Função genérica para processar partições
-    def processPartitions(basePath: String, maxFiles: Int, isSunday: Boolean, isNfceDet: Boolean = false): Unit = {
+
+    def getDirectorySize(path: Path): Long = {
+      fs.listStatus(path).map { status =>
+        if (status.isFile) status.getLen
+        else getDirectorySize(status.getPath)
+      }.sum
+    }
+
+    def processPartitions(basePath: String): Unit = {
+
       val partitions = fs.listStatus(new Path(basePath))
         .filter(_.isDirectory)
         .map(_.getPath.toString)
 
-      // Extrai o valor numérico da partição e ordena
-      val sortedPartitions = partitions
-        .map { path =>
-          val partitionValue = path.split("=")(1).toInt // Extrai o valor numérico
-          (partitionValue, path) // Retorna uma tupla (valor, caminho)
-        }
-        .sortBy(_._1) // Ordena pelo valor numérico
-        .map(_._2) // Mantém apenas o caminho
+      partitions.foreach { partitionPath =>
+        try {
 
-      // Se for o diretório especial (/datalake/prata/sources/dbms/dec/nfce/det), aplica a regra especial
-      if (isNfceDet) {
-        if (isSunday) {
-          // Se for domingo, reparticiona todas as partições
-          sortedPartitions.foreach { partitionPath =>
-            repartitionIfNeeded(partitionPath, maxFiles)
+          val path = new Path(partitionPath)
+
+          val parquetFiles = fs.listStatus(path)
+            .filter(f => f.isFile && f.getPath.getName.endsWith(".parquet"))
+
+          val fileCount = parquetFiles.length
+
+          val sizeBytes = getDirectorySize(path)
+          val sizeMB = sizeBytes / (1024.0 * 1024.0)
+
+          val idealPartitions =
+            math.max(1, ceil(sizeMB / TARGET_MB).toInt)
+
+          val diff = math.abs(fileCount - idealPartitions)
+          val percentDiff =
+            if (idealPartitions == 0) 0.0
+            else diff.toDouble / idealPartitions.toDouble
+
+          println(s"\nPartição: $partitionPath")
+          println(f"Tamanho: $sizeMB%.2f MB")
+          println(s"Arquivos atuais: $fileCount")
+          println(s"Arquivos ideais: $idealPartitions")
+          println(f"Diferença percentual: ${percentDiff * 100}%.2f%%")
+
+          // 🔥 Nova regra inteligente
+          val shouldRepartition =
+            diff > TOLERANCE_ABSOLUTE &&
+              percentDiff > TOLERANCE_PERCENT
+
+          if (shouldRepartition) {
+
+            println("Reorganizando partição...")
+
+            val df = spark.read.parquet(partitionPath)
+            val tempPath = s"${partitionPath}_temp"
+
+            val repartitionedDF =
+              if (idealPartitions > fileCount)
+                df.repartition(idealPartitions)
+              else
+                df.coalesce(idealPartitions)
+
+            repartitionedDF
+              .write
+              .option("compression", "lz4")
+              .mode("overwrite")
+              .parquet(tempPath)
+
+            fs.delete(path, true)
+            fs.rename(new Path(tempPath), path)
+
+            println(s"Reorganização concluída para: $partitionPath")
+
+          } else {
+            println("Diferença irrelevante. Ignorando reorganização.")
           }
-        } else {
-          // Se não for domingo, reparticiona apenas a última e a penúltima partição
-          val lastPartition = sortedPartitions.last
-          val secondLastPartition = sortedPartitions(sortedPartitions.length - 2)
 
-          repartitionIfNeeded(lastPartition, maxFiles)
-          repartitionIfNeeded(secondLastPartition, maxFiles)
-        }
-      } else {
-        // Para outros diretórios, reparticiona todas as partições em todos os dias
-        sortedPartitions.foreach { partitionPath =>
-          repartitionIfNeeded(partitionPath, maxFiles)
+        } catch {
+          case e: Exception =>
+            System.err.println(s"Erro ao processar $partitionPath: ${e.getMessage}")
         }
       }
     }
 
-    // Função para repartitionar se necessário
-    def repartitionIfNeeded(partitionPath: String, maxFiles: Int): Unit = {
-      val fileCount = fs.listStatus(new Path(partitionPath)).count(_.getPath.getName.endsWith(".parquet"))
-
-      println(s"Partição: $partitionPath, Arquivos: $fileCount")
-
-      if (fileCount > maxFiles) {
-        println(s"Reparticionando: $partitionPath")
-        val df = spark.read.parquet(partitionPath)
-        val tempPath = s"${partitionPath}_temp"
-
-        df.repartition(maxFiles).write.option("compression", "lz4").mode("overwrite").parquet(tempPath)
-
-        fs.delete(new Path(partitionPath), true)
-        fs.rename(new Path(tempPath), new Path(partitionPath))
-
-        println(s"Reparticionamento concluído para: $partitionPath")
-      } else {
-        println(s"Nenhuma ação necessária para: $partitionPath")
-      }
-    }
-
-    // Verifica se hoje é domingo
-    val calendar = Calendar.getInstance()
-    val isSunday = calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY
-
-    // Definição dos diretórios e seus respectivos limites de reparticionamento
-    val pathsWithLimits = Seq(
-      ("/datalake/prata/sources/dbms/dec/nfe/infNFe", 40, false),
-      ("/datalake/prata/sources/dbms/dec/nfe/det", 40, false),
-      ("/datalake/prata/sources/dbms/dec/nfce/infNFCe", 60, false),
-      ("/datalake/prata/sources/dbms/dec/nfce/det", 60, true) // Diretório especial
+    val configs = Seq(
+      ("/datalake/prata/sources/dbms/dec/nfe/infNFe"),
+      ("/datalake/prata/sources/dbms/dec/nfe/det"),
+      ("/datalake/prata/sources/dbms/dec/nfce/infNFCe"),
+      ("/datalake/prata/sources/dbms/dec/nfce/det")
     )
 
-    // Processar todas as partições com seus respectivos limites
-    pathsWithLimits.foreach { case (path, maxFiles, isNfceDet) =>
-      processPartitions(path, maxFiles, isSunday, isNfceDet)
+    configs.foreach { path =>
+      println(s"Processando caminho: $path")
+      processPartitions(path)
+      println(s"Concluído processamento de: $path")
     }
   }
 }
+
+
 //RepartitionProcessor.main(Array())

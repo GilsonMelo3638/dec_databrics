@@ -7,8 +7,8 @@ import java.util.Properties
 
 object RelatorioTotalizacaoDFE {
   // Datas para o relatório - VARIÁVEIS CENTRALIZADAS E ÚNICAS
-  val DATA_INICIO = "01/01/2026"
-  val DATA_FIM = "31/01/2026"
+  val DATA_INICIO = "01/02/2026"
+  val DATA_FIM = "28/02/2026"
 
   def main(args: Array[String]): Unit = {
     // Inicializa a sessão do Spark
@@ -45,8 +45,10 @@ object RelatorioTotalizacaoDFE {
       ("ADMDEC.DEC_DFE_NFCOM_EVENTO", "Eventos de NFCom"),
       ("ADMDEC.DEC_DFE_BPE", "BPE (Bilhetes de Passagem Eletrônicos)"),
       ("ADMDEC.DEC_DFE_BPE_CANCELAMENTO", "Cancelamentos de BPE"),
+      ("ADMDEC.DEC_DFE_BPE_EVENTO", "Evento de BPE"),
       ("ADMDEC.DEC_DFE_CTE_SVD", "CT-e SVD (Conhecimento de Transporte Eletrônico)"),
       ("ADMDEC.DEC_DFE_CTE_SVD_CANCELAMENTO", "Cancelamentos de CT-e SVD"),
+      ("ADMDEC.DEC_DFE_CTE_SVD_EVENTO", "Eventos de CT-e SVD"),
       ("ADMDEC.DEC_DFE_MDFE", "MDF-e (Manifesto de Documentos Fiscais Eletrônicos)"),
       ("ADMDEC.DEC_DFE_MDFE_CANCELAMENTO", "Cancelamentos de MDF-e"),
       ("ADMDEC.DEC_DFE_MDFE_EVENTO", "Eventos de MDF-e")

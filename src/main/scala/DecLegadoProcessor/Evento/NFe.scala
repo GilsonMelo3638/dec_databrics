@@ -49,7 +49,7 @@ object NFe {
     }.toList
 
     anoMesList.foreach { anoMes =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/legado/dec/nfe_evento_diario/"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/nfe_evento/year=2026/month=02"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $anoMes: $startTime")
@@ -96,7 +96,7 @@ object NFe {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/nfe/evento")
+        .save("/datalake/prata/sources/dbms/dec/nfe/evento2")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()
