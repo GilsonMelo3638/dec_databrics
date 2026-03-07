@@ -37,7 +37,7 @@ object NFCom {
   val mesInicio = 1
   val mesFim = 1
   val tipoDocumento = "nfcom"
-  val diretorioProcessar = "20260228"
+  val diretorioProcessar = "20260305"
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder().appName("ExtractInNFCom").enableHiveSupport().getOrCreate()

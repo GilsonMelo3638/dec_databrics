@@ -188,6 +188,7 @@ object NFe extends DocumentProcessor {
 }
 
  //Exemplo de como executar (agora sem parâmetros para usar o mês anterior):
+//NFe.main(Array())       // Usa mês anterior automaticamente
 //BPe.main(Array())       // Usa mês anterior automaticamente
 //CTe.main(Array())       // Usa mês anterior automaticamente
 //MDFe.main(Array())      // Usa mês anterior automaticamente

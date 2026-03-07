@@ -16,12 +16,12 @@ object MonitoramentoDocumentoPipeline {
 
     try {
 
-      val documento = "nfe_evento"
-      val tag = "procEventoNFe"
+      val documento = "nf3e"
+      val tag = "nf3eProc"
       val ano = "2026"
 
-      val mesInicio = 1
-      val mesFim = 2
+      val mesInicio = 2
+      val mesFim = 3
 
       var dfAcumulado: DataFrame = null
 

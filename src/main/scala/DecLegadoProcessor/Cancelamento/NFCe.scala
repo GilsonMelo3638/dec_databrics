@@ -35,7 +35,7 @@ object NFCe {
   val ano = 2025
   val mesInicio = 3
   val mesFim = 3
-  val tipoDocumento = "nfce_cancelamento"
+  val tipoDocumento = "nfce"
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder().appName("ExtractLegadoCancelamentoNFCe").enableHiveSupport().getOrCreate()
@@ -49,7 +49,7 @@ object NFCe {
     }.toList
 
     anoMesList.foreach { anoMes =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/$tipoDocumento/201912_202502"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/$tipoDocumento/202404"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $anoMes: $startTime")
@@ -105,4 +105,4 @@ object NFCe {
   }
 }
 
-//NFCeCancelamentoLegadoProcessor.main(Array())
+//NFCe.main(Array())

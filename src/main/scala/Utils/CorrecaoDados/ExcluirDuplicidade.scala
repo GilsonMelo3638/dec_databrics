@@ -1,6 +1,6 @@
-package Utils.Auditoria
+package Utils.CorrecaoDados
 
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.SparkSession
 
 class ExcluirDuplicidade(
                            spark: SparkSession,
@@ -84,14 +84,14 @@ class ExcluirDuplicidade(
 //
 //val deduplicator = new ExcluirDuplicidade(spark)
 //
-//val particoes = Seq("2502", "2503")
+//val particoes = Seq("2603")
 //
 //deduplicator.processPartitions(
-//  tipoArquivo = "cte",
-//  tipoInformacao = "GVTe",
+//  tipoArquivo = "nfe",
+//  tipoInformacao = "infNFe3",
 //  particoes = particoes,
 //  colunaDedupe = "chave",
-//  reparticoes = 1,
+//  reparticoes = 40,
 //  sufixoDestino = "_2"
 //)
 

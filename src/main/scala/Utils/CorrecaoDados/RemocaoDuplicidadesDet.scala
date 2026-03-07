@@ -1,9 +1,10 @@
-package Utils.Auditoria
+package Utils.CorrecaoDados
 
-import org.apache.spark.sql.{SparkSession}
-import org.apache.spark.storage.StorageLevel
 import org.apache.hadoop.fs.{FileSystem, Path}
-import scala.util.{Try, Success, Failure}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.storage.StorageLevel
+
+import scala.util.{Failure, Success, Try}
 
 object RemocaoDuplicidadesDet {
 
