@@ -3,7 +3,7 @@ package Utils.Auditoria
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.col
 
-class DatasetComparator(spark: SparkSession) {
+class CompararDatasetListaColunas(spark: SparkSession) {
 
   /**
    * Carrega parquet e retorna apenas colunas distintas
@@ -40,7 +40,7 @@ class DatasetComparator(spark: SparkSession) {
   }
 }
 
-//val comparator = new DatasetComparator(spark)
+//val comparator = new CompararDatasetListaColunas(spark)
 //
 //val pathIBS = "/datalake/prata/sources/dbms/dec/nfe/det"
 //val pathDet = "/datalake/prata/backup_producao/nfe/det"

@@ -3,7 +3,7 @@ package Utils.Auditoria
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
-object ComparacaoChavesApp {
+object ComapararChavesEntreDiretorios {
 
   def main(args: Array[String]): Unit = {
 
@@ -314,4 +314,4 @@ object ComparacaoChavesApp {
   }
 }
 
-//ComparacaoChavesApp.main(Array())
+//ComparacaoListaChavesDiretorio.main(Array())

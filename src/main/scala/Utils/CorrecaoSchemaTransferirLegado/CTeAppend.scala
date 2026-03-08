@@ -17,7 +17,7 @@ object CTeAppend {
 
     spark.conf.set("spark.sql.parquet.compression.codec", "lz4")
 
-    val inputPath = "/datalake/bronze/sources/dbms/legado/dec/cte_diario/"
+    val inputPath = "/datalake/bronze/sources/dbms/legado/dec//cte_diario_complemento/"
     val outputPath = "/datalake/bronze/sources/dbms/legado/dec/cte_diario2/"
 
     val numPartitions = 10
