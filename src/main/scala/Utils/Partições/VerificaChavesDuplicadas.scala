@@ -21,8 +21,8 @@ object VerificaChavesDuplicadas {
 
     try {
       // 2. Parâmetros
-      val basePath = "/datalake/bronze/sources/dbms/dec/nfce_diario/"
-      val outputPath = "/datalake/bronze/sources/dbms/dec/nfce_duplicatas_final/"
+      val basePath = "/datalake/bronze/sources/dbms/legado/dec/nfce_diario2"
+      val outputPath = "/datalake/bronze/sources/dbms/legado/dec/nfce_duplicatas_final/"
 
       // 3. Limpeza inicial
       val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
