@@ -4,11 +4,11 @@ import org.apache.spark.sql.functions.{col, substring}
 import org.apache.spark.sql.types.{IntegerType, StringType}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object BPe {
+object BPeTransfer {
   def main(args: Array[String]): Unit = {
     // Configuração do Spark
     val spark = SparkSession.builder()
-      .appName("NFCeProcessor")
+      .appName("BPeTransferProcessor")
       .getOrCreate()
 
     // Configuração de compressão
@@ -75,4 +75,4 @@ object BPe {
     }
   }
 }
-//BPe.main(Array())
+//BPeTransfer.main(Array())

@@ -1,32 +1,32 @@
 package Utils.CorrecaoSchemaTransferirLegado
 
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.apache.hadoop.fs.{FileSystem, Path}
+
 import scala.math.ceil
 
-object NFeRepartionGeralProcessor {
+object NFCeRepartionGeralProcessor {
 
   val TARGET_MB = 256.0
 
   def main(args: Array[String]): Unit = {
 
     val spark = SparkSession.builder()
-      .appName("NFeRepartionGeralProcessor")
+      .appName("NFCeRepartionGeralProcessor")
       .getOrCreate()
 
     spark.conf.set("spark.sql.parquet.enableVectorizedReader", "false")
     spark.conf.set("spark.sql.parquet.compression.codec", "lz4")
 
-    val inputPath = "/datalake/bronze/sources/dbms/legado/dec/nfe_diario/"
-    val outputPath = "/datalake/bronze/sources/dbms/legado/dec/nfe_diario2/"
+    val inputPath = "/datalake/bronze/sources/dbms/legado/dec/nfce_diario3/"
+    val outputPath = "/datalake/bronze/sources/dbms/legado/dec/nfce_diario5/"
 
     try {
 
       val df = spark.read.parquet(inputPath)
-        .withColumn("NSUDF", col("NSUDF").cast(StringType))
-        .withColumn("NSUAN", col("NSUAN").cast(StringType))
+        .withColumn("NSU", col("NSU").cast(StringType))
         .withColumn("CSTAT", col("CSTAT").cast(StringType))
 
       processByHDFS(spark, df, inputPath, outputPath)
@@ -117,4 +117,4 @@ object NFeRepartionGeralProcessor {
 }
 
 
-//NFeRepartionGeralProcessor.main(Array())
+//NFCeRepartionGeralProcessor.main(Array())

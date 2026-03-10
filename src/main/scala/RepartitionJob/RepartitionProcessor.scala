@@ -22,11 +22,11 @@
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
 package RepartitionJob
 
-
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
 
 import scala.math.ceil
+import java.util.Calendar
 
 object RepartitionProcessor {
 
@@ -35,8 +35,8 @@ object RepartitionProcessor {
   val fs = FileSystem.get(hadoopConf)
 
   val TARGET_MB = 256.0
-  val TOLERANCE_PERCENT = 0.30   // 10% de tolerância
-  val TOLERANCE_ABSOLUTE = 1     // diferença absoluta de 1 é ignorada
+  val TOLERANCE_PERCENT = 0.30
+  val TOLERANCE_ABSOLUTE = 1
 
   def main(args: Array[String]): Unit = {
 
@@ -47,13 +47,33 @@ object RepartitionProcessor {
       }.sum
     }
 
-    def processPartitions(basePath: String): Unit = {
+    def processPartitions(basePath: String, isNfceDet: Boolean, isSunday: Boolean): Unit = {
 
       val partitions = fs.listStatus(new Path(basePath))
         .filter(_.isDirectory)
         .map(_.getPath.toString)
 
-      partitions.foreach { partitionPath =>
+      val sortedPartitions =
+        partitions
+          .map { p =>
+            val value = p.split("=").last.toInt
+            (value, p)
+          }
+          .sortBy(_._1)
+          .map(_._2)
+
+      val partitionsToProcess =
+        if (isNfceDet) {
+          if (isSunday) {
+            sortedPartitions
+          } else {
+            sortedPartitions.takeRight(2)
+          }
+        } else {
+          sortedPartitions
+        }
+
+      partitionsToProcess.foreach { partitionPath =>
         try {
 
           val path = new Path(partitionPath)
@@ -70,6 +90,7 @@ object RepartitionProcessor {
             math.max(1, ceil(sizeMB / TARGET_MB).toInt)
 
           val diff = math.abs(fileCount - idealPartitions)
+
           val percentDiff =
             if (idealPartitions == 0) 0.0
             else diff.toDouble / idealPartitions.toDouble
@@ -80,7 +101,6 @@ object RepartitionProcessor {
           println(s"Arquivos ideais: $idealPartitions")
           println(f"Diferença percentual: ${percentDiff * 100}%.2f%%")
 
-          // 🔥 Nova regra inteligente
           val shouldRepartition =
             diff > TOLERANCE_ABSOLUTE &&
               percentDiff > TOLERANCE_PERCENT
@@ -120,20 +140,23 @@ object RepartitionProcessor {
       }
     }
 
+    val calendar = Calendar.getInstance()
+    val isSunday = calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY
+
     val configs = Seq(
-      ("/datalake/prata/sources/dbms/dec/nfe/infNFe"),
-      ("/datalake/prata/sources/dbms/dec/nfe/det"),
-      ("/datalake/prata/sources/dbms/dec/nfce/infNFCe"),
-      ("/datalake/prata/sources/dbms/dec/nfce/det")
+      ("/datalake/prata/sources/dbms/dec/nfe/infNFe", false),
+      ("/datalake/prata/sources/dbms/dec/nfe/det", false),
+      ("/datalake/prata/sources/dbms/dec/nfce/infNFCe", false),
+      ("/datalake/prata/sources/dbms/dec/nfce/det", true) // diretório especial
     )
 
-    configs.foreach { path =>
+    configs.foreach { case (path, isNfceDet) =>
       println(s"Processando caminho: $path")
-      processPartitions(path)
+      processPartitions(path, isNfceDet, isSunday)
       println(s"Concluído processamento de: $path")
     }
+
   }
 }
 
-
-//RepartitionProcessor.main(Array())
+// RepartitionProcessor.main(Array())

@@ -1,6 +1,6 @@
 //spark-shell   --num-executors 40   --executor-memory 16G   --executor-cores 4   --driver-memory 8G   --conf "spark.driver.maxResultSize=4G"   --conf "spark.sql.parquet.writeLegacyFormat=true"   --conf "spark.sql.debug.maxToStringFields=100"   --conf "spark.executor.memoryOverhead=4096"   --conf "spark.network.timeout=1200s"   --conf "spark.executor.heartbeatInterval=300s"   --conf "spark.storage.replication=2"   --conf "spark.shuffle.service.enabled=true"   --conf "spark.shuffle.file.buffer=1m"   --conf "spark.reducer.maxSizeInFlight=96m"   --conf "spark.dynamicAllocation.enabled=true"   --conf "spark.dynamicAllocation.minExecutors=10"   --conf "spark.dynamicAllocation.maxExecutors=40"   --conf "spark.dynamicAllocation.initialExecutors=20"   --conf "spark.sql.shuffle.partitions=800"   --conf "spark.default.parallelism=800"   --conf "spark.memory.fraction=0.6"   --conf "spark.memory.storageFraction=0.5"   --conf "spark.sql.autoBroadcastJoinThreshold=-1"   --conf "spark.sql.hive.filesourcePartitionFileCacheSize=524288000"   --conf "spark.sql.shuffle.spill=true"   --packages "com.databricks:spark-xml_2.12:0.13.0"
 
-package Utils.Particições
+package Utils.Partições
 
 
 import org.apache.spark.sql.{SparkSession, DataFrame}
