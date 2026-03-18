@@ -22,8 +22,8 @@
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
 package DecLegadoProcessor.Principal.Mensal
 
-import Processors.NFCeProcessor
-import Schemas.NFCeSchema
+import Processors.NFCeProcessor_bk
+import Schemas.NFCeSchema_bk
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
@@ -42,7 +42,7 @@ object InfNFCe {
     import spark.implicits._
 
     // Obter o esquema da classe CTeOSSchema
-    val schema = NFCeSchema.createSchema()
+    val schema = NFCeSchema_bk.createSchema()
       // Lista de meses com base nas variáveis externas
       val anoMesList = (mesInicio to mesFim).map { month =>
         f"$ano${month}%02d"
@@ -72,7 +72,7 @@ object InfNFCe {
 
         // 4. Gera o DataFrame selectedDF usando a nova classe
         implicit val sparkSession: SparkSession = spark // Passando o SparkSession implicitamente
-        val selectedDF = NFCeProcessor.generateSelectedDF(parsedDF)
+        val selectedDF = NFCeProcessor_bk.generateSelectedDF(parsedDF)
         // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
         val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 //        // Imprimir no console as variações e a contagem de 'chave_particao'

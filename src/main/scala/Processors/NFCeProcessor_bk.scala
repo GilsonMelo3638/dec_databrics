@@ -1,12 +1,10 @@
 package Processors
-
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object NFCeProcessor {
+object NFCeProcessor_bk {
   def generateSelectedDF(parsedDF: DataFrame)(implicit spark: SparkSession): DataFrame = {
     import spark.implicits._ // Habilita o uso de $"coluna"
-
     parsedDF.select(
       $"NSU",
       concat(
@@ -26,8 +24,6 @@ object NFCeProcessor {
       $"parsed.protNFe.infProt.tpAmb".as("infprot_tpAmb"),
       $"parsed.protNFe.infProt.verAplic".as("infprot_verAplic"),
       $"parsed.protNFe.infProt.xMotivo".as("infprot_xMotivo"),
-      $"parsed.NFe.infNFe._Id".as("infNFe_id"),
-      $"parsed.NFe.infNFe._versao".as("infNFe_versao"),
       $"parsed.NFe.infNFe.avulsa.CNPJ".as("avulsa_cnpj"),
       $"parsed.NFe.infNFe.avulsa.UF".as("avulsa_uf"),
       $"parsed.NFe.infNFe.avulsa.dEmi".as("avulsa_demi"),
@@ -67,6 +63,8 @@ object NFCeProcessor {
       $"parsed.NFe.infNFe.dest.xNome".as("dest_xnome"),
       $"parsed.NFe.infNFe.dest.idEstrangeiro".as("idEstrangeiro"),
       $"parsed.NFe.infNFe.dest.indIEDest".as("indIEDest"),
+      $"parsed.NFe.infNFe.emit.CNPJ".as("cnpj_emitente"),
+      $"parsed.NFe.infNFe.emit.CPF".as("cpf_emitente"),
       $"parsed.NFe.infNFe.emit.CNPJ".as("emit_cnpj"),
       $"parsed.NFe.infNFe.emit.CPF".as("emit_cpf"),
       $"parsed.NFe.infNFe.emit.CNAE".as("emit_cnae"),
@@ -108,20 +106,12 @@ object NFCeProcessor {
       $"parsed.NFe.infNFe.exporta.xLocExporta".as("exporta_xlocexporta"),
       $"parsed.NFe.infNFe.ide.dhEmi".as("ide_dhemi"),
       $"parsed.NFe.infNFe.ide.cDV".as("ide_cdv"),
-      $"parsed.NFe.infNFe.ide.indBemMovelUsado".as("ide_indBemMovelUsado"),
-      $"parsed.NFe.infNFe.ide.cMunFGIBS".as("ide_cMunFGIBS"),
       $"parsed.NFe.infNFe.ide.cMunFG".as("ide_cmunfg"),
       $"parsed.NFe.infNFe.ide.cNF".as("ide_cnf"),
       $"parsed.NFe.infNFe.ide.cUF".as("ide_cuf"),
-      $"parsed.NFe.infNFe.ide.dPrevEntrega".as("ide_dPrevEntrega"),
       $"parsed.NFe.infNFe.ide.dhCont".as("ide_dhcont"),
       $"parsed.NFe.infNFe.ide.dhSaiEnt".as("ide_dhsaient"),
       $"parsed.NFe.infNFe.ide.finNFe".as("ide_finnfe"),
-      $"parsed.NFe.infNFe.ide.tpNFDebito".as("ide_tpNFDebito"),
-      $"parsed.NFe.infNFe.ide.gCompraGov.pRedutor".as("gCompraGov_pRedutor"),
-      $"parsed.NFe.infNFe.ide.gCompraGov.tpEnteGov".as("gCompraGov_tpEnteGov"),
-      $"parsed.NFe.infNFe.ide.gCompraGov.tpOperGov".as("gCompraGov_tpOperGov"),
-      $"parsed.NFe.infNFe.ide.gPagAntecipado.refNFe".as("gPagAntecipado_refNFe"),
       $"parsed.NFe.infNFe.ide.idDest".as("ide_iddest"),
       $"parsed.NFe.infNFe.ide.indFinal".as("ide_indfinal"),
       $"parsed.NFe.infNFe.ide.indIntermed".as("ide_indintermed"),
@@ -154,7 +144,13 @@ object NFCeProcessor {
       $"parsed.NFe.infNFe.retirada.xMun".as("retirada_xmun"),
       $"parsed.NFe.infNFe.retirada.xNome".as("retirada_xnome"),
       $"parsed.NFe.infNFe.retirada.xPais".as("retirada_xpais"),
-      $"parsed.NFe.infNFe.total.ISTot.vIS".as("ISTot_vIS"),
+      $"parsed.NFe.infNFe.retirada.modFrete".as("retirada_modfrete"),
+      $"parsed.NFe.infNFe.retTransp.cfop".as("rettransp_cfop"),
+      $"parsed.NFe.infNFe.retTransp.cmunfg".as("rettransp_cmunfg"),
+      $"parsed.NFe.infNFe.retTransp.picmsret".as("rettransp_picmsret"),
+      $"parsed.NFe.infNFe.retTransp.vbcret".as("rettransp_vbcret"),
+      $"parsed.NFe.infNFe.retTransp.vicmsret".as("rettransp_vicmsret"),
+      $"parsed.NFe.infNFe.retTransp.vserv".as("rettransp_vserv"),
       $"parsed.NFe.infNFe.total.icmstot.qbcmono".as("icmstot_qbcmono"),
       $"parsed.NFe.infNFe.total.icmstot.qbcmonoret".as("icmstot_qbcmonoret"),
       $"parsed.NFe.infNFe.total.icmstot.qbcmonoreten".as("icmstot_qbcmonoreten"),
@@ -184,40 +180,12 @@ object NFCeProcessor {
       $"parsed.NFe.infNFe.total.icmstot.vst".as("icmstot_vst"),
       $"parsed.NFe.infNFe.total.icmstot.vseg".as("icmstot_vseg"),
       $"parsed.NFe.infNFe.total.icmstot.vtottrib".as("icmstot_vtottrib"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.vBCIBSCBS".as("IBSCBSTot_vBCIBSCBS"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gIBS.gIBSUF.vDif".as("gIBSUF_vDif"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gIBS.gIBSUF.vDevTrib".as("gIBSUF_vDevTrib"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gIBS.gIBSUF.vIBSUF".as("gIBSUF_vIBSUF"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gIBS.vIBS".as("gIBS_vIBS"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gIBS.vCredPres".as("gIBS_vCredPres"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gIBS.vCredPresCondSus".as("gIBS_vCredPresCondSus"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gIBS.gIBSMun.vDif".as("gIBSMun_vDif"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gIBS.gIBSMun.vDevTrib".as("gIBSMun_vDevTrib"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gIBS.gIBSMun.vIBSMun".as("gIBSMun_vIBSMun"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gCBS.vDif".as("gCBS_vDif"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gCBS.vDevTrib".as("gCBS_vDevTrib"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gCBS.vCBS".as("gCBS_vCBS"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gCBS.vCredPres".as("gCBS_vCredPres"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gCBS.vCredPresCondSus".as("gCBS_vCredPresCondSus"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gMono.vIBSMono".as("gMono_vIBSMono"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gMono.vCBSMono".as("gMono_vCBSMono"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gMono.vIBSMonoReten".as("gMono_vIBSMonoReten"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gMono.vCBSMonoReten".as("gMono_vCBSMonoReten"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gMono.vIBSMonoRet".as("gMono_vIBSMonoRet"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gMono.vCBSMonoRet".as("gMono_vCBSMonoRet"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gEstornoCred.vIBSEstCred".as("gEstornoCred_vIBSEstCred"),
-      $"parsed.NFe.infNFe.total.IBSCBSTot.gEstornoCred.vCBSEstCred".as("gEstornoCred_vCBSEstCred"),
-      $"parsed.NFe.infNFe.total.vNFTot".as("IBSCBSTot_vNFTot"),
       $"parsed.NFe.infNFe.total.ISSQNtot.cRegTrib".as("issqntot_cregtrib"),
       $"parsed.NFe.infNFe.total.ISSQNtot.dCompet".as("issqntot_dcompet"),
       $"parsed.NFe.infNFe.total.ISSQNtot.vBC".as("issqntot_vbc"),
       $"parsed.NFe.infNFe.total.ISSQNtot.vCOFINS".as("issqntot_vcofins"),
-      $"parsed.NFe.infNFe.total.ISSQNtot.vDeducao".as("issqntot_vDeducao"),
-      $"parsed.NFe.infNFe.total.ISSQNtot.vDescCond".as("issqntot_vDescCond"),
-      $"parsed.NFe.infNFe.total.ISSQNtot.vDescIncond".as("issqntot_vDescIncond"),
       $"parsed.NFe.infNFe.total.ISSQNtot.vISS".as("issqntot_viss"),
       $"parsed.NFe.infNFe.total.ISSQNtot.vISSRet".as("issqntot_vissret"),
-      $"parsed.NFe.infNFe.total.ISSQNtot.vOutro".as("issqntot_vOutro"),
       $"parsed.NFe.infNFe.total.ISSQNtot.vPIS".as("issqntot_vpis"),
       $"parsed.NFe.infNFe.total.ISSQNtot.vServ".as("issqntot_vserv"),
       $"parsed.NFe.infNFe.total.retTrib.vBCIRRF".as("rettrib_vbcirrf"),
@@ -226,7 +194,6 @@ object NFCeProcessor {
       $"parsed.NFe.infNFe.total.retTrib.vRetCOFINS".as("rettrib_vretcofins"),
       $"parsed.NFe.infNFe.total.retTrib.vRetCSLL".as("rettrib_vretcsll"),
       $"parsed.NFe.infNFe.total.retTrib.vRetPIS".as("rettrib_vretpis"),
-      $"parsed.NFe.infNFe.total.retTrib.vRetPrev".as("rettrib_vRetPrev"),
       $"parsed.NFe.infNFe.pag.detPag".as("pag_detPag"),
       $"parsed.NFe.infNFe.pag.vTroco".as("pag_vtroco"),
       $"parsed.NFe.infNFe.transp.modFrete".as("transp_modFrete"),
@@ -263,7 +230,9 @@ object NFCeProcessor {
       $"parsed.NFe.infNFe.infRespTec.hashCSRT".as("infresptec_hashcsrt"),
       $"parsed.NFe.infNFe.infRespTec.idCSRT".as("infresptec_idcsrt"),
       $"parsed.NFe.infNFe.infRespTec.xContato".as("infresptec_xcontato"),
-      $"parsed.NFe.infNFe.infSolicNFF.xSolic".as("infsolicnff_xsolic")
+      $"parsed.NFe.infNFe.infSolicNFF.xSolic".as("infsolicnff_xsolic"),
+      $"parsed.NFe.infNFeSupl.qrCode".as("qrCode"),
+      $"parsed.NFe.infNFeSupl.urlChave".as("urlChave")
     )
   }
 }

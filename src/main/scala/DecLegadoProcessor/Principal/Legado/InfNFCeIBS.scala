@@ -20,17 +20,17 @@
 //  --conf "spark.dynamicAllocation.maxExecutors=40" \
 //  --packages com.databricks:spark-xml_2.12:0.13.0 \
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
-package DecLegadoProcessor.Principal.Faltantes
+package DecLegadoProcessor.Principal.Legado
 
-import Processors.NFCeProcessor_bk
-import Schemas.NFCeSchema_bk
+import Processors.NFCeProcessor
+import Schemas.NFCeSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
 import java.time.LocalDateTime
 
-object InfNFCe {
+object InfNFCeIBS {
   // Variáveis externas para o intervalo de meses e ano de processamento
   val ano = 2025
   val mesInicio = 3
@@ -38,18 +38,18 @@ object InfNFCe {
   val tipoDocumento = "nfce"
 
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder().appName("ExtractFaltanteNFCe").enableHiveSupport().getOrCreate()
+    val spark = SparkSession.builder().appName("ExtractInfNFCeIBS").enableHiveSupport().getOrCreate()
     import spark.implicits._
 
     // Obter o esquema da classe CTeOSSchema
-    val schema = NFCeSchema_bk.createSchema()
+    val schema = NFCeSchema.createSchema()
     // Lista de meses com base nas variáveis externas
     val anoMesList = (mesInicio to mesFim).map { month =>
       f"$ano${month}%02d"
     }.toList
 
     anoMesList.foreach { anoMes =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/nfce/2025MIGRACAO"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/nfce/year=2026/month=03"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $anoMes: $startTime")
@@ -72,19 +72,19 @@ object InfNFCe {
 
       // 4. Gera o DataFrame selectedDF usando a nova classe
       implicit val sparkSession: SparkSession = spark // Passando o SparkSession implicitamente
-      val selectedDF = NFCeProcessor_bk.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
+      val selectedDF = NFCeProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
       val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
-      // Imprimir no console as variações e a contagem de 'chave_particao'
-      val chaveParticaoContagem = selectedDFComParticao
-        .groupBy("chave_particao")
-        .agg(count("chave").alias("contagem_chaves"))
-        .orderBy("chave_particao")
-
-      // Coletar os dados para exibição no console
-      chaveParticaoContagem.collect().foreach { row =>
-        println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
-      }
+//      // Imprimir no console as variações e a contagem de 'chave_particao'
+//      val chaveParticaoContagem = selectedDFComParticao
+//        .groupBy("chave_particao")
+//        .agg(count("chave").alias("contagem_chaves"))
+//        .orderBy("chave_particao")
+//
+//      // Coletar os dados para exibição no console
+//      chaveParticaoContagem.collect().foreach { row =>
+//        println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
+//      }
 
       // Redistribuir os dados para 40 partições
       val repartitionedDF = selectedDFComParticao.repartition(40)
@@ -96,7 +96,7 @@ object InfNFCe {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/nfce/infNFCe")
+        .save("/datalake/prata/sources/dbms/dec/nfce/infNFCeIBS")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()
