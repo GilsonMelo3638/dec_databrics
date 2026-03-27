@@ -22,7 +22,7 @@
 //  hdfs://sepladbigdata/app/dec/NFeDetPrata-0.0.1-SNAPSHOT.jar
 package DecDiarioProcessor.Principal
 
-import Schemas.NFCeDetSchema_bk
+import Schemas.NFCeDetSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
@@ -31,7 +31,7 @@ import org.apache.spark.sql.functions._
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-object nfceDet {
+object nfceDet_bk {
   def main(args: Array[String]): Unit = {
     val tipoDocumento = "nfce"
     val spark = SparkSession.builder()
@@ -106,7 +106,7 @@ object nfceDet {
           $"IP_TRANSMISSOR"
         )
         // 3. Usar `from_xml` para ler o XML da coluna usando o esquema definido
-        val schema = NFCeDetSchema_bk.createSchema()
+        val schema = NFCeDetSchema.createSchema()
         val parsedDF = xmlDF.withColumn("parsed", from_xml($"xml", schema))
 
         // 4. Selecionar os campos desejados

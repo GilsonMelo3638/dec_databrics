@@ -22,8 +22,8 @@
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
 package DecDiarioProcessor.Principal
 
-import Processors.NFCeProcessor_bk
-import Schemas.NFCeSchema_bk
+import Processors.NFCeProcessor
+import Schemas.NFCeSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
@@ -116,11 +116,11 @@ object InfNFCe {
             $"IP_TRANSMISSOR"
           )
 
-          val schema = NFCeSchema_bk.createSchema()
+          val schema = NFCeSchema.createSchema()
           val parsedDF = xmlDF.withColumn("parsed", from_xml($"xml", schema))
 
           implicit val sparkSession: SparkSession = spark
-          val selectedDF = NFCeProcessor_bk.generateSelectedDF(parsedDF)
+          val selectedDF = NFCeProcessor.generateSelectedDF(parsedDF)
           val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
           // Particionar e processar sem coletar

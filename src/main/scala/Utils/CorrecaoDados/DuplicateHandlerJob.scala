@@ -69,4 +69,4 @@ object DuplicateHandlerJob {
     spark.stop()
   }
 }
-DuplicateHandlerJob.main(Array())
+//DuplicateHandlerJob.main(Array())

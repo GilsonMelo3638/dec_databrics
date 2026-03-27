@@ -22,7 +22,7 @@
 //  hdfs://sepladbigdata/app/dec/NFeDetPrata-0.0.1-SNAPSHOT.jar
 package DecLegadoProcessor.Principal.Legado
 
-import Schemas.NFCeDetSchemaIBS
+import Schemas.NFCeDetSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
@@ -46,14 +46,15 @@ object nfceDetIBS {
       .getOrCreate()
       import spark.implicits._
       // Obter o esquema da classe CTeOSSchema
-      val schema = NFCeDetSchemaIBS.createSchema()
+      val schema = NFCeDetSchema.createSchema()
     // Lista de meses com base nas variáveis externas
     val anoMesList = (mesInicio to mesFim).map { month =>
       f"$ano${month}%02d"
     }.toList
 
     anoMesList.foreach { anoMes =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/legado/dec/nfce_diario"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/nfce/year=2026/month=03/day=23"
+        //2019, 2020, 2021, 2022, 2023, 2024, 2025
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $anoMes: $startTime")
@@ -626,19 +627,19 @@ object nfceDetIBS {
       // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
       val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
-//      // Imprimir no console as variações e a contagem de 'chave_particao'
-//      val chaveParticaoContagem = selectedDFComParticao
-//        .groupBy("chave_particao")
-//        .agg(count("chave").alias("contagem_chaves"))
-//        .orderBy("chave_particao")
-//
-//      // Coletar os dados para exibição no console
-//      chaveParticaoContagem.collect().foreach { row =>
-//        println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
-//      }
+      // Imprimir no console as variações e a contagem de 'chave_particao'
+      val chaveParticaoContagem = selectedDFComParticao
+        .groupBy("chave_particao")
+        .agg(count("chave").alias("contagem_chaves"))
+        .orderBy("chave_particao")
+
+      // Coletar os dados para exibição no console
+      chaveParticaoContagem.collect().foreach { row =>
+        println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
+      }
 
       // Redistribuir os dados para 40 partições
-      val repartitionedDF = selectedDFComParticao.repartition(40)
+      val repartitionedDF = selectedDFComParticao.repartition(30)
 
       // Escrever os dados particionados
       repartitionedDF

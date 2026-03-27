@@ -2,7 +2,7 @@ package Schemas
 
 import org.apache.spark.sql.types.{DateType, DoubleType, StringType, StructType, _}
 
-object NFCeDetSchema {
+object NFCeDetSchema_bk {
   def createSchema(): StructType = {
     new StructType()
       .add("protNFe", new StructType()
