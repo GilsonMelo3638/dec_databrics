@@ -20,8 +20,8 @@ object MonitoramentoDocumentoPipeline {
       val tag = "nf3eProc"
       val ano = "2026"
 
-      val mesInicio = 3
-      val mesFim = 3
+      val mesInicio = 4
+      val mesFim = 4
 
       var dfAcumulado: DataFrame = null
 

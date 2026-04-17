@@ -17,7 +17,7 @@ object ContadorDocumentosProcessado {
     )
     val basePath = "/datalake/bronze/sources/dbms/dec/diario"
     val ano = "2026"
-    val mes = "02"
+    val mes = "03"
 
     var totalCount = 0L
 

@@ -22,8 +22,8 @@
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
 package DecLegadoProcessor.Principal.Diario
 
-import Processors.NF3eProcessor
-import Schemas.NF3eSchema
+import Processors.NFComProcessor
+import Schemas.NFComSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
@@ -31,12 +31,12 @@ import org.apache.spark.sql.functions._
 
 import java.time.LocalDateTime
 
-object NF3e {
+object NFCom {
   // Variáveis externas para o intervalo de meses e ano de processamento
   val ano = 2025
   val mesInicio = 1
   val mesFim = 1
-  val tipoDocumento = "nf3e"  // ÚNICO lugar onde o tipo é definido
+  val tipoDocumento = "nfcom"  // ÚNICO lugar onde o tipo é definido
   val diretorioProcessar = "20260327"
 
   // Função para formatar o nome do documento conforme necessário para cada contexto
@@ -55,7 +55,7 @@ object NF3e {
     import spark.implicits._
 
     // Obter o esquema da classe NFComSchema
-    val schema = NF3eSchema.createSchema()
+    val schema = NFComSchema.createSchema()
 
     // Lista de meses com base nas variáveis externas
     val anoMesList = (mesInicio to mesFim).map { month =>
@@ -90,7 +90,7 @@ object NF3e {
 
       // 4. Gera o DataFrame selectedDF
       implicit val sparkSession: SparkSession = spark
-      val selectedDF = NF3eProcessor.generateSelectedDF(parsedDF)
+      val selectedDF = NFComProcessor.generateSelectedDF(parsedDF)
       val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
       // Imprimir no console as variações e a contagem de 'chave_particao'

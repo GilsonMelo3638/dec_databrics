@@ -1,10 +1,10 @@
 package Utils.CorrecaoSchemaTransferirLegado
 
-import org.apache.spark.sql.functions.{col, substring}
-import org.apache.spark.sql.types.{IntegerType, StringType}
+import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{DataFrame, SparkSession}
+
 import java.time.{LocalDate, ZoneId}
-import java.time.format.DateTimeFormatter
 
 abstract class DocumentProcessor {
   // Configurações específicas para cada tipo de documento
@@ -79,20 +79,25 @@ abstract class DocumentProcessor {
 
   // Método genérico para processamento e particionamento
   protected def processAndPartitionData(df: DataFrame, outputPath: String, numPartitions: Int): Unit = {
-    val partitionedDF = df.withColumn("year_temp", substring(col("DHPROC"), 7, 4))
-      .withColumn("month_temp", substring(col("DHPROC"), 4, 2))
-      .withColumn("day_temp", substring(col("DHPROC"), 1, 2).cast(IntegerType))
+    import org.apache.spark.sql.functions._
+
+    val partitionedDF = df
+      .withColumn("data_ts", to_timestamp(col("DHPROC"), "dd/MM/yyyy HH:mm:ss"))
+      .withColumn("year_temp", year(col("data_ts")))
+      .withColumn("month_temp", month(col("data_ts")))
+      .withColumn("day_temp", dayofmonth(col("data_ts")))
+      .filter(col("data_ts").isNotNull)
 
     val dateCombinations = partitionedDF.select("year_temp", "month_temp", "day_temp").distinct().collect()
 
     dateCombinations.foreach { row =>
-      val year = row.getString(0)
-      val month = row.getString(1)
+      val year = row.getInt(0)
+      val monthNum = row.getInt(1)
       val dayNum = row.getInt(2)
 
       val dayDF = partitionedDF.filter(
         col("year_temp") === year &&
-          col("month_temp") === month &&
+          col("month_temp") === monthNum &&
           col("day_temp") === dayNum
       ).drop("year_temp", "month_temp", "day_temp", "original_day")
 
@@ -100,7 +105,7 @@ abstract class DocumentProcessor {
         .write
         .mode("append")
         .option("compression", "lz4")
-        .parquet(s"$outputPath/year=$year/month=$month/day=$dayNum")
+        .parquet(s"$outputPath/year=$year/month=$monthNum/day=$dayNum")
     }
   }
 }
@@ -187,7 +192,7 @@ object NFe extends DocumentProcessor {
   }
 }
 
- //Exemplo de como executar (agora sem parâmetros para usar o mês anterior):
+//Exemplo de como executar (agora sem parâmetros para usar o mês anterior):
 //NFe.main(Array())       // Usa mês anterior automaticamente
 //BPe.main(Array())       // Usa mês anterior automaticamente
 //CTe.main(Array())       // Usa mês anterior automaticamente
@@ -195,7 +200,6 @@ object NFe extends DocumentProcessor {
 //NF3e.main(Array())      // Usa mês anterior automaticamente
 //NFCom.main(Array())     // Usa mês anterior automaticamente
 //NFCe.main(Array())      // Usa mês anterior automaticamente
-//NFe.main(Array())       // Usa mês anterior automaticamente
 
 // Ou ainda pode sobrescrever com parâmetros específicos:
 // BPe.main(Array("2025", "6")) // Força ano 2025, mês 6
