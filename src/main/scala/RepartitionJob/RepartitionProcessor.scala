@@ -5,32 +5,36 @@ import org.apache.spark.sql.functions.{col, xxhash64}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.util.Calendar
-import scala.math.ceil
+import scala.math.round
 
 object RepartitionProcessor {
 
   val spark: SparkSession = SparkSession.builder().getOrCreate()
   val fs: FileSystem = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
-  val TARGET_MB = 256.0
-  val MAX_RECORDS_PER_FILE = 5000000
+  // 🎯 parâmetros ideais
+  val TARGET_MB = 160.0
+  val MAX_FILE_MB = 256.0
+  val MAX_RECORDS_PER_FILE = 4200000
 
-  val TOLERANCE_PERCENT = 0.3
-  val TOLERANCE_ABSOLUTE = 1
+  // 🧠 zona de estabilidade (anti-loop REAL)
+  val LOWER_TOLERANCE = 0.85
+  val UPPER_TOLERANCE = 1.15
 
   def main(args: Array[String]): Unit = {
 
     spark.conf.set("spark.sql.files.maxRecordsPerFile", MAX_RECORDS_PER_FILE)
 
+    // 📅 regra de domingo
     val calendar = Calendar.getInstance()
     val isSunday = calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY
 
+    // 📂 diretórios (com flag especial)
     val configs = Seq(
       ("/datalake/prata/sources/dbms/dec/nfe/infNFe", false),
       ("/datalake/prata/sources/dbms/dec/nfe/det", false),
       ("/datalake/prata/sources/dbms/dec/nfce/infNFCe", false),
-      ("/datalake/prata/sources/dbms/dec/nfce/det", true) // diretório especial
-
+      ("/datalake/prata/sources/dbms/dec/nfce/det", true) // 🔥 diretório especial
     )
 
     configs.foreach { case (path, isNfceDet) =>
@@ -47,12 +51,15 @@ object RepartitionProcessor {
       .filter(_.isDirectory)
       .map(_.getPath.toString)
 
+    // 🔥 ordena partições (ex: ANOMES=202401)
     val sortedPartitions =
       partitions
         .map(p => (p.split("=").last.toInt, p))
         .sortBy(_._1)
         .map(_._2)
 
+    // 🧠 regra especial:
+    // - nfce/det → só últimas 2 partições (exceto domingo)
     val partitionsToProcess =
       if (isNfceDet && !isSunday) sortedPartitions.takeRight(2)
       else sortedPartitions
@@ -71,24 +78,28 @@ object RepartitionProcessor {
 
       val fileCount = parquetFiles.length
 
-      val sizeBytes = getDirectorySize(path)
-      val sizeMB = sizeBytes / (1024.0 * 1024.0)
+      val sizeMB = getDirectorySize(path) / (1024.0 * 1024.0)
 
-      val idealPartitions = math.max(1, ceil(sizeMB / TARGET_MB).toInt)
+      // 🎯 cálculo ESTÁVEL (sem ceil)
+      val basePartitions = round(sizeMB / TARGET_MB).toInt
 
-      val diff = math.abs(fileCount - idealPartitions)
-      val percentDiff =
-        if (idealPartitions == 0) 0.0
-        else diff.toDouble / idealPartitions.toDouble
+      // 🔒 garante limite de tamanho máximo
+      val minPartitions = round(sizeMB / MAX_FILE_MB).toInt
 
-      logPartition(partitionPath, sizeMB, fileCount, idealPartitions, percentDiff)
+      val idealPartitions = Seq(basePartitions, minPartitions, 1).max
 
-      val shouldRepartition =
-        diff > TOLERANCE_ABSOLUTE &&
-          percentDiff > TOLERANCE_PERCENT
+      // 🧠 faixa aceitável
+      val lowerBound = (idealPartitions * LOWER_TOLERANCE).toInt
+      val upperBound = (idealPartitions * UPPER_TOLERANCE).toInt
 
-      if (!shouldRepartition) {
-        println("✔ Já está otimizado. Pulando.")
+      logPartition(partitionPath, sizeMB, fileCount, idealPartitions, lowerBound, upperBound)
+
+      val isHealthy =
+        fileCount >= lowerBound &&
+          fileCount <= upperBound
+
+      if (isHealthy) {
+        println("✔ Já está saudável. Pulando.")
         return
       }
 
@@ -125,6 +136,7 @@ object RepartitionProcessor {
 
     val currentPartitions = df.rdd.getNumPartitions
 
+    // 🚫 evita shuffle inútil
     if (currentPartitions == numPartitions) {
       println("✔ Mesmo número de partições. Mantendo.")
       return df
@@ -133,15 +145,12 @@ object RepartitionProcessor {
     val hasChave = df.columns.contains("CHAVE")
 
     if (hasChave) {
-      println("🔑 Usando CHAVE para distribuição determinística")
-
+      println("🔑 Usando CHAVE")
       df.withColumn("_hash", xxhash64(col("CHAVE")))
         .repartition(numPartitions, col("_hash"))
         .drop("_hash")
-
     } else {
-      println("⚠️ CHAVE não encontrada. Usando fallback (todas colunas)")
-
+      println("⚠️ Fallback (todas colunas)")
       df.withColumn("_hash", xxhash64(df.columns.map(col): _*))
         .repartition(numPartitions, col("_hash"))
         .drop("_hash")
@@ -159,13 +168,21 @@ object RepartitionProcessor {
     }.sum
   }
 
-  def logPartition(path: String, sizeMB: Double, files: Int, ideal: Int, diff: Double): Unit = {
+  def logPartition(path: String,
+                   sizeMB: Double,
+                   files: Int,
+                   ideal: Int,
+                   lower: Int,
+                   upper: Int): Unit = {
+
     println(s"\n📂 $path")
     println(f"📦 Tamanho: $sizeMB%.2f MB")
     println(s"📄 Arquivos atuais: $files")
     println(s"🎯 Ideal: $ideal")
-    println(f"📊 Diferença: ${diff * 100}%.2f%%")
+    println(s"📏 Faixa aceitável: [$lower - $upper]")
   }
 }
 
 //RepartitionProcessor.main(Array())
+
+

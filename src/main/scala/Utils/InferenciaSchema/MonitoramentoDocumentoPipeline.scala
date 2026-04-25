@@ -1,15 +1,38 @@
+
 package Utils.InferenciaSchema
 
 import org.apache.spark.sql.{SparkSession, DataFrame}
+import Schemas.NF3eSchema
 import org.apache.spark.sql.functions.col
 import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.spark.sql.types._
 
 object MonitoramentoDocumentoPipeline {
+
+  def flattenSchema(schema: StructType, prefix: String = ""): Seq[String] = {
+    schema.fields.flatMap { field =>
+
+      val fieldName =
+        if (prefix.isEmpty) field.name
+        else s"$prefix.${field.name}"
+
+      field.dataType match {
+        case struct: StructType =>
+          flattenSchema(struct, fieldName)
+
+        case ArrayType(struct: StructType, _) =>
+          flattenSchema(struct, fieldName)
+
+        case _ =>
+          Seq(fieldName)
+      }
+    }
+  }
 
   def main(args: Array[String]): Unit = {
 
     val spark = SparkSession.builder()
-      .appName("Pipeline Documento - Extracao e Inferencia")
+      .appName("Monitoramento Documento Pipeline - Consolidado")
       .config("spark.sql.parquet.compression.codec", "lz4")
       .enableHiveSupport()
       .getOrCreate()
@@ -20,21 +43,21 @@ object MonitoramentoDocumentoPipeline {
       val tag = "nf3eProc"
       val ano = "2026"
 
-      val mesInicio = 4
+      val mesInicio = 3
       val mesFim = 4
 
       var dfAcumulado: DataFrame = null
 
-      // ===============================
-      // 🔁 Loop de meses
-      // ===============================
+      // ============================================
+      // 🔁 LOOP → SOMENTE LEITURA + UNION
+      // ============================================
 
       for (mesInt <- mesInicio to mesFim) {
 
         val mes = f"$mesInt%02d"
 
         println("\n" + "=" * 80)
-        println(s"PROCESSANDO MÊS: $ano-$mes")
+        println(s"LENDO MÊS: $ano-$mes")
         println("=" * 80)
 
         val origemPath =
@@ -49,7 +72,7 @@ object MonitoramentoDocumentoPipeline {
             .filter(col("XML_DOCUMENTO_CLOB").isNotNull)
 
           val total = dfXml.count()
-          println(s"Total de XMLs mês $mes: $total")
+          println(s"Total XMLs mês $mes: $total")
 
           if (total > 0) {
             dfAcumulado =
@@ -58,13 +81,13 @@ object MonitoramentoDocumentoPipeline {
           }
 
         } else {
-          println("Coluna XML_DOCUMENTO_CLOB não encontrada. Pulando mês.")
+          println("Coluna XML_DOCUMENTO_CLOB não encontrada.")
         }
       }
 
-      // ===============================
-      // 🔥 Inferência única
-      // ===============================
+      // ============================================
+      // 🔥 VALIDAÇÃO
+      // ============================================
 
       if (dfAcumulado == null) {
         println("Nenhum XML encontrado no período.")
@@ -72,14 +95,20 @@ object MonitoramentoDocumentoPipeline {
       }
 
       val totalFinal = dfAcumulado.count()
-      println(s"\nTotal consolidado de XMLs: $totalFinal")
+      println(s"\nTOTAL CONSOLIDADO: $totalFinal")
+
+      // ============================================
+      // 🧱 ESCRITA TEMP
+      // ============================================
 
       val tempDir =
         s"/tmp/${documento}_xml_temp_${System.currentTimeMillis()}"
 
-      dfAcumulado.write
-        .mode("overwrite")
-        .text(tempDir)
+      dfAcumulado.write.mode("overwrite").text(tempDir)
+
+      // ============================================
+      // 🔍 INFERÊNCIA ÚNICA
+      // ============================================
 
       val xmlDF = spark.read
         .format("xml")
@@ -87,10 +116,37 @@ object MonitoramentoDocumentoPipeline {
         .option("inferSchema", "true")
         .load(tempDir)
 
-      println("\nSchema inferido considerando TODOS os meses:")
+      println("\nSchema inferido (CONSOLIDADO):")
       xmlDF.printSchema()
 
-      // Limpeza
+      // ============================================
+      // 🔎 COMPARAÇÃO
+      // ============================================
+
+      val schemaInferido = flattenSchema(xmlDF.schema).toSet
+
+      val schemaOficial = flattenSchema(
+        NF3eSchema.createSchema()
+      ).toSet
+
+      val camposNaoMapeados = schemaInferido
+        .diff(schemaOficial)
+        .filterNot(_.toLowerCase.contains("signature"))
+
+      println("\n" + "=" * 80)
+      println("CAMPOS NÃO MAPEADOS (CONSOLIDADO)")
+      println("=" * 80)
+
+      if (camposNaoMapeados.isEmpty) {
+        println("✔ Nenhuma diferença encontrada.")
+      } else {
+        camposNaoMapeados.toSeq.sorted.foreach(println)
+      }
+
+      // ============================================
+      // 🧹 LIMPEZA
+      // ============================================
+
       FileSystem
         .get(spark.sparkContext.hadoopConfiguration)
         .delete(new Path(tempDir), true)

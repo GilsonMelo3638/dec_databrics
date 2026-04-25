@@ -4,24 +4,28 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.functions.{col, xxhash64}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-import scala.math.ceil
+import scala.math.round
 
 object RepartitionXlmPequenosMediosProcessor {
 
   val spark: SparkSession = SparkSession.builder().getOrCreate()
   val fs: FileSystem = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
-  val TARGET_MB = 256.0
-  val MAX_RECORDS_PER_FILE = 5000000
+  // 🎯 parâmetros ideais
+  val TARGET_MB = 160.0
+  val MAX_FILE_MB = 256.0
+  val MAX_RECORDS_PER_FILE = 4200000
 
-  val TOLERANCE_PERCENT = 0.2
-  val TOLERANCE_ABSOLUTE = 1
+  // 🧠 zona de estabilidade (anti-loop REAL)
+  val LOWER_TOLERANCE = 0.85
+  val UPPER_TOLERANCE = 1.15
 
   def main(args: Array[String]): Unit = {
 
     spark.conf.set("spark.sql.files.maxRecordsPerFile", MAX_RECORDS_PER_FILE)
 
-    val configs = Seq(
+    val basePaths = Seq(
+      "/datalake/prata/sources/dbms/dec/nf3e/cancelamento",
       ("/datalake/prata/sources/dbms/dec/cte/CTe"),
       ("/datalake/prata/sources/dbms/dec/cte/CTeOS"),
       ("/datalake/prata/sources/dbms/dec/cte/GVTe"),
@@ -30,29 +34,21 @@ object RepartitionXlmPequenosMediosProcessor {
       ("/datalake/prata/sources/dbms/dec/nf3e/NF3e"),
       ("/datalake/prata/sources/dbms/dec/nfcom/NFCom")
     )
-
-    configs.foreach(processPartitions(_, isNfceDet = false))
+    basePaths.foreach { path =>
+      println(s"\n🚀 Processando: $path")
+      processPartitions(path)
+    }
 
     println("\n✅ Finalizado.")
   }
 
-  def processPartitions(basePath: String, isNfceDet: Boolean): Unit = {
+  def processPartitions(basePath: String): Unit = {
 
     val partitions = fs.listStatus(new Path(basePath))
       .filter(_.isDirectory)
       .map(_.getPath.toString)
 
-    val sortedPartitions =
-      partitions
-        .map(p => (p.split("=").last.toInt, p))
-        .sortBy(_._1)
-        .map(_._2)
-
-    val partitionsToProcess =
-      if (isNfceDet) sortedPartitions.takeRight(2)
-      else sortedPartitions
-
-    partitionsToProcess.foreach(processSinglePartition)
+    partitions.foreach(processSinglePartition)
   }
 
   def processSinglePartition(partitionPath: String): Unit = {
@@ -66,24 +62,28 @@ object RepartitionXlmPequenosMediosProcessor {
 
       val fileCount = parquetFiles.length
 
-      val sizeBytes = getDirectorySize(path)
-      val sizeMB = sizeBytes / (1024.0 * 1024.0)
+      val sizeMB = getDirectorySize(path) / (1024.0 * 1024.0)
 
-      val idealPartitions = math.max(1, ceil(sizeMB / TARGET_MB).toInt)
+      // 🎯 cálculo ESTÁVEL (sem ceil)
+      val basePartitions = round(sizeMB / TARGET_MB).toInt
 
-      val diff = math.abs(fileCount - idealPartitions)
-      val percentDiff =
-        if (idealPartitions == 0) 0.0
-        else diff.toDouble / idealPartitions.toDouble
+      // 🔒 garante limite de tamanho máximo
+      val minPartitions = round(sizeMB / MAX_FILE_MB).toInt
 
-      logPartition(partitionPath, sizeMB, fileCount, idealPartitions, percentDiff)
+      val idealPartitions = Seq(basePartitions, minPartitions, 1).max
 
-      val shouldRepartition =
-        diff > TOLERANCE_ABSOLUTE &&
-          percentDiff > TOLERANCE_PERCENT
+      // 🧠 faixa aceitável
+      val lowerBound = (idealPartitions * LOWER_TOLERANCE).toInt
+      val upperBound = (idealPartitions * UPPER_TOLERANCE).toInt
 
-      if (!shouldRepartition) {
-        println("✔ Já está otimizado. Pulando.")
+      logPartition(partitionPath, sizeMB, fileCount, idealPartitions, lowerBound, upperBound)
+
+      val isHealthy =
+        fileCount >= lowerBound &&
+          fileCount <= upperBound
+
+      if (isHealthy) {
+        println("✔ Já está saudável. Pulando.")
         return
       }
 
@@ -112,10 +112,15 @@ object RepartitionXlmPequenosMediosProcessor {
     }
   }
 
+  // =========================
+  // DISTRIBUIÇÃO INTELIGENTE
+  // =========================
+
   def rebalance(df: DataFrame, numPartitions: Int): DataFrame = {
 
     val currentPartitions = df.rdd.getNumPartitions
 
+    // 🚫 evita shuffle inútil
     if (currentPartitions == numPartitions) {
       println("✔ Mesmo número de partições. Mantendo.")
       return df
@@ -124,20 +129,21 @@ object RepartitionXlmPequenosMediosProcessor {
     val hasChave = df.columns.contains("CHAVE")
 
     if (hasChave) {
-      println("🔑 Usando CHAVE para distribuição determinística")
-
+      println("🔑 Usando CHAVE")
       df.withColumn("_hash", xxhash64(col("CHAVE")))
         .repartition(numPartitions, col("_hash"))
         .drop("_hash")
-
     } else {
-      println("⚠️ CHAVE não encontrada. Usando fallback (todas colunas)")
-
+      println("⚠️ Fallback (todas colunas)")
       df.withColumn("_hash", xxhash64(df.columns.map(col): _*))
         .repartition(numPartitions, col("_hash"))
         .drop("_hash")
     }
   }
+
+  // =========================
+  // UTILS
+  // =========================
 
   def getDirectorySize(path: Path): Long = {
     fs.listStatus(path).map { status =>
@@ -146,13 +152,20 @@ object RepartitionXlmPequenosMediosProcessor {
     }.sum
   }
 
-  def logPartition(path: String, sizeMB: Double, files: Int, ideal: Int, diff: Double): Unit = {
+  def logPartition(path: String,
+                   sizeMB: Double,
+                   files: Int,
+                   ideal: Int,
+                   lower: Int,
+                   upper: Int): Unit = {
+
     println(s"\n📂 $path")
     println(f"📦 Tamanho: $sizeMB%.2f MB")
     println(s"📄 Arquivos atuais: $files")
     println(s"🎯 Ideal: $ideal")
-    println(f"📊 Diferença: ${diff * 100}%.2f%%")
+    println(s"📏 Faixa aceitável: [$lower - $upper]")
   }
 }
+
 
 //RepartitionXlmPequenosMediosProcessor.main(Array())
