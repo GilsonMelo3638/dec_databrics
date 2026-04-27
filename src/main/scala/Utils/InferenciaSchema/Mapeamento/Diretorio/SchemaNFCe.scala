@@ -1,4 +1,4 @@
-package Utils.InferenciaSchema
+package Utils.InferenciaSchema.Mapeamento.Diretorio
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types._

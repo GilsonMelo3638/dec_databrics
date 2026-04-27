@@ -1,4 +1,4 @@
-package Utils.InferenciaSchema
+package Utils.InferenciaSchema.Mapeamento.Diretorio
 
 import org.apache.spark.sql.SparkSession
 // Defina o schema XML para as tags que você deseja extrair

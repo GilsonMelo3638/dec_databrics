@@ -1,4 +1,4 @@
-package Utils.InferenciaSchema
+package Utils.InferenciaSchema.Mapeamento.Diretorio
 
 import com.databricks.spark.xml._
 import org.apache.spark.sql.{DataFrame, SparkSession}

@@ -1,16 +1,14 @@
-package Utils.InferenciaSchema
+package Utils.InferenciaSchema.Mapeamento.Diretorio
 
 import org.apache.spark.sql.SparkSession
-// Defina o schema XML para as tags que você deseja extrair
 
-
-object SchemaNFCom {
+object SchemaCTeCancelamento {
   def main(args: Array[String]): Unit = {
     // Criação da sessão Spark com suporte ao Hive
-    val spark = SparkSession.builder.appName("ExtractNFComProc").enableHiveSupport().getOrCreate()
+    val spark = SparkSession.builder.appName("ExtractInfCTeCancelamento").enableHiveSupport().getOrCreate()
     // Diretório dos arquivos Parquet
     // Carregar o DataFrame a partir do diretório Parquet, assumindo que o XML completo está em 'XML_DOCUMENTO_CLOB'
-    val df = spark.read.format("xml").option("rowTag", "nfcomProc").load("/datalake/bronze/sources/dbms/dec/nfcom/202301")
+    val df = spark.read.format("xml").option("rowTag", "procEventoCTe").load("/datalake/bronze/sources/dbms/dec/cte_evento/2025_2")
     // Agora você pode acessar infNFe
 
     df.printSchema()
@@ -18,4 +16,4 @@ object SchemaNFCom {
 }
 
 
-//SchemaNFCom.main(Array())
+//SchemaCTeCancelamento.main(Array())
