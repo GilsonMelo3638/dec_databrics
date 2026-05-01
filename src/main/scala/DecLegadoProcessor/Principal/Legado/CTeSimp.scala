@@ -20,37 +20,38 @@
 //  --conf "spark.dynamicAllocation.maxExecutors=40" \
 //  --packages com.databricks:spark-xml_2.12:0.13.0 \
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
-package DecLegadoProcessor.Principal.Mensal
+package DecLegadoProcessor.Principal.Legado
 
-import Processors.BPeProcessor
-import Schemas.BPeSchema
+import Processors.CTeSimpProcessor
+import Schemas.CTeSimpSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
 import java.time.LocalDateTime
 
-object Bpe {
+object CTeSimp {
+
   // Variáveis externas para o intervalo de meses e ano de processamento
-  val ano = 2021
+  val ano = 2025
   val mesInicio = 2
   val mesFim = 2
-  val tipoDocumento = "bpe"
+  val tipoDocumento = "cte"
 
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder().appName("ExtractInfBPe").enableHiveSupport().getOrCreate()
+    val spark = SparkSession.builder().appName("ExtractInfCTeSimp").enableHiveSupport().getOrCreate()
     import spark.implicits._
 
     // Obter o esquema da classe CTeOSSchema
-    val schema = BPeSchema.createSchema()    // Lista de anos com base nas variáveis externas
+    val schema = CTeSimpSchema.createSchema() // Lista de anos com base nas variáveis externas
     // Lista de meses com base nas variáveis externas
     val anoMesList = (mesInicio to mesFim).map { month =>
       f"$ano${month}%02d"
     }.toList
 
     anoMesList.foreach { anoMes =>
-      val parquetPath = "/datalake/bronze/sources/dbms/dec//diario/bpe/year=2025/month=05"
-
+      //     val parquetPath = s"/datalake/bronze/sources/dbms/legado/dec/cte_diario/"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/cte/year=2026/month=04"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $ano: $startTime")
@@ -59,14 +60,18 @@ object Bpe {
       // 1. Carrega o arquivo Parquet
       val parquetDF = spark.read.parquet(parquetPath)
 
-      // 2. Seleciona as colunas e filtra MODELO = 64
+      // 2. Seleciona as colunas e filtra MODELO = 67
       val xmlDF = parquetDF
+        .filter($"MODELO" === 57)
+        .filter($"XML_DOCUMENTO_CLOB".rlike("<cteSimpProc"))
         .select(
           $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
-          $"NSU".cast("string").as("NSU"),
+          $"NSUSVD".cast("string").as("NSUSVD"),
           $"DHPROC",
           $"DHEMI",
-          $"IP_TRANSMISSOR"
+          $"IP_TRANSMISSOR",
+          $"MODELO".cast("string").as("MODELO"),
+          $"TPEMIS".cast("string").as("TPEMIS")
         )
       xmlDF.show()
       // 3. Usa `from_xml` para ler o XML da coluna usando o esquema
@@ -75,22 +80,21 @@ object Bpe {
 
       // 4. Gera o DataFrame selectedDF usando a nova classe
       implicit val sparkSession: SparkSession = spark // Passando o SparkSession implicitamente
-      val selectedDF = BPeProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
+      val selectedDF = CTeSimpProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
       val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
+//      // Imprimir no console as variações e a contagem de 'chave_particao'
+//      val chaveParticaoContagem = selectedDFComParticao
+//        .groupBy("chave_particao")
+//        .agg(count("chave").alias("contagem_chaves"))
+//        .orderBy("chave_particao")
+//
+//      // Coletar os dados para exibição no console
+//      chaveParticaoContagem.collect().foreach { row =>
+//        println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
+//      }
 
-      // Imprimir no console as variações e a contagem de 'chave_particao'
-      val chaveParticaoContagem = selectedDFComParticao
-        .groupBy("chave_particao")
-        .agg(count("chave").alias("contagem_chaves"))
-        .orderBy("chave_particao")
-
-      // Coletar os dados para exibição no console
-      chaveParticaoContagem.collect().foreach { row =>
-        println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
-      }
-
-      // Redistribuir os dados para 5 partições
-      val repartitionedDF = selectedDFComParticao.repartition(5)
+      // Redistribuir os dados para 40 partições
+      val repartitionedDF = selectedDFComParticao.repartition(1)
 
       // Escrever os dados particionados
       repartitionedDF
@@ -99,13 +103,12 @@ object Bpe {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/bpe/BPe")
+        .save("/datalake/prata/sources/dbms/dec/cte/CTeSimp2")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()
-      println(s"Gravação concluída: $saveEndTime")
-    }
+      println(s"Gravação concluída: $saveEndTime")    }
   }
 }
 
-//Bpe.main(Array())
+//CTeSimp.main(Array())

@@ -109,17 +109,27 @@ object NFComProcessor {
       $"parsed.NFCom.infNFCom.gFat.enderCorresp.xCpl".as("endercorresp_xcpl"),
       $"parsed.NFCom.infNFCom.gFat.enderCorresp.xLgr".as("endercorresp_xlgr"),
       $"parsed.NFCom.infNFCom.gFat.enderCorresp.xMun".as("endercorresp_xmun"),
+      $"parsed.NFCom.infNFCom.gFat.enderCorresp.email".as("endercorresp_email"), // Novo campo
+      $"parsed.NFCom.infNFCom.gFat.enderCorresp.fone".as("endercorresp_fone"), // Novo campo
       $"parsed.NFCom.infNFCom.gFat.gPIX.urlQRCodePIX".as("gfat_gpix_urlqrcode"),
 
       // Campos de gFatCentral
       $"parsed.NFCom.infNFCom.gFatCentral.CNPJ".as("gfatcentral_cnpj"),
       $"parsed.NFCom.infNFCom.gFatCentral.cUF".as("gfatcentral_cuf"),
 
+      // Campos de gFidelidade (Novo struct)
+      $"parsed.NFCom.infNFCom.gFidelidade.dRefResgPts".as("gfidelidade_drefresgpts"),
+      $"parsed.NFCom.infNFCom.gFidelidade.dRefSaldoPts".as("gfidelidade_drefsaldopts"),
+      $"parsed.NFCom.infNFCom.gFidelidade.qtdPtsResg".as("gfidelidade_qtdptsresg"),
+      $"parsed.NFCom.infNFCom.gFidelidade.qtdSaldoPts".as("gfidelidade_qtdsaldopts"),
+
       // Campos de gRespTec
       $"parsed.NFCom.infNFCom.gRespTec.CNPJ".as("gresptec_cnpj"),
       $"parsed.NFCom.infNFCom.gRespTec.email".as("gresptec_email"),
       $"parsed.NFCom.infNFCom.gRespTec.fone".as("gresptec_fone"),
       $"parsed.NFCom.infNFCom.gRespTec.xContato".as("gresptec_xcontato"),
+      $"parsed.NFCom.infNFCom.gRespTec.hashCSRT".as("gresptec_hashcsrt"), // Novo campo
+      $"parsed.NFCom.infNFCom.gRespTec.idCSRT".as("gresptec_idcsrt"),     // Novo campo
 
       // Campos de ide
       $"parsed.NFCom.infNFCom.ide.cDV".as("ide_cdv"),

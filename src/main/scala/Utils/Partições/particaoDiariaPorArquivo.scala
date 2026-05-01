@@ -13,8 +13,8 @@ object particaoDiariaPorArquivo {
       .getOrCreate()
 
     try {
-      val inputPath = "/datalake/bronze/sources/dbms/legado/dec/cte_diario_complemento"
-      val outputPath = "/datalake/bronze/sources/dbms/legado/dec/cte_diario2/"
+      val inputPath = "/datalake/bronze/sources/dbms/dec/cte/202503"
+      val outputPath = "/datalake/bronze/sources/dbms/legado/dec/cte_diario3/"
 
       processSingleDirectory(spark, inputPath, outputPath)
       println("✅ Processamento concluído com sucesso!")

@@ -19,6 +19,7 @@ object MDFeProcessor {
       $"IP_TRANSMISSOR",
       $"parsed.MDFe.infMDFe._Id".as("infmdfe_id"),
       $"parsed.MDFe.infMDFe._versao".as("infmdfe_versao"),
+      $"parsed.MDFe.infMDFe.infSolicNFF.xSolic".as("infsolicnff_xsolic"),
       $"parsed.MDFe.infMDFe.autXML".as("infmdfe_autxml"), // Array intacto
       $"parsed.MDFe.infMDFe.emit.CNPJ".as("emit_cnpj"),
       $"parsed.MDFe.infMDFe.emit.CPF".as("emit_cpf"),
@@ -37,6 +38,7 @@ object MDFeProcessor {
       $"parsed.MDFe.infMDFe.emit.xNome".as("emit_xnome"),
       $"parsed.MDFe.infMDFe.ide.UFFim".as("ide_uffim"),
       $"parsed.MDFe.infMDFe.ide.UFIni".as("ide_ufini"),
+      $"parsed.MDFe.infMDFe.ide.indCarregaPosterior".as("ide_indcarregaposterior"),
       $"parsed.MDFe.infMDFe.ide.cDV".as("ide_cdv"),
       $"parsed.MDFe.infMDFe.ide.cMDF".as("ide_cmdf"),
       $"parsed.MDFe.infMDFe.ide.cUF".as("ide_cuf"),
@@ -91,8 +93,8 @@ object MDFeProcessor {
       $"parsed.MDFe.infMDFe.infModal.rodo.infANTT.infCIOT".as("infantt_infciot"), // Array intacto
       $"parsed.MDFe.infMDFe.infModal.rodo.infANTT.infContratante".as("infantt_infcontratante"), // Array intacto
       $"parsed.MDFe.infMDFe.infModal.rodo.infANTT.infPag".as("infantt_infpag"), // Array intacto
-      $"parsed.MDFe.infMDFe.infModal.rodo.valePed.categCombVeic".as("valeped_categcombveic"),
-      $"parsed.MDFe.infMDFe.infModal.rodo.valePed.disp".as("valeped_disp"), // Array intacto
+      $"parsed.MDFe.infMDFe.infModal.rodo.infANTT.valePed.categCombVeic",
+      $"parsed.MDFe.infMDFe.infModal.rodo.infANTT.valePed.disp", // Array intacto
       $"parsed.MDFe.infMDFe.infModal.rodo.lacRodo".as("rodo_lacrodo"), // Array intacto
       $"parsed.MDFe.infMDFe.infModal.rodo.veicPrincipal.cInt".as("veicprincipal_cint"),
       $"parsed.MDFe.infMDFe.infModal.rodo.veicPrincipal.capKG".as("veicprincipal_capkg"),

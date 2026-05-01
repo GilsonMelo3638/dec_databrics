@@ -20,35 +20,35 @@
 //  --conf "spark.dynamicAllocation.maxExecutors=40" \
 //  --packages com.databricks:spark-xml_2.12:0.13.0 \
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
-package DecLegadoProcessor.Principal.Mensal
+package DecLegadoProcessor.Principal.Anual
 
-import Processors.MDFeProcessor
-import Schemas.MDFeSchema
+import Processors.NFComProcessor
+import Schemas.NFComSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
 import java.time.LocalDateTime
 
-object MDFe {
+object NFCom {
   // Variáveis externas para o intervalo de meses e ano de processamento
-  val ano = 2025
-  val mesInicio = 2
-  val mesFim = 2
-  val tipoDocumento = "mdfe"
+  val anoInicio = 2024
+  val anoFim = 2024
+  val tipoDocumento = "nfcom"
+
+  // Função para criar o esquema de forma modular
 
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder().appName("ExtractInMDFe").enableHiveSupport().getOrCreate()
+    val spark = SparkSession.builder().appName("ExtractInfNFCom").enableHiveSupport().getOrCreate()
     import spark.implicits._
-    // Obter o esquema da classe CTeOSSchema
-    val schema = MDFeSchema.createSchema()
-    // Lista de meses com base nas variáveis externas
-    val anoMesList = (mesInicio to mesFim).map { month =>
-      f"$ano${month}%02d"
-    }.toList
 
-    anoMesList.foreach { anoMes =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/$tipoDocumento/$anoMes"
+    // Obter o esquema da classe CTeOSSchema
+    val schema = NFComSchema.createSchema()
+    // Lista de anos com base nas variáveis externas
+    val anoList = (anoInicio to anoFim).map(_.toString).toList
+
+    anoList.foreach { ano =>
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/nfcom/year=2026/month=04/"
 
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
@@ -60,7 +60,6 @@ object MDFe {
 
       // 2. Seleciona as colunas e filtra MODELO = 64
       val xmlDF = parquetDF
-        .filter($"NSU" < 1000000000) // Aplica o filtro antes da seleção
         .select(
           $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
           $"NSU".cast("string").as("NSU"),
@@ -75,22 +74,22 @@ object MDFe {
 
       // 4. Gera o DataFrame selectedDF usando a nova classe
       implicit val sparkSession: SparkSession = spark // Passando o SparkSession implicitamente
-      val selectedDF = MDFeProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
+      val selectedDF = NFComProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
       val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
-      // Imprimir no console as variações e a contagem de 'chave_particao'
-      val chaveParticaoContagem = selectedDFComParticao
-        .groupBy("chave_particao")
-        .agg(count("chave").alias("contagem_chaves"))
-        .orderBy("chave_particao")
+//      // Imprimir no console as variações e a contagem de 'chave_particao'
+//      val chaveParticaoContagem = selectedDFComParticao
+//        .groupBy("chave_particao")
+//        .agg(count("chave").alias("contagem_chaves"))
+//        .orderBy("chave_particao")
+//
+//      // Coletar os dados para exibição no console
+//      chaveParticaoContagem.collect().foreach { row =>
+//        println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
+//      }
 
-      // Coletar os dados para exibição no console
-      chaveParticaoContagem.collect().foreach { row =>
-        println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
-      }
-
-      // Redistribuir os dados para 40 partições
-      val repartitionedDF = selectedDFComParticao.repartition(1)
+      // Redistribuir os dados para 4 partições
+      val repartitionedDF = selectedDFComParticao.repartition(4)
 
       // Escrever os dados particionados
       repartitionedDF
@@ -99,7 +98,7 @@ object MDFe {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/mdfe/MDFe")
+        .save("/datalake/prata/sources/dbms/dec/nfcom/NFCom2")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()
@@ -108,4 +107,4 @@ object MDFe {
   }
 }
 
-//MDFeProcLegadoMensalProcessor.main(Array())
+//NFCom.main(Array())
