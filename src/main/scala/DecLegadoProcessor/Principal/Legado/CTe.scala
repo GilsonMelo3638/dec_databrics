@@ -22,15 +22,15 @@
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
 package DecLegadoProcessor.Principal.Legado
 
-import Processors.CTeOSProcessor
-import Schemas.CTeOSSchema
+import Processors.CTeProcessor
+import Schemas.CTeSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
 import java.time.LocalDateTime
 
-object CTeOS {
+object CTe {
 
   // Variáveis externas para o intervalo de meses e ano de processamento
   val ano = 2025
@@ -39,19 +39,19 @@ object CTeOS {
   val tipoDocumento = "cte"
 
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder().appName("ExtractInfCTeOS").enableHiveSupport().getOrCreate()
+    val spark = SparkSession.builder().appName("ExtractInfCTeSimp").enableHiveSupport().getOrCreate()
     import spark.implicits._
 
     // Obter o esquema da classe CTeOSSchema
-    val schema = CTeOSSchema.createSchema() // Lista de anos com base nas variáveis externas
+    val schema = CTeSchema.createSchema() // Lista de anos com base nas variáveis externas
     // Lista de meses com base nas variáveis externas
     val anoMesList = (mesInicio to mesFim).map { month =>
       f"$ano${month}%02d"
     }.toList
 
     anoMesList.foreach { anoMes =>
-      //          val parquetPath = s"/datalake/bronze/sources/dbms/legado/dec/cte_diario/"
-     val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/cte/year=2026/month=04"
+         //  val parquetPath = s"/datalake/bronze/sources/dbms/legado/dec/cte_diario/"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/cte/year=2026/month=04]"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $ano: $startTime")
@@ -62,7 +62,8 @@ object CTeOS {
 
       // 2. Seleciona as colunas e filtra MODELO = 67
       val xmlDF = parquetDF
-        .filter($"MODELO" === 67)
+        .filter($"MODELO" === 57)
+        .filter($"XML_DOCUMENTO_CLOB".rlike("<cteProc"))
         .select(
           $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
           $"NSUSVD".cast("string").as("NSUSVD"),
@@ -79,7 +80,7 @@ object CTeOS {
 
       // 4. Gera o DataFrame selectedDF usando a nova classe
       implicit val sparkSession: SparkSession = spark // Passando o SparkSession implicitamente
-      val selectedDF = CTeOSProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
+      val selectedDF = CTeProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
       val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 //      // Imprimir no console as variações e a contagem de 'chave_particao'
 //      val chaveParticaoContagem = selectedDFComParticao
@@ -102,7 +103,7 @@ object CTeOS {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/cte/CTeOS2")
+        .save("/datalake/prata/sources/dbms/dec/cte/CTe2")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()
@@ -110,4 +111,4 @@ object CTeOS {
   }
 }
 
-//CTeOS.main(Array())
+//CTe.main(Array())

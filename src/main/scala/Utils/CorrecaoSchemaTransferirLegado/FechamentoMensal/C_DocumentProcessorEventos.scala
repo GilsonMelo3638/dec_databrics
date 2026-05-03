@@ -1,12 +1,12 @@
-package Utils.CorrecaoSchemaTransferirLegado
+package Utils.CorrecaoSchemaTransferirLegado.FechamentoMensal
 
-import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.types.StringType
+import org.apache.spark.sql.functions.{col, substring}
+import org.apache.spark.sql.types.{IntegerType, StringType}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.{LocalDate, ZoneId}
 
-abstract class DocumentProcessor {
+abstract class DocumentProcessorEventos {
   // Configurações específicas para cada tipo de documento
   def documentType: String
   def defaultPartitions: Int
@@ -79,25 +79,20 @@ abstract class DocumentProcessor {
 
   // Método genérico para processamento e particionamento
   protected def processAndPartitionData(df: DataFrame, outputPath: String, numPartitions: Int): Unit = {
-    import org.apache.spark.sql.functions._
-
-    val partitionedDF = df
-      .withColumn("data_ts", to_timestamp(col("DHPROC"), "dd/MM/yyyy HH:mm:ss"))
-      .withColumn("year_temp", year(col("data_ts")))
-      .withColumn("month_temp", month(col("data_ts")))
-      .withColumn("day_temp", dayofmonth(col("data_ts")))
-      .filter(col("data_ts").isNotNull)
+    val partitionedDF = df.withColumn("year_temp", substring(col("DHPROC"), 7, 4))
+      .withColumn("month_temp", substring(col("DHPROC"), 4, 2))
+      .withColumn("day_temp", substring(col("DHPROC"), 1, 2).cast(IntegerType))
 
     val dateCombinations = partitionedDF.select("year_temp", "month_temp", "day_temp").distinct().collect()
 
     dateCombinations.foreach { row =>
-      val year = row.getInt(0)
-      val monthNum = row.getInt(1)
+      val year = row.getString(0)
+      val month = row.getString(1)
       val dayNum = row.getInt(2)
 
       val dayDF = partitionedDF.filter(
         col("year_temp") === year &&
-          col("month_temp") === monthNum &&
+          col("month_temp") === month &&
           col("day_temp") === dayNum
       ).drop("year_temp", "month_temp", "day_temp", "original_day")
 
@@ -105,39 +100,44 @@ abstract class DocumentProcessor {
         .write
         .mode("append")
         .option("compression", "lz4")
-        .parquet(s"$outputPath/year=$year/month=$monthNum/day=$dayNum")
+        .parquet(s"$outputPath/year=$year/month=$month/day=$dayNum")
     }
   }
 }
 
 // Implementações específicas para cada tipo de documento (mantidas iguais)
-object BPe extends DocumentProcessor {
-  override def documentType: String = "bpe"
-  override def defaultPartitions: Int = 10
+
+object CTeEvento extends DocumentProcessorEventos {
+  override def documentType: String = "cte_evento"
+  override def defaultPartitions: Int = 5
 
   override def convertDataTypes(df: DataFrame): DataFrame = {
-    super.convertDataTypes(df)
-      .withColumn("NSU", col("NSU").cast(StringType))
-      .withColumn("CSTAT", col("CSTAT").cast(StringType))
+    super.convertDataTypes(df).withColumn("NSUSVD", col("NSUSVD").cast(StringType)).withColumn("CSTAT", col("CSTAT").cast(StringType))
   }
 }
 
-object CTe extends DocumentProcessor {
-  override def documentType: String = "cte"
-  override def defaultPartitions: Int = 4
+
+object BPeEvento extends DocumentProcessorEventos {
+  override def documentType: String = "bpe_evento"
+  override def defaultPartitions: Int = 2
 
   override def convertDataTypes(df: DataFrame): DataFrame = {
-    super.convertDataTypes(df)
-      .withColumn("NSUSVD", col("NSUSVD").cast(StringType))
-      .withColumn("NSUAUT", col("NSUAUT").cast(StringType))
-      .withColumn("CSTAT", col("CSTAT").cast(StringType))
-      .withColumn("MODELO", col("MODELO").cast(StringType))
-      .withColumn("TPEMIS", col("TPEMIS").cast(StringType))
+    super.convertDataTypes(df).withColumn("NSU", col("NSU").cast(StringType)).withColumn("CSTAT", col("CSTAT").cast(StringType))
   }
 }
 
-object MDFe extends DocumentProcessor {
-  override def documentType: String = "mdfe"
+
+object MDFeEvento extends DocumentProcessorEventos {
+  override def documentType: String = "mdfe_evento"
+  override def defaultPartitions: Int = 2
+
+  override def convertDataTypes(df: DataFrame): DataFrame = {
+    super.convertDataTypes(df).withColumn("NSU", col("NSU").cast(StringType)).withColumn("CSTAT", col("CSTAT").cast(StringType))
+  }
+}
+
+object NF3eEvento extends DocumentProcessorEventos {
+  override def documentType: String = "nf3e_evento"
   override def defaultPartitions: Int = 2
 
   override def convertDataTypes(df: DataFrame): DataFrame = {
@@ -147,8 +147,8 @@ object MDFe extends DocumentProcessor {
   }
 }
 
-object NF3e extends DocumentProcessor {
-  override def documentType: String = "nf3e"
+object NFComEvento extends DocumentProcessorEventos {
+  override def documentType: String = "nfcom_evento"
   override def defaultPartitions: Int = 2
 
   override def convertDataTypes(df: DataFrame): DataFrame = {
@@ -158,48 +158,110 @@ object NF3e extends DocumentProcessor {
   }
 }
 
-object NFCom extends DocumentProcessor {
-  override def documentType: String = "nfcom"
-  override def defaultPartitions: Int = 2
-
-  override def convertDataTypes(df: DataFrame): DataFrame = {
-    super.convertDataTypes(df)
-      .withColumn("NSU", col("NSU").cast(StringType))
-      .withColumn("CSTAT", col("CSTAT").cast(StringType))
-  }
-}
-
-object NFCe extends DocumentProcessor {
-  override def documentType: String = "nfce"
-  override def defaultPartitions: Int = 10
-
-  override def convertDataTypes(df: DataFrame): DataFrame = {
-    super.convertDataTypes(df)
-      .withColumn("NSU", col("NSU").cast(StringType))
-      .withColumn("CSTAT", col("CSTAT").cast(StringType))
-  }
-}
-
-object NFe extends DocumentProcessor {
-  override def documentType: String = "nfe"
+object NFeEvento extends DocumentProcessorEventos {
+  override def documentType: String = "nfe_evento"
   override def defaultPartitions: Int = 5
 
   override def convertDataTypes(df: DataFrame): DataFrame = {
     super.convertDataTypes(df)
       .withColumn("NSUDF", col("NSUDF").cast(StringType))
-      .withColumn("NSUAN", col("NSUAN").cast(StringType))
       .withColumn("CSTAT", col("CSTAT").cast(StringType))
   }
 }
 
-//Exemplo de como executar (agora sem parâmetros para usar o mês anterior):
-//NFe.main(Array())       // Usa mês anterior automaticamente
-//BPe.main(Array())       // Usa mês anterior automaticamente
-//CTe.main(Array())       // Usa mês anterior automaticamente
-//MDFe.main(Array())      // Usa mês anterior automaticamente
-//NF3e.main(Array())      // Usa mês anterior automaticamente
-//NFCom.main(Array())     // Usa mês anterior automaticamente
-//NFCe.main(Array())      // Usa mês anterior automaticamente
+object NFeCancelamento extends DocumentProcessorEventos {
+  override def documentType: String = "nfe_cancelamento"
+  override def defaultPartitions: Int = 1
+
+  override def convertDataTypes(df: DataFrame): DataFrame = {
+    super.convertDataTypes(df)
+      .withColumn("NSUDF", col("NSUDF").cast(StringType))
+      .withColumn("CSTAT", col("CSTAT").cast(StringType))
+  }
+}
+
+object NFCeCancelamento extends DocumentProcessorEventos {
+  override def documentType: String = "nfce_cancelamento"
+  override def defaultPartitions: Int = 2
+
+  override def convertDataTypes(df: DataFrame): DataFrame = {
+    super.convertDataTypes(df)
+      .withColumn("NSU", col("NSU").cast(StringType))
+      .withColumn("CSTAT", col("CSTAT").cast(StringType))
+  }
+}
+
+object BPeCancelamento extends DocumentProcessorEventos {
+  override def documentType: String = "bpe_cancelamento"
+  override def defaultPartitions: Int = 1
+
+  override def convertDataTypes(df: DataFrame): DataFrame = {
+    super.convertDataTypes(df)
+      .withColumn("NSU", col("NSU").cast(StringType))
+      .withColumn("CSTAT", col("CSTAT").cast(StringType))
+  }
+}
+
+object NFComCancelamento extends DocumentProcessorEventos {
+  override def documentType: String = "nfcom_cancelamento"
+  override def defaultPartitions: Int = 1
+
+  override def convertDataTypes(df: DataFrame): DataFrame = {
+    super.convertDataTypes(df)
+      .withColumn("NSU", col("NSU").cast(StringType))
+      .withColumn("CSTAT", col("CSTAT").cast(StringType))
+  }
+}
+
+object NF3eCancelamento extends DocumentProcessorEventos {
+  override def documentType: String = "nf3e_cancelamento"
+  override def defaultPartitions: Int = 1
+
+  override def convertDataTypes(df: DataFrame): DataFrame = {
+    super.convertDataTypes(df)
+      .withColumn("NSU", col("NSU").cast(StringType))
+      .withColumn("CSTAT", col("CSTAT").cast(StringType))
+  }
+}
+
+object CTeCancelamento extends DocumentProcessorEventos {
+  override def documentType: String = "cte_cancelamento"
+  override def defaultPartitions: Int = 1
+
+  override def convertDataTypes(df: DataFrame): DataFrame = {
+    super.convertDataTypes(df)
+      .withColumn("NSUSVD", col("NSUSVD").cast(StringType))
+      .withColumn("CSTAT", col("CSTAT").cast(StringType))
+  }
+}
+
+object MDFeCancelamento extends DocumentProcessorEventos {
+  override def documentType: String = "mdfe_cancelamento"
+  override def defaultPartitions: Int = 1
+
+  override def convertDataTypes(df: DataFrame): DataFrame = {
+    super.convertDataTypes(df)
+      .withColumn("NSU", col("NSU").cast(StringType))
+      .withColumn("CSTAT", col("CSTAT").cast(StringType))
+  }
+}
+
+
+// Exemplo de como executar (agora sem parâmetros para usar o mês anterior):
+
+//CTeEvento.main(Array())      // Usa mês anterior automaticamente
+//BPeEvento.main(Array())      // Usa mês anterior automaticamente
+//MDFeEvento.main(Array())      // Usa mês anterior automaticamente
+//NF3eEvento.main(Array())      // Usa mês anterior automaticamente
+//NFComEvento.main(Array())     // Usa mês anterior automaticamente
+//NFeEvento.main(Array())       // Usa mês anterior automaticamente
+//NFeCancelamento.main(Array())       // Usa mês anterior automaticamente
+//NFCeCancelamento.main(Array())       // Usa mês anterior automaticamente
+//BPeCancelamento.main(Array())       // Usa mês anterior automaticamente
+//NFComCancelamento.main(Array())       // Usa mês anterior automaticamente
+//NF3eCancelamento.main(Array())       // Usa mês anterior automaticamente
+//CTeCancelamento.main(Array())       // Usa mês anterior automaticamente
+//MDFeCancelamento.main(Array())       // Usa mês anterior automaticamente
 
 // Ou ainda pode sobrescrever com parâmetros específicos:
 // BPe.main(Array("2025", "6")) // Força ano 2025, mês 6

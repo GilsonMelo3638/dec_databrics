@@ -1,4 +1,4 @@
-package Utils.CorrecaoSchemaTransferirLegado
+package Utils.CorrecaoSchemaTransferirLegado.FechamentoMensal
 
 import org.apache.spark.sql.SparkSession
 
@@ -7,9 +7,9 @@ import java.util.Properties
 object A_RelatorioTotalizacaoUnificado {
 
   val ANO = "2026"
-  val MES = "02"
+  val MES = "04"
   val DATA_INICIO = s"01/$MES/$ANO"
-  val DATA_FIM = s"28/$MES/$ANO"
+  val DATA_FIM = s"30/$MES/$ANO"
 
   val BASE_PATH = "/datalake/bronze/sources/dbms/dec/diario"
 
