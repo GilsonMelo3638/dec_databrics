@@ -29,6 +29,11 @@ object CTeOSProcessor {
       $"parsed.protCTe.infProt.xMotivo".as("infprot_xmotivo"),
       $"parsed.protCTe.infProt.verAplic".as("infprot_veraplic"),
       $"parsed.CTeOS._versao".as("versaoCTeOS"),
+      $"parsed._dhConexao".as("dhConexao"),
+      $"parsed._ipTransmissor".as("ipTransmissor"),
+      $"parsed._nPortaCon".as("nPortaCon"),
+      $"parsed._versao".as("versao"),
+      $"parsed._xmlns".as("xmlns"),
       $"parsed.CTeOS.infCTeSupl.qrCodCTe".as("qrCodCTe"),
       $"parsed.CTeOS.infCte._Id".as("idCTe"),
       $"parsed.CTeOS.infCte._versao".as("versaoInfCte"),
@@ -39,7 +44,9 @@ object CTeOSProcessor {
       $"parsed.CTeOS.infCte.compl.xCaracSer".as("compl_xCaracSer"),
       $"parsed.CTeOS.infCte.compl.xEmi".as("compl_xEmi"),
       $"parsed.CTeOS.infCte.compl.xObs".as("compl_xObs"),
-      $"parsed.CTeOS.infCte.emit.CNPJ".as("emit__IE"),
+      $"parsed.CTeOS.infCte.emit.CNPJ".as("emit_CNPJ"),
+      $"parsed.CTeOS.infCte.emit.CRT".as("emit_CRT"),
+      $"parsed.CTeOS.infCte.emit.IE".as("emit_IE"),
       $"parsed.CTeOS.infCte.emit.enderEmit.CEP".as("enderEmit_CEP"),
       $"parsed.CTeOS.infCte.emit.enderEmit.UF".as("enderEmit_UF"),
       $"parsed.CTeOS.infCte.emit.enderEmit.cMun".as("enderEmit_CMun"),
@@ -195,6 +202,7 @@ object CTeOSProcessor {
       $"parsed.CTeOS.infCte.toma.xNome".as("toma_XNome"),
       $"parsed.CTeOS.infCte.vPrest.Comp".as("vPrest_Comp"),
       $"parsed.CTeOS.infCte.vPrest.vRec".as("vPrest_VRec"),
-      $"parsed.CTeOS.infCte.vPrest.vTPrest".as("vPrest_VTPrest")   )
+      $"parsed.CTeOS.infCte.vPrest.vTPrest".as("vPrest_VTPrest"
+      )   )
   }
 }

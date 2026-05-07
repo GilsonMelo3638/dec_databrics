@@ -1,4 +1,4 @@
-package Auditoria
+package Utils.Auditoria.AuditoriaLogger
 
 import scala.sys.process._
 

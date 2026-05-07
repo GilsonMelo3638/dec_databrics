@@ -50,8 +50,8 @@ object CTeOS {
     }.toList
 
     anoMesList.foreach { anoMes =>
-      //          val parquetPath = s"/datalake/bronze/sources/dbms/legado/dec/cte_diario/"
-     val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/cte/year=2026/month=04"
+      //           val parquetPath = s"/datalake/bronze/sources/dbms/legado/dec/cte_diario/"
+         val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/cte/year=2026/month=05"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $ano: $startTime")

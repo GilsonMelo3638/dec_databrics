@@ -1,4 +1,4 @@
-package Auditoria
+package Utils.Auditoria.AuditoriaLogger
 
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession

@@ -20,59 +20,64 @@
 //  --conf "spark.dynamicAllocation.maxExecutors=40" \
 //  --packages com.databricks:spark-xml_2.12:0.13.0 \
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
-package DecLegadoProcessor.Principal.Faltantes
+package DecLegadoProcessor.Principal.Legado
 
-import Processors.NFeProcessor
-import Schemas.NFeSchema
+import Processors.NF3eProcessor
+import Schemas.NF3eSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
 import java.time.LocalDateTime
 
-object InfNFeIBS {
+object NF3e {
   // Variáveis externas para o intervalo de meses e ano de processamento
   val ano = 2025
-  val mesInicio = 5
-  val mesFim = 5
-  val tipoDocumento = "nfe"
+  val mesInicio = 2
+  val mesFim = 2
+  val tipoDocumento = "nf3e"
+
+  // Função para criar o esquema de forma modular
 
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder().appName("ExtractFaltanteNFe").enableHiveSupport().getOrCreate()
+    val spark = SparkSession.builder().appName("ExtractInfNF3e").enableHiveSupport().getOrCreate()
     import spark.implicits._
 
     // Obter o esquema da classe CTeOSSchema
-    val schema = NFeSchema.createSchema()
+    val schema = NF3eSchema.createSchema()
     // Lista de meses com base nas variáveis externas
     val anoMesList = (mesInicio to mesFim).map { month =>
       f"$ano${month}%02d"
     }.toList
 
     anoMesList.foreach { anoMes =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/nfe/year=2026/month=02"
+      //      val parquetPath = s"/datalake/bronze/sources/dbms/legado/dec/nf3e_diario"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/nf3e/year=2026/month=05"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
-      println(s"Início da iteração para $anoMes: $startTime")
+      println(s"Início da iteração para $ano: $startTime")
       println(s"Lendo dados do caminho: $parquetPath")
+
       // 1. Carrega o arquivo Parquet
       val parquetDF = spark.read.parquet(parquetPath)
 
-      // 2. Seleciona as colunas XML_DOCUMENTO_CLOB e NSUDF
-      val xmlDF = parquetDF.select(
-        $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
-        $"NSUDF".cast("string").as("NSUDF"),
-        $"DHPROC",
-        $"DHEMI",
-        $"IP_TRANSMISSOR"
-      )
-
+      // 2. Seleciona as colunas e filtra MODELO = 64
+      val xmlDF = parquetDF
+        .select(
+          $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
+          $"NSU".cast("string").as("NSU"),
+          $"DHPROC",
+          $"DHEMI",
+          $"IP_TRANSMISSOR"
+        )
+      xmlDF.show()
       // 3. Usa `from_xml` para ler o XML da coluna usando o esquema
       val parsedDF = xmlDF.withColumn("parsed", from_xml($"xml", schema))
       //     parsedDF.printSchema()
 
       // 4. Gera o DataFrame selectedDF usando a nova classe
       implicit val sparkSession: SparkSession = spark // Passando o SparkSession implicitamente
-      val selectedDF = NFeProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
+      val selectedDF = NF3eProcessor.generateSelectedDF(parsedDF)      // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
       val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
 //      // Imprimir no console as variações e a contagem de 'chave_particao'
@@ -86,8 +91,8 @@ object InfNFeIBS {
 //        println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
 //      }
 
-      // Redistribuir os dados para 40 partições
-      val repartitionedDF = selectedDFComParticao.repartition(40)
+      // Redistribuir os dados para 4 partições
+      val repartitionedDF = selectedDFComParticao.repartition(4)
 
       // Escrever os dados particionados
       repartitionedDF
@@ -96,12 +101,13 @@ object InfNFeIBS {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/nfe/infNFeIBS")
+        .save("/datalake/prata/sources/dbms/dec/nf3e/NF3e2")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()
-      println(s"Gravação concluída: $saveEndTime")    }
+      println(s"Gravação concluída: $saveEndTime")
+    }
   }
 }
 
-//InfNFeIBS.main(Array())
+//NF3e.main(Array())

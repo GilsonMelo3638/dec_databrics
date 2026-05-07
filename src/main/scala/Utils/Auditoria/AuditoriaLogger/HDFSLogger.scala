@@ -1,6 +1,5 @@
-package Utils.Auditoria
+package Utils.Auditoria.AuditoriaLogger
 
-import Auditoria.{AuditoriaDet, UltimaPastaHDFS}
 import org.apache.hadoop.fs.{FSDataOutputStream, FileSystem, Path}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.col
@@ -110,11 +109,11 @@ object AuditoriaLogger {
   def main(args: Array[String]): Unit = {
     // Default values if not provided in args
     var year = "2026"
-    var month = "4"
+    var month = "5"
     var anoInicio = 2026
-    var mesInicio = 4
+    var mesInicio = 5
     var anoFim = 2026
-    var mesFim = 4
+    var mesFim = 5
 
     // Parse arguments if provided
     if (args.length >= 6) {

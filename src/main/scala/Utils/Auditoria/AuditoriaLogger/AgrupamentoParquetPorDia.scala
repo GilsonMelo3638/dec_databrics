@@ -1,8 +1,8 @@
-package Utils.Auditoria
+package Utils.Auditoria.AuditoriaLogger
 
-import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.apache.spark.sql.functions.{col, substring, lit, concat}
 import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.spark.sql.functions.{col, concat, lit, substring}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object AgrupamentoParquetPorDia {
   def main(args: Array[String]): Unit = {

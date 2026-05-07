@@ -17,6 +17,9 @@ object NFeProcessor {
       ).as("DHPROC_FORMATADO"),
       $"DHEMI",
       $"IP_TRANSMISSOR",
+      $"parsed._versao".as("versao_xml"),
+      $"parsed._xmlns".as("xmlns"),
+      $"parsed.protNFe._versao".as("prot_versao"),
       $"parsed.protNFe.infProt._Id".as("infprot_Id"),
       $"parsed.protNFe.infProt.chNFe".as("chave"),
       $"parsed.protNFe.infProt.cStat".as("infprot_cstat"),
@@ -26,9 +29,18 @@ object NFeProcessor {
       $"parsed.protNFe.infProt.tpAmb".as("infprot_tpAmb"),
       $"parsed.protNFe.infProt.verAplic".as("infprot_verAplic"),
       $"parsed.protNFe.infProt.xMotivo".as("infprot_xMotivo"),
+      $"parsed.protNFe.infProt.cMsg".as("infprot_cmsg"),
+      $"parsed.protNFe.infProt.xMsg".as("infprot_xmsg"),
       $"parsed.NFe.infNFe._Id".as("infNFe_id"),
       $"parsed.NFe.infNFe._versao".as("infNFe_versao"),
       $"parsed.NFe.infNFe.avulsa.CNPJ".as("avulsa_cnpj"),
+      $"parsed.NFe.infNFe.autXML".as("autxml"),
+      $"parsed.NFe.infNFe.agropecuario.defensivo.CPFRespTec".as("agro_defensivo_cpfresptec"),
+      $"parsed.NFe.infNFe.agropecuario.defensivo.nReceituario".as("agro_defensivo_nreceituario"),
+      $"parsed.NFe.infNFe.agropecuario.guiaTransito.UFGuia".as("agro_guiatransito_ufguia"),
+      $"parsed.NFe.infNFe.agropecuario.guiaTransito.nGuia".as("agro_guiatransito_nguia"),
+      $"parsed.NFe.infNFe.agropecuario.guiaTransito.serieGuia".as("agro_guiatransito_serieguia"),
+      $"parsed.NFe.infNFe.agropecuario.guiaTransito.tpGuia".as("agro_guiatransito_tpguia"),
       $"parsed.NFe.infNFe.avulsa.UF".as("avulsa_uf"),
       $"parsed.NFe.infNFe.avulsa.dEmi".as("avulsa_demi"),
       $"parsed.NFe.infNFe.avulsa.dPag".as("avulsa_dpag"),
@@ -246,6 +258,7 @@ object NFeProcessor {
       $"parsed.NFe.infNFe.transp.transporta.xNome".as("transp_transporta_xNome"),
       $"parsed.NFe.infNFe.transp.transporta".as("transp_transporta"),
       $"parsed.NFe.infNFe.transp.vagao".as("transp_vagao"),
+      $"parsed.NFe.infNFe.transp.balsa".as("transp_balsa"),
       $"parsed.NFe.infNFe.transp.veicTransp.RNTC".as("transp_veicTransp_RNTC"),
       $"parsed.NFe.infNFe.transp.veicTransp.UF".as("transp_veicTransp_UF"),
       $"parsed.NFe.infNFe.transp.veicTransp.placa".as("transp_veicTransp_placa"),
@@ -263,7 +276,7 @@ object NFeProcessor {
       $"parsed.NFe.infNFe.infRespTec.hashCSRT".as("infresptec_hashcsrt"),
       $"parsed.NFe.infNFe.infRespTec.idCSRT".as("infresptec_idcsrt"),
       $"parsed.NFe.infNFe.infRespTec.xContato".as("infresptec_xcontato"),
-      $"parsed.NFe.infNFe.infSolicNFF.xSolic".as("infsolicnff_xsolic")
+      $"parsed.NFe.infNFe.infSolicNFF.xSolic".as("infsolicnff_xsolic")// ===== NOVOS CAMPOS =====
     )
   }
 }
