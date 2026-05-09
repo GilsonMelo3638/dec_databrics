@@ -137,20 +137,32 @@ abstract class DocumentProcessor(
           // 1. Carrega o arquivo Parquet
           val parquetDF = spark.read.parquet(parquetPath)
 
-          // Verificação de consistência entre total de registros e registros distintos
+          // Verificação de consistência baseada na coluna NSU dinâmica
           val totalCount = parquetDF.count()
-          val distinctCount = parquetDF.distinct().count()
+
+          val distinctCount =
+            parquetDF
+              .select(col(nsuColumnName))
+              .distinct()
+              .count()
 
           if (totalCount != distinctCount) {
-            println(s"Erro: Total de registros ($totalCount) é diferente do total de registros distintos ($distinctCount) no caminho: $parquetPath")
-            throw new IllegalStateException("Inconsistência nos dados: total e distinto não coincidem.")
+            println(
+              s"Erro: Total de registros ($totalCount) é diferente do total de valores distintos da coluna $nsuColumnName ($distinctCount) no caminho: $parquetPath"
+            )
+
+            throw new IllegalStateException(
+              s"Inconsistência nos dados: existem registros duplicados pela coluna $nsuColumnName."
+            )
           } else {
-            println(s"Verificação bem-sucedida: Total ($totalCount) e distintos ($distinctCount) são iguais no caminho: $parquetPath")
+            println(
+              s"Verificação bem-sucedida: Total ($totalCount) e distintos da coluna $nsuColumnName ($distinctCount) são iguais no caminho: $parquetPath"
+            )
           }
 
           // Seleciona as colunas usando o método específico para cada tipo de documento
           val xmlDF = createXmlDF(parquetDF)
-          xmlDF.show()
+       //   xmlDF.show()
 
           // 3. Usa `from_xml` para ler o XML da coluna usando o esquema
           val parsedDF = xmlDF.withColumn("parsed", from_xml($"xml", schema))
