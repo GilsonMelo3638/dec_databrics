@@ -56,14 +56,14 @@ object SqoopProcessorApp {
         }
       }
 
-      BPeProcessor.main(Array())
-      MDFeProcessor.main(Array())
-      NF3eProcessor.main(Array())
-      CTeProcessor.main(Array())
-      CTeSimpProcessor.main(Array())
-      CTeOSProcessor.main(Array())
-      GVTeProcessor.main(Array())
-      NFComProcessor.main(Array())
+      BPeProcessor.process(spark)
+      MDFeProcessor.process(spark)
+      NF3eProcessor.process(spark)
+      CTeProcessor.process(spark)
+      CTeSimpProcessor.process(spark)
+      CTeOSProcessor.process(spark)
+      GVTeProcessor.process(spark)
+      NFComProcessor.process(spark)
       ExternalTableCreatorApp.main(Array())
 
       // Executa o RepartitionXlmPequenosMediosProcessor como último processo

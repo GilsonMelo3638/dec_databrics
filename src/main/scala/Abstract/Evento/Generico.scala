@@ -16,7 +16,8 @@ abstract class DecCancelamentoDiarioProcessor(
                                                val tipoDocumento: String,
                                                val tipoDocumentoCancelamento: String,
                                                val prataDocumento: String,
-                                               val schema: org.apache.spark.sql.types.StructType
+                                               val schema: org.apache.spark.sql.types.StructType,
+                                               val nsuColumnName: String
                                              ) {
 
   def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame
@@ -56,15 +57,29 @@ abstract class DecCancelamentoDiarioProcessor(
 
           // Verificação de consistência entre total de registros e registros distintos
           val totalCount = parquetDF.count()
-          val distinctCount = parquetDF.distinct().count()
+
+          val distinctCount =
+            parquetDF
+              .select(col(nsuColumnName))
+              .distinct()
+              .count()
 
           if (totalCount != distinctCount) {
-            println(s"Erro: Total de registros ($totalCount) é diferente do total de registros distintos ($distinctCount) no caminho: $parquetPath")
-            throw new IllegalStateException("Inconsistência nos dados: total e distinto não coincidem.")
-          } else {
-            println(s"Verificação bem-sucedida: Total ($totalCount) e distintos ($distinctCount) são iguais no caminho: $parquetPath")
-          }
 
+            println(
+              s"Erro: Total de registros ($totalCount) é diferente do total de valores distintos da coluna $nsuColumnName ($distinctCount) no caminho: $parquetPath"
+            )
+
+            throw new IllegalStateException(
+              s"Inconsistência nos dados: existem registros duplicados pela coluna $nsuColumnName."
+            )
+
+          } else {
+
+            println(
+              s"Verificação bem-sucedida: Total ($totalCount) e distintos da coluna $nsuColumnName ($distinctCount) são iguais no caminho: $parquetPath"
+            )
+          }
           // 2. Seleciona as colunas
           val xmlDF = selectColumns(parquetDF)
 
@@ -126,7 +141,11 @@ abstract class DecCancelamentoDiarioProcessor(
 // Implementações específicas para cada tipo de documento
 
 object NFeEvento extends DecCancelamentoDiarioProcessor(
-  "nfe", "nfe_evento", "evento", NFeEventoSchema.createSchema()
+  "nfe",
+  "nfe_evento",
+  "evento",
+  NFeEventoSchema.createSchema(),
+  "NSUDF"
 ) {
   override def selectColumns(parquetDF: org.apache.spark.sql.DataFrame): org.apache.spark.sql.DataFrame = {
     // Importação dos implicits do Spark
@@ -146,7 +165,11 @@ object NFeEvento extends DecCancelamentoDiarioProcessor(
 }
 
 object CTeEvento extends DecCancelamentoDiarioProcessor(
-  "cte", "cte_evento", "evento", CTeEventoSchema.createSchema()
+  "cte",
+  "cte_evento",
+  "evento",
+  CTeEventoSchema.createSchema(),
+  "NSUSVD"
 ) {
   override def selectColumns(parquetDF: org.apache.spark.sql.DataFrame): org.apache.spark.sql.DataFrame = {
     // Importação dos implicits do Spark
@@ -165,7 +188,11 @@ object CTeEvento extends DecCancelamentoDiarioProcessor(
 }
 
 object BPeEvento extends DecCancelamentoDiarioProcessor(
-  "bpe", "bpe_evento", "evento", BPeEventoSchema.createSchema()
+  "bpe",
+  "bpe_evento",
+  "evento",
+  BPeEventoSchema.createSchema(),
+  "NSU"
 ) {
   override def selectColumns(parquetDF: org.apache.spark.sql.DataFrame): org.apache.spark.sql.DataFrame = {
     // Importação dos implicits do Spark
@@ -184,7 +211,11 @@ object BPeEvento extends DecCancelamentoDiarioProcessor(
 }
 
 object MDFeEvento extends DecCancelamentoDiarioProcessor(
-  "mdfe", "mdfe_evento", "evento", MDFeEventoSchema.createSchema()
+  "mdfe",
+  "mdfe_evento",
+  "evento",
+  MDFeEventoSchema.createSchema(),
+  "NSU"
 ) {
   override def selectColumns(parquetDF: org.apache.spark.sql.DataFrame): org.apache.spark.sql.DataFrame = {
     // Importação dos implicits do Spark
@@ -202,9 +233,13 @@ object MDFeEvento extends DecCancelamentoDiarioProcessor(
   }
 }
 
-  object NF3eEvento extends DecCancelamentoDiarioProcessor(
-    "nf3e", "nf3e_evento", "evento", NF3eEventoSchema.createSchema()
-  ) {
+object NF3eEvento extends DecCancelamentoDiarioProcessor(
+  "nf3e",
+  "nf3e_evento",
+  "evento",
+  NF3eEventoSchema.createSchema(),
+  "NSU"
+) {
     override def selectColumns(parquetDF: org.apache.spark.sql.DataFrame): org.apache.spark.sql.DataFrame = {
       // Importação dos implicits do Spark
       import parquetDF.sparkSession.implicits._
@@ -222,7 +257,11 @@ object MDFeEvento extends DecCancelamentoDiarioProcessor(
   }
 
 object NFComEvento extends DecCancelamentoDiarioProcessor(
-  "nfcom", "nfcom_evento", "evento", NFComEventoSchema.createSchema()
+  "nfcom",
+  "nfcom_evento",
+  "evento",
+  NFComEventoSchema.createSchema(),
+  "NSU"
 ) {
   override def selectColumns(parquetDF: org.apache.spark.sql.DataFrame): org.apache.spark.sql.DataFrame = {
     // Importação dos implicits do Spark
