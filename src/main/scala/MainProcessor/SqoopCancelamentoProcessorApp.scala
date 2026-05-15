@@ -4,25 +4,30 @@ import Abstract.Cancelamento.{BPe, CTe, MDFe, NF3e, NFCe, NFCom, NFe}
 import Abstract.Evento.{CTeEvento, NFeEvento, BPeEvento, MDFeEvento, NF3eEvento, NFComEvento}
 import Extrator.{diarioGenericoCancelamento, diarioGenericoEvento}
 import RepartitionJob.RepartitionXlmCancelmentosProcessor
+import org.apache.spark.sql.SparkSession
 
 object SqoopCancelamentoProcessorApp {
   def main(args: Array[String]): Unit = {
+    val spark = SparkSession.builder()
+      .appName("SqoopCancelamentoProcessorApp")
+      .enableHiveSupport()
+      .getOrCreate()
     // Chama o método main da classe SqoopGenericoCancelamentoProcessor
     diarioGenericoCancelamento.main(args)
-    BPe.main(Array())
-    MDFe.main(Array())
-    NF3e.main(Array())
-    NFCom.main(Array())
-    NFCe.main(Array())
-    NFe.main(Array())
-    CTe.main(Array())
+    BPe.process(spark)
+    MDFe.process(spark)
+    NF3e.process(spark)
+    NFCom.process(spark)
+    NFCe.process(spark)
+    NFe.process(spark)
+    CTe.process(spark)
     diarioGenericoEvento.main(args)
-    CTeEvento.main(Array())
-    NFeEvento.main(Array())
-    BPeEvento.main(Array())
-    MDFeEvento.main(Array())
-    NF3eEvento.main(Array())
-    NFComEvento.main(Array())
+    CTeEvento.process(spark)
+    NFeEvento.process(spark)
+    BPeEvento.process(spark)
+    MDFeEvento.process(spark)
+    NF3eEvento.process(spark)
+    NFComEvento.process(spark)
 
     // Executa o RepartitionXlmPequenosMediosProcessor como último processo
     try {

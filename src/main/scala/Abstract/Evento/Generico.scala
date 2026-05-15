@@ -20,11 +20,11 @@ abstract class DecCancelamentoDiarioProcessor(
                                                val nsuColumnName: String
                                              ) {
 
-  def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame
+  def generateSelectedDF(
+                          parsedDF: org.apache.spark.sql.DataFrame
+                        )(implicit spark: SparkSession): org.apache.spark.sql.DataFrame
 
-  def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder().appName(s"Extract${tipoDocumento.capitalize}Cancelamento").enableHiveSupport().getOrCreate()
-
+  def process(spark: SparkSession): Unit = {
     // Importação dos implicits do Spark
     import spark.implicits._
 
@@ -92,7 +92,7 @@ abstract class DecCancelamentoDiarioProcessor(
           val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
           // Redistribuir os dados para 5 partições
-          val repartitionedDF = selectedDFComParticao.repartition(2)
+          val repartitionedDF = selectedDFComParticao.repartition(10)
 
           // Escrever os dados particionados
           repartitionedDF

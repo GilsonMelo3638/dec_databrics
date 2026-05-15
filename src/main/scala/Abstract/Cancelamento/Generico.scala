@@ -7,6 +7,7 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
+
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -21,9 +22,7 @@ abstract class DecCancelamentoDiarioProcessor(
 
   def generateSelectedDF(parsedDF: org.apache.spark.sql.DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame
 
-  def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder().appName(s"Extract${tipoDocumento.capitalize}Cancelamento").enableHiveSupport().getOrCreate()
-
+  def process(spark: SparkSession): Unit = {
     // Importação dos implicits do Spark
     import spark.implicits._
 
