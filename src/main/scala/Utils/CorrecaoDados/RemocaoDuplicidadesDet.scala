@@ -53,7 +53,7 @@ object RemocaoDuplicidadesDet {
 
     val particoes =
       if (args.nonEmpty) args.toSeq
-      else Seq("2006")
+      else Seq("2404")
 
     val colunasChave = Seq("chave", "nitem")
     val sufixoSaida = "_dedup"
@@ -147,5 +147,5 @@ object RemocaoDuplicidadesDet {
   }
 }
 
-//RemocaoDuplicidades.main(Array())
-//RemocaoDuplicidades.main(Array("2006","2007","2008"))
+//RemocaoDuplicidadesDet.main(Array())
+//RemocaoDuplicidadesDet.main(Array("2006","2007","2008"))

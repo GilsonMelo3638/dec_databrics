@@ -147,10 +147,10 @@ object AuditoriaLogger {
 
       // Executa os processos prévios
       HDFSLogger.log("Executando UltimaPastaHDFS")
-      UltimaPastaHDFS.main(Array())
+      UltimaPastaHDFS.executar(HDFSLogger.log)
 
       HDFSLogger.log("Executando AgrupamentoParquetPorDia")
-      AgrupamentoParquetPorDia.main(Array())
+      AgrupamentoParquetPorDia.executar(HDFSLogger.log)
 
       // Processa os documentos
       HDFSLogger.log(s"Iniciando processamento de documentos para year=$year, month=$month")
@@ -438,16 +438,16 @@ object AuditoriaLogger {
     try {
       // Para NFE
       HDFSLogger.log("Iniciando processamento de NFE")
-      AuditoriaDet.identificarChavesFaltantesNoPrata(spark, "nfe", anoInicio, mesInicio, anoFim, mesFim)
-      AuditoriaDet.identificarAusencias(spark, "nfe")
-      AuditoriaDet.verificarDuplicidade(spark, "nfe")
+      AuditoriaDet.identificarChavesFaltantesNoPrata(spark, "nfe", anoInicio, mesInicio, anoFim, mesFim, HDFSLogger.log)
+      AuditoriaDet.identificarAusencias(spark, "nfe", HDFSLogger.log)
+      AuditoriaDet.verificarDuplicidade(spark, "nfe", HDFSLogger.log)
       HDFSLogger.log("Processamento de NFE concluído")
 
       // Para NFCE
       HDFSLogger.log("Iniciando processamento de NFCE")
-      AuditoriaDet.identificarChavesFaltantesNoPrata(spark, "nfce", anoInicio, mesInicio, anoFim, mesFim)
-      AuditoriaDet.identificarAusencias(spark, "nfce")
-      AuditoriaDet.verificarDuplicidade(spark, "nfce")
+      AuditoriaDet.identificarChavesFaltantesNoPrata(spark, "nfce", anoInicio, mesInicio, anoFim, mesFim, HDFSLogger.log)
+      AuditoriaDet.identificarAusencias(spark, "nfce", HDFSLogger.log)
+      AuditoriaDet.verificarDuplicidade(spark, "nfce", HDFSLogger.log)
       HDFSLogger.log("Processamento de NFCE concluído")
 
     } catch {

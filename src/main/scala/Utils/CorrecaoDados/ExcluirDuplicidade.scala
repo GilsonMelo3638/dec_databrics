@@ -84,14 +84,14 @@ class ExcluirDuplicidade(
 //
 //val deduplicator = new ExcluirDuplicidade(spark)
 //
-//val particoes = Seq("2603")
+//val particoes = Seq("2404")
 //
 //deduplicator.processPartitions(
 //  tipoArquivo = "nfe",
-//  tipoInformacao = "infNFe3",
+//  tipoInformacao = "infNFe",
 //  particoes = particoes,
 //  colunaDedupe = "chave",
-//  reparticoes = 40,
+//  reparticoes = 57,
 //  sufixoDestino = "_2"
 //)
 

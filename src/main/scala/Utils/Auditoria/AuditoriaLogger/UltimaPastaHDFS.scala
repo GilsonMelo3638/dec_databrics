@@ -4,7 +4,27 @@ import scala.sys.process._
 
 object UltimaPastaHDFS {
 
+  /**
+   * Método principal utilizado quando executado standalone.
+   * Mantém compatibilidade com execução direta:
+   *
+   * UltimaPastaHDFS.main(Array())
+   */
   def main(args: Array[String]): Unit = {
+    executar()
+  }
+
+  /**
+   * Método reutilizável que aceita função de log.
+   *
+   * Por padrão usa println.
+   * Quando chamado pelo AuditoriaLogger:
+   *
+   * UltimaPastaHDFS.executar(HDFSLogger.log)
+   *
+   * os logs também serão gravados em arquivo HDFS.
+   */
+  def executar(logFn: String => Unit = println): Unit = {
 
     val diretorios = Seq(
       "/datalake/bronze/sources/dbms/dec/processamento/nfce/processado",
@@ -29,31 +49,43 @@ object UltimaPastaHDFS {
       "/datalake/bronze/sources/dbms/dec/processamento/nfcom_evento/processado"
     )
 
+    logFn(s"Iniciando verificação de ${diretorios.size} diretórios HDFS")
+
     diretorios.foreach { dir =>
+
       try {
+
+        logFn(s"Verificando diretório: $dir")
+
         val comandoListarPastas = s"hdfs dfs -ls $dir"
         val resultado = comandoListarPastas.!!
 
-        val pastas = resultado.split("\n")
-          .filter(_.startsWith("d")) // só diretórios
+        val pastas = resultado
+          .split("\n")
+          .filter(_.startsWith("d")) // apenas diretórios
           .map(_.trim.split("\\s+").last)
           .sorted
           .reverse
 
         pastas.headOption match {
-          case Some(ultimaPasta) =>
-            println(s"Última pasta em $dir: $ultimaPasta")
 
-            // Agora verifica se tem arquivos dentro
+          case Some(ultimaPasta) =>
+
+            logFn(s"Última pasta encontrada em $dir: $ultimaPasta")
+
+            // Verifica arquivos dentro da última pasta
             val comandoListarArquivos = s"hdfs dfs -ls $ultimaPasta"
             val conteudo = comandoListarArquivos.!!
 
-            val arquivos = conteudo.split("\n")
-              .filter(_.startsWith("-")) // arquivos regulares
+            val arquivos = conteudo
+              .split("\n")
+              .filter(_.startsWith("-")) // apenas arquivos
 
             if (arquivos.isEmpty) {
-              println(
-                s"""🚨 ALERTA:
+
+              logFn(
+                s"""
+                   |🚨 ALERTA:
                    |A última pasta está VAZIA!
                    |Diretório base: $dir
                    |Última pasta: $ultimaPasta
@@ -61,20 +93,49 @@ object UltimaPastaHDFS {
                    |""".stripMargin
               )
 
-              // Se quiser falhar o job, descomenta:
+              // Caso queira falhar o job:
               // sys.error(s"Última pasta vazia: $ultimaPasta")
+
+            } else {
+
+              logFn(
+                s"""
+                   |✅ OK:
+                   |Diretório base: $dir
+                   |Última pasta: $ultimaPasta
+                   |Quantidade de arquivos: ${arquivos.length}
+                   |""".stripMargin
+              )
             }
 
           case None =>
-            println(s"⚠️ ALERTA: Nenhuma pasta encontrada em $dir")
+
+            logFn(
+              s"""
+                 |⚠️ ALERTA:
+                 |Nenhuma pasta encontrada.
+                 |Diretório base: $dir
+                 |""".stripMargin
+            )
         }
 
       } catch {
+
         case e: Exception =>
-          println(s"❌ ERRO ao processar diretório $dir: ${e.getMessage}")
+
+          logFn(
+            s"""
+               |❌ ERRO ao processar diretório
+               |Diretório: $dir
+               |Erro: ${e.getMessage}
+               |""".stripMargin
+          )
       }
     }
+
+    logFn("Finalizada verificação das últimas pastas HDFS")
   }
 }
 
+// Execução standalone
 // UltimaPastaHDFS.main(Array())
