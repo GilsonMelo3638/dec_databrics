@@ -105,7 +105,6 @@ object G_LevantamentoProcessamentoDEC {
       }
     }
 
-    spark.stop()
   }
 }
 

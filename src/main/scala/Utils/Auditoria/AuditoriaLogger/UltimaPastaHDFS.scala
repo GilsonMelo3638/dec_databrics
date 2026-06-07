@@ -1,6 +1,7 @@
 package Utils.Auditoria.AuditoriaLogger
 
 import scala.sys.process._
+import scala.collection.mutable
 
 object UltimaPastaHDFS {
 
@@ -49,6 +50,9 @@ object UltimaPastaHDFS {
       "/datalake/bronze/sources/dbms/dec/processamento/nfcom_evento/processado"
     )
 
+    // Acumulador para quantidade de pastas por data
+    val resumoPorData = mutable.Map[String, Int]()
+
     logFn(s"Iniciando verificação de ${diretorios.size} diretórios HDFS")
 
     diretorios.foreach { dir =>
@@ -73,6 +77,15 @@ object UltimaPastaHDFS {
 
             logFn(s"Última pasta encontrada em $dir: $ultimaPasta")
 
+            // Extrai a data da última pasta
+            val dataPasta = ultimaPasta.split("/").last
+
+            // Conta quantos diretórios possuem esta data como última pasta
+            resumoPorData.update(
+              dataPasta,
+              resumoPorData.getOrElse(dataPasta, 0) + 1
+            )
+
             // Verifica arquivos dentro da última pasta
             val comandoListarArquivos = s"hdfs dfs -ls $ultimaPasta"
             val conteudo = comandoListarArquivos.!!
@@ -92,9 +105,6 @@ object UltimaPastaHDFS {
                    |Possível falha de processamento ou ingestão.
                    |""".stripMargin
               )
-
-              // Caso queira falhar o job:
-              // sys.error(s"Última pasta vazia: $ultimaPasta")
 
             } else {
 
@@ -133,6 +143,31 @@ object UltimaPastaHDFS {
       }
     }
 
+    logFn("")
+    logFn("===================================================")
+    logFn("RELATÓRIO CONSOLIDADO DE ÚLTIMAS PASTAS POR DATA")
+    logFn("===================================================")
+
+    if (resumoPorData.isEmpty) {
+
+      logFn("Nenhuma pasta encontrada para consolidação.")
+
+    } else {
+
+      resumoPorData.toSeq
+        .sortBy(_._1)
+        .reverse
+        .foreach { case (data, quantidadePastas) =>
+
+          val textoPastas =
+            if (quantidadePastas == 1) "pasta"
+            else "pastas"
+
+          logFn(s"$data -> $quantidadePastas $textoPastas")
+        }
+    }
+
+    logFn("===================================================")
     logFn("Finalizada verificação das últimas pastas HDFS")
   }
 }

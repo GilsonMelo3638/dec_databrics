@@ -76,7 +76,6 @@ object H_LevantamentoParticoesAno {
       }
     }
 
-    spark.stop()
   }
 }
 
