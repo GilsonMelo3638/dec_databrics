@@ -69,6 +69,7 @@ object DocumentoMapGeneric {
   def executar(
                 spark: SparkSession,
                 documento: String,
+                nomeLog: String,
                 tag: String,
                 schemaOficial: StructType,
                 ano: String,
@@ -79,7 +80,7 @@ object DocumentoMapGeneric {
               ): Unit = {
 
     // Criar logger específico para este documento
-    val logDir = s"/app/inferencia_schema/${documento}"
+    val logDir = s"/app/inferencia_schema/${nomeLog}"
     val logger = new HdfsLogger(spark, logDir)
 
     try {
@@ -243,7 +244,7 @@ object DocumentoMapGeneric {
       // CTE
       // =========================
       executar(
-        spark, "cte", "cteProc",
+        spark, "cte", "cte", "cteProc",
         CTeSchema.createSchema(),
         ano, mesInicio, mesFim,
         df =>
@@ -258,7 +259,7 @@ object DocumentoMapGeneric {
       // CTE SIMP
       // =========================
       executar(
-        spark, "cte", "cteSimpProc",
+        spark, "cte", "ctesimp", "cteSimpProc",
         CTeSimpSchema.createSchema(),
         ano, mesInicio, mesFim,
         df =>
@@ -273,7 +274,7 @@ object DocumentoMapGeneric {
       // CTE OS
       // =========================
       executar(
-        spark, "cte", "cteOSProc",
+        spark, "cte", "cteos", "cteOSProc",
         CTeOSSchema.createSchema(),
         ano, mesInicio, mesFim,
         df =>
@@ -288,7 +289,7 @@ object DocumentoMapGeneric {
       // CTE GTVe
       // =========================
       executar(
-        spark, "cte", "GTVeProc",
+        spark, "cte", "gvte", "GTVeProc",
         GVTeSchema.createSchema(),
         ano, mesInicio, mesFim,
         df =>
@@ -300,18 +301,100 @@ object DocumentoMapGeneric {
       )
 
       // =========================
-      // MDFE / BPE / NF3E / NFCOM
+      // MDFE
       // =========================
-      executar(spark,"mdfe","mdfeProc",MDFeSchema.createSchema(),ano,mesInicio,mesFim,filtroPadrao,ignoraSignature)
-      executar(spark,"bpe","bpeProc",BPeSchema.createSchema(),ano,mesInicio,mesFim,filtroPadrao,ignoraSignature)
-      executar(spark,"nf3e","nf3eProc",NF3eSchema.createSchema(),ano,mesInicio,mesFim,filtroPadrao,ignoraSignature)
-      executar(spark,"nfcom","nfcomProc",NFComSchema.createSchema(),ano,mesInicio,mesFim,filtroPadrao,ignoraSignature)
+      executar(
+        spark,
+        "mdfe",
+        "mdfe",
+        "mdfeProc",
+        MDFeSchema.createSchema(),
+        ano,
+        mesInicio,
+        mesFim,
+        filtroPadrao,
+        ignoraSignature
+      )
+
+      // =========================
+      // BPE TRADICIONAL
+      // =========================
+      executar(
+        spark,
+        "bpe",
+        "bpe",
+        "bpeProc",
+        BPeSchema.createSchema(),
+        ano,
+        mesInicio,
+        mesFim,
+        df =>
+          df.filter(col("XML_DOCUMENTO_CLOB").isNotNull)
+            .filter(
+              col("XML_DOCUMENTO_CLOB").rlike("<BPe[\\s>]")
+            )
+            .select(col("XML_DOCUMENTO_CLOB")),
+        ignoraSignature
+      )
+
+      // =========================
+      // BPETA
+      // =========================
+      executar(
+        spark,
+        "bpe",
+        "bpeta",
+        "bpeProc",
+        BPeTASchema.createSchema(),
+        ano,
+        mesInicio,
+        mesFim,
+        df =>
+          df.filter(col("XML_DOCUMENTO_CLOB").isNotNull)
+            .filter(
+              col("XML_DOCUMENTO_CLOB").rlike("<BPeTA[\\s>]")
+            )
+            .select(col("XML_DOCUMENTO_CLOB")),
+        ignoraSignature
+      )
+
+      // =========================
+      // NF3E
+      // =========================
+      executar(
+        spark,
+        "nf3e",
+        "nf3e",
+        "nf3eProc",
+        NF3eSchema.createSchema(),
+        ano,
+        mesInicio,
+        mesFim,
+        filtroPadrao,
+        ignoraSignature
+      )
+
+      // =========================
+      // NFCOM
+      // =========================
+      executar(
+        spark,
+        "nfcom",
+        "nfcom",
+        "nfcomProc",
+        NFComSchema.createSchema(),
+        ano,
+        mesInicio,
+        mesFim,
+        filtroPadrao,
+        ignoraSignature
+      )
 
       // =========================
       // NFE - INF
       // =========================
       executar(
-        spark, "nfe", "nfeProc",
+        spark, "nfe", "infnfe", "nfeProc",
         NFeSchema.createSchema(),
         ano, mesInicio, mesFim,
         filtroPadrao,
@@ -325,7 +408,7 @@ object DocumentoMapGeneric {
       // NFE - DET
       // =========================
       executar(
-        spark, "nfe", "nfeProc",
+        spark, "nfe", "detnfe", "nfeProc",
         NFeDetSchema.createSchema(),
         ano, mesInicio, mesFim,
         filtroPadrao,
@@ -341,7 +424,7 @@ object DocumentoMapGeneric {
       // NFCE - INF
       // =========================
       executar(
-        spark, "nfce", "nfeProc",
+        spark, "nfce", "infnfce", "nfeProc",
         NFCeSchema.createSchema(),
         ano, mesInicio, mesFim,
         filtroPadrao,
@@ -355,7 +438,7 @@ object DocumentoMapGeneric {
       // NFCE - DET
       // =========================
       executar(
-        spark, "nfce", "nfeProc",
+        spark, "nfce", "detnfce", "nfeProc",
         NFCeDetSchema.createSchema(),
         ano, mesInicio, mesFim,
         filtroPadrao,

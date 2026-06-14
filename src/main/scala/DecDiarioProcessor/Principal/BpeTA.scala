@@ -1,7 +1,7 @@
 package DecDiarioProcessor.Principal
 
-import Processors.BPeProcessor
-import Schemas.BPeSchema
+import Processors.BPeTAProcessor
+import Schemas.BPeTASchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
@@ -11,17 +11,17 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-object Bpe {
+object BpeTA {
   // Variáveis externas para o tipo de documento
   val tipoDocumento = "bpe"
-  val prataDocumento = "BPe"
+  val prataDocumento = "BPeTA"
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder().appName("ExtractInfBPe").enableHiveSupport().getOrCreate()
     import spark.implicits._
 
     // Obter o esquema da classe BPeSchema
-    val schema = BPeSchema.createSchema()
+    val schema = BPeTASchema.createSchema()
 
     // Gerar a lista dos últimos 10 dias no formato YYYYMMDD, começando do dia anterior
     val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
@@ -34,7 +34,7 @@ object Bpe {
     val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
 
     ultimos10Dias.foreach { dia =>
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$prataDocumento/processar/$dia"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_BPeTA/$dia"
       val parquetPrataPath = s"/datalake/prata/sources/dbms/dec/$tipoDocumento/$prataDocumento"
       val parquetPathProcessado = s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processado/$dia"
 
@@ -70,6 +70,8 @@ object Bpe {
               $"DHEMI",
               $"IP_TRANSMISSOR"
             )
+            .filter($"xml".isNotNull)
+            .filter($"xml".rlike("<BPeTA[\\s>]"))
           xmlDF.show()
 
           // 3. Usa `from_xml` para ler o XML da coluna usando o esquema
@@ -77,19 +79,19 @@ object Bpe {
 
           // 4. Gera o DataFrame selectedDF usando a nova classe
           implicit val sparkSession: SparkSession = spark // Passando o SparkSession implicitamente
-          val selectedDF = BPeProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
+          val selectedDF = BPeTAProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
           val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
-//          // Imprimir no console as variações e a contagem de 'chave_particao'
-//          val chaveParticaoContagem = selectedDFComParticao
-//            .groupBy("chave_particao")
-//            .agg(count("chave").alias("contagem_chaves"))
-//            .orderBy("chave_particao")
-//
-//          // Coletar os dados para exibição no console
-//          chaveParticaoContagem.collect().foreach { row =>
-//            println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
-//          }
+          // Imprimir no console as variações e a contagem de 'chave_particao'
+          val chaveParticaoContagem = selectedDFComParticao
+            .groupBy("chave_particao")
+            .agg(count("chave").alias("contagem_chaves"))
+            .orderBy("chave_particao")
+
+          // Coletar os dados para exibição no console
+          chaveParticaoContagem.collect().foreach { row =>
+            println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
+          }
 
           // Redistribuir os dados para 5 partições
           val repartitionedDF = selectedDFComParticao.repartition(5)
@@ -135,4 +137,4 @@ object Bpe {
   }
 }
 
-//BpeProcDiarioProcessor.main(Array())
+//BpeTA.main(Array())

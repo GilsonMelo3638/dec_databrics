@@ -176,7 +176,8 @@ object AuditoriaLogger {
   private def processarTodosDocumentos(spark: SparkSession, year: String, month: String): Unit = {
     // Lista de configurações para cada tipo de documento
     val documentosConfig = List(
-      ("/datalake/bronze/sources/dbms/dec/diario/bpe/", "/datalake/prata/sources/dbms/dec/bpe/BPe/", None, None, "CHAVE"),
+      ("/datalake/bronze/sources/dbms/dec/diario/bpe/", "/datalake/prata/sources/dbms/dec/bpe/BPe/", None, Some("<BPe[\\s>]"),"CHAVE"),
+      ("/datalake/bronze/sources/dbms/dec/diario/bpe/", "/datalake/prata/sources/dbms/dec/bpe/BPeTA/", None, Some("<BPeTA[\\s>]"), "CHAVE"),
       ("/datalake/bronze/sources/dbms/dec/diario/mdfe/", "/datalake/prata/sources/dbms/dec/mdfe/MDFe/", None, None, "CHAVE"),
       ("/datalake/bronze/sources/dbms/dec/diario/cte/", "/datalake/prata/sources/dbms/dec/cte/CTeSimp/", Some(57), Some("<cteSimpProc"), "CHAVE"),
       ("/datalake/bronze/sources/dbms/dec/diario/cte/", "/datalake/prata/sources/dbms/dec/cte/CTe/", Some(57), Some("<cteProc"), "CHAVE"),

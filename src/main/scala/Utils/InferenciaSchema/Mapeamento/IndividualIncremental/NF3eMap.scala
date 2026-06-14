@@ -42,8 +42,8 @@ object NF3eMap {
       val documento = "nf3e"
       val tag = s"${documento}Proc"
       val ano = "2026"
-      val mesInicio = 3
-      val mesFim = 4
+      val mesInicio = 5
+      val mesFim = 6
 
       var dfAcumulado: DataFrame = null
 
@@ -156,4 +156,4 @@ object NF3eMap {
   }
 }
 
-// NF3eMap.main(Array()).main(Array())
+// NF3eMap.main(Array())

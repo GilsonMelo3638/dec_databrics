@@ -22,19 +22,19 @@
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
 package DecLegadoProcessor.Principal.Legado
 
-import Processors.BPeProcessor
-import Schemas.BPeSchema
+import Processors.BPeTAProcessor
+import Schemas.BPeTASchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
 import java.time.LocalDateTime
 
-object Bpe {
+object BPeTA {
   // Variáveis externas para o intervalo de meses e ano de processamento
-  val ano = 2021
-  val mesInicio = 2
-  val mesFim = 2
+  val ano = 2026
+  val mesInicio = 6
+  val mesFim = 6
   val tipoDocumento = "bpe"
 
   def main(args: Array[String]): Unit = {
@@ -42,15 +42,15 @@ object Bpe {
     import spark.implicits._
 
     // Obter o esquema da classe CTeOSSchema
-    val schema = BPeSchema.createSchema()    // Lista de anos com base nas variáveis externas
+    val schema = BPeTASchema.createSchema()    // Lista de anos com base nas variáveis externas
     // Lista de meses com base nas variáveis externas
     val anoMesList = (mesInicio to mesFim).map { month =>
       f"$ano${month}%02d"
     }.toList
 
     anoMesList.foreach { anoMes =>
-     val parquetPath = "/datalake/bronze/sources/dbms/legado/dec/bpe_diario/"
-//      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/bpe/year=2026/month=04"
+      //   val parquetPath = "/datalake/bronze/sources/dbms/legado/dec/bpe_diario/"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/bpe/year=2026/"
 
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
@@ -67,8 +67,7 @@ object Bpe {
           $"NSU".cast("string").as("NSU"),
           $"DHPROC",
           $"DHEMI",
-          $"IP_TRANSMISSOR"
-        )
+          $"IP_TRANSMISSOR").filter(col("xml").contains("<BPeTA"))
       xmlDF.show()
       // 3. Usa `from_xml` para ler o XML da coluna usando o esquema
       val parsedDF = xmlDF.withColumn("parsed", from_xml($"xml", schema))
@@ -76,7 +75,7 @@ object Bpe {
 
       // 4. Gera o DataFrame selectedDF usando a nova classe
       implicit val sparkSession: SparkSession = spark // Passando o SparkSession implicitamente
-      val selectedDF = BPeProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
+      val selectedDF = BPeTAProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
       val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
 
 //      // Imprimir no console as variações e a contagem de 'chave_particao'
@@ -100,7 +99,7 @@ object Bpe {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/bpe/BPe2")
+        .save("/datalake/prata/sources/dbms/dec/bpe/BPeTA")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()
@@ -109,4 +108,4 @@ object Bpe {
   }
 }
 
-//Bpe.main(Array())
+//BPeTA.main(Array())

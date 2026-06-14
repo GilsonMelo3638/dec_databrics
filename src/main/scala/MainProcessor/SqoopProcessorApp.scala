@@ -57,6 +57,7 @@ object SqoopProcessorApp {
       }
 
       BPeProcessor.process(spark)
+      BPeTAProcessor.process(spark)
       MDFeProcessor.process(spark)
       NF3eProcessor.process(spark)
       CTeProcessor.process(spark)

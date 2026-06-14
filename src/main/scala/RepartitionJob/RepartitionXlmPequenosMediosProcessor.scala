@@ -30,6 +30,7 @@ object RepartitionXlmPequenosMediosProcessor {
       ("/datalake/prata/sources/dbms/dec/cte/CTeOS"),
       ("/datalake/prata/sources/dbms/dec/cte/GVTe"),
       ("/datalake/prata/sources/dbms/dec/bpe/BPe"),
+      ("/datalake/prata/sources/dbms/dec/bpe/BPeTA"),
       ("/datalake/prata/sources/dbms/dec/mdfe/MDFe"),
       ("/datalake/prata/sources/dbms/dec/nf3e/NF3e"),
       ("/datalake/prata/sources/dbms/dec/nfcom/NFCom")

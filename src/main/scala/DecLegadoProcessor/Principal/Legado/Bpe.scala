@@ -49,8 +49,8 @@ object Bpe {
     }.toList
 
     anoMesList.foreach { anoMes =>
-     val parquetPath = "/datalake/bronze/sources/dbms/legado/dec/bpe_diario/"
-//      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/bpe/year=2026/month=04"
+      //  val parquetPath = "/datalake/bronze/sources/dbms/legado/dec/bpe_diario/"
+       val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/bpe/year=2026/month=06"
 
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
@@ -69,6 +69,9 @@ object Bpe {
           $"DHEMI",
           $"IP_TRANSMISSOR"
         )
+        .filter($"xml".isNotNull)
+        .filter($"xml".rlike("<BPe[\\s>]"))
+        .filter(!$"xml".rlike("<BPeTA[\\s>]"))
       xmlDF.show()
       // 3. Usa `from_xml` para ler o XML da coluna usando o esquema
       val parsedDF = xmlDF.withColumn("parsed", from_xml($"xml", schema))

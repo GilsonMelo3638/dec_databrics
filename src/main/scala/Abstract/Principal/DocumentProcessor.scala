@@ -30,6 +30,30 @@ abstract class DocumentProcessor(
 
     prataDocumento match {
 
+      case "BPe" =>
+        parquetDF
+          .filter($"XML_DOCUMENTO_CLOB".isNotNull)
+          .filter($"XML_DOCUMENTO_CLOB".rlike("<BPe[\\s>]"))
+          .select(
+            $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
+            col(nsuColumnName).cast("string").as(nsuAlias),
+            $"DHPROC",
+            $"DHEMI",
+            $"IP_TRANSMISSOR"
+          )
+
+      case "BPeTA" =>
+        parquetDF
+          .filter($"XML_DOCUMENTO_CLOB".isNotNull)
+          .filter($"XML_DOCUMENTO_CLOB".rlike("<BPeTA[\\s>]"))
+          .select(
+            $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
+            col(nsuColumnName).cast("string").as(nsuAlias),
+            $"DHPROC",
+            $"DHEMI",
+            $"IP_TRANSMISSOR"
+          )
+
       case "CTe" =>
         parquetDF
           .filter($"MODELO" === 57)
@@ -116,6 +140,9 @@ abstract class DocumentProcessor(
 
       val parquetPath = prataDocumento match {
 
+        case "BPeTA" =>
+          s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_BPeTA/$dia"
+
         case "GVTe" =>
           s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_GVTe/$dia"
 
@@ -133,6 +160,9 @@ abstract class DocumentProcessor(
         s"/datalake/prata/sources/dbms/dec/$tipoDocumento/$prataDocumento"
 
       val parquetPathProcessado = prataDocumento match {
+
+        case "BPe" =>
+          s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_BPeTA/$dia"
 
         case "CTe" =>
           s"/datalake/bronze/sources/dbms/dec/processamento/$tipoDocumento/processar_CTeSimp/$dia"
@@ -272,6 +302,22 @@ object BPeProcessor
   : org.apache.spark.sql.DataFrame = {
 
     Processors.BPeProcessor.generateSelectedDF(parsedDF)
+  }
+}
+
+object BPeTAProcessor
+  extends DocumentProcessor("bpe", "BPeTA", "NSU", "NSU") {
+
+  override def createSchema()
+  : org.apache.spark.sql.types.StructType =
+    Schemas.BPeTASchema.createSchema()
+
+  override def generateSelectedDF(
+                                   parsedDF: org.apache.spark.sql.DataFrame
+                                 )(implicit spark: SparkSession)
+  : org.apache.spark.sql.DataFrame = {
+
+    Processors.BPeTAProcessor.generateSelectedDF(parsedDF)
   }
 }
 

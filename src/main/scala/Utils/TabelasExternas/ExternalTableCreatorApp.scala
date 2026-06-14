@@ -268,6 +268,7 @@ object ExternalTableCreatorApp {
         "hdfs:///datalake/prata/sources/dbms/dec/bpe",
         List(
           "BPe",
+          "BPeTA",
           "cancelamento",
           "evento"
         )
