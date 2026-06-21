@@ -22,36 +22,37 @@
 //  hdfs://sepladbigdata/app/dec/DecInfNFePrata-0.0.1-SNAPSHOT.jar
 package DecLegadoProcessor.Principal.Legado
 
-import Processors.CTeSimpProcessor
-import Schemas.CTeSimpSchema
+import Processors.NFComProcessor
+import Schemas.NFComSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
 import java.time.LocalDateTime
 
-object CTeSimp {
-
+object NFCom {
   // Variáveis externas para o intervalo de meses e ano de processamento
   val ano = 2025
   val mesInicio = 2
   val mesFim = 2
-  val tipoDocumento = "cte"
+  val tipoDocumento = "nfcom"
+
+  // Função para criar o esquema de forma modular
 
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder().appName("ExtractInfCTeSimp").enableHiveSupport().getOrCreate()
+    val spark = SparkSession.builder().appName("NFCom").enableHiveSupport().getOrCreate()
     import spark.implicits._
 
     // Obter o esquema da classe CTeOSSchema
-    val schema = CTeSimpSchema.createSchema() // Lista de anos com base nas variáveis externas
+    val schema = NFComSchema.createSchema()
     // Lista de meses com base nas variáveis externas
     val anoMesList = (mesInicio to mesFim).map { month =>
       f"$ano${month}%02d"
     }.toList
 
     anoMesList.foreach { anoMes =>
-      //val parquetPath = s"/datalake/bronze/sources/dbms/legado/dec/cte_diario/"
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/cte/year=2026/month=06"
+      //      val parquetPath = s"/datalake/bronze/sources/dbms/legado/dec/nfcom_diario"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/nfcom/year=2026/month=06"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $ano: $startTime")
@@ -60,18 +61,14 @@ object CTeSimp {
       // 1. Carrega o arquivo Parquet
       val parquetDF = spark.read.parquet(parquetPath)
 
-      // 2. Seleciona as colunas e filtra MODELO = 67
+      // 2. Seleciona as colunas e filtra MODELO = 64
       val xmlDF = parquetDF
-        .filter($"MODELO" === 57)
-        .filter($"XML_DOCUMENTO_CLOB".rlike("<cteSimpProc"))
         .select(
           $"XML_DOCUMENTO_CLOB".cast("string").as("xml"),
-          $"NSUSVD".cast("string").as("NSUSVD"),
+          $"NSU".cast("string").as("NSU"),
           $"DHPROC",
           $"DHEMI",
-          $"IP_TRANSMISSOR",
-          $"MODELO".cast("string").as("MODELO"),
-          $"TPEMIS".cast("string").as("TPEMIS")
+          $"IP_TRANSMISSOR"
         )
       xmlDF.show()
       // 3. Usa `from_xml` para ler o XML da coluna usando o esquema
@@ -80,8 +77,9 @@ object CTeSimp {
 
       // 4. Gera o DataFrame selectedDF usando a nova classe
       implicit val sparkSession: SparkSession = spark // Passando o SparkSession implicitamente
-      val selectedDF = CTeSimpProcessor.generateSelectedDF(parsedDF) // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
+      val selectedDF = NFComProcessor.generateSelectedDF(parsedDF)      // Criando uma nova coluna 'chave_particao' extraindo os dígitos 3 a 6 da coluna 'CHAVE'
       val selectedDFComParticao = selectedDF.withColumn("chave_particao", substring(col("chave"), 3, 4))
+
 //      // Imprimir no console as variações e a contagem de 'chave_particao'
 //      val chaveParticaoContagem = selectedDFComParticao
 //        .groupBy("chave_particao")
@@ -93,8 +91,8 @@ object CTeSimp {
 //        println(s"Variação: ${row.getAs[String]("chave_particao")}, Contagem: ${row.getAs[Long]("contagem_chaves")}")
 //      }
 
-      // Redistribuir os dados para 40 partições
-      val repartitionedDF = selectedDFComParticao.repartition(1)
+      // Redistribuir os dados para 4 partições
+      val repartitionedDF = selectedDFComParticao.repartition(4)
 
       // Escrever os dados particionados
       repartitionedDF
@@ -103,12 +101,13 @@ object CTeSimp {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/cte/CTeSimp2")
+        .save("/datalake/prata/sources/dbms/dec/nfcom/NFCom2")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()
-      println(s"Gravação concluída: $saveEndTime")    }
+      println(s"Gravação concluída: $saveEndTime")
+    }
   }
 }
 
-//CTeSimp.main(Array())
+//NFCom.main(Array())

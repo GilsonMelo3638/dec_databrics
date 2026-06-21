@@ -41,8 +41,8 @@ object CTeSimpMap {
       val documento = "cte"
       val tag = "cteSimpProc"
       val ano = "2026"
-      val mesInicio = 3
-      val mesFim = 4
+      val mesInicio = 5
+      val mesFim = 6
 
       var dfAcumulado: DataFrame = null
       var totalGeral: Long = 0

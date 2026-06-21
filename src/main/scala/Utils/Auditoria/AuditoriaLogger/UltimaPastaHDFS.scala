@@ -2,6 +2,8 @@ package Utils.Auditoria.AuditoriaLogger
 
 import scala.sys.process._
 import scala.collection.mutable
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 object UltimaPastaHDFS {
 
@@ -50,10 +52,20 @@ object UltimaPastaHDFS {
       "/datalake/bronze/sources/dbms/dec/processamento/nfcom_evento/processado"
     )
 
+    // Data esperada = dia anterior no formato YYYYMMDD
+    val dataEsperada = LocalDate
+      .now()
+      .minusDays(1)
+      .format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+
     // Acumulador para quantidade de pastas por data
     val resumoPorData = mutable.Map[String, Int]()
 
+    // Acumulador dos detalhes dos alertas para imprimir no relatório final
+    val alertasDetalhados = mutable.ArrayBuffer[String]()
+
     logFn(s"Iniciando verificação de ${diretorios.size} diretórios HDFS")
+    logFn(s"Data esperada para a última pasta: $dataEsperada")
 
     diretorios.foreach { dir =>
 
@@ -66,8 +78,10 @@ object UltimaPastaHDFS {
 
         val pastas = resultado
           .split("\n")
+          .map(_.trim)
           .filter(_.startsWith("d")) // apenas diretórios
-          .map(_.trim.split("\\s+").last)
+          .map(_.split("\\s+").last)
+          .filter(_.nonEmpty)
           .sorted
           .reverse
 
@@ -86,15 +100,44 @@ object UltimaPastaHDFS {
               resumoPorData.getOrElse(dataPasta, 0) + 1
             )
 
-            // Verifica arquivos dentro da última pasta
+            // Verifica conteúdo da última pasta
             val comandoListarArquivos = s"hdfs dfs -ls $ultimaPasta"
             val conteudo = comandoListarArquivos.!!
 
-            val arquivos = conteudo
+            val linhasConteudo = conteudo
               .split("\n")
-              .filter(_.startsWith("-")) // apenas arquivos
+              .map(_.trim)
+              .filter(_.nonEmpty)
 
-            if (arquivos.isEmpty) {
+            val arquivos = linhasConteudo.filter(_.startsWith("-"))
+            val subdiretorios = linhasConteudo.filter(_.startsWith("d"))
+
+            // ============================================
+            // ALERTA 1: última pasta diferente do dia anterior
+            // ============================================
+            if (dataPasta != dataEsperada) {
+              alertasDetalhados +=
+                s"""
+                   |[DATA DIFERENTE DO ESPERADO]
+                   |Diretório base: $dir
+                   |Última pasta: $ultimaPasta
+                   |Data encontrada: $dataPasta
+                   |Data esperada: $dataEsperada
+                   |""".stripMargin
+            }
+
+            // ============================================
+            // ALERTA 2: última pasta vazia
+            // ============================================
+            if (arquivos.isEmpty && subdiretorios.isEmpty) {
+
+              alertasDetalhados +=
+                s"""
+                   |[PASTA VAZIA]
+                   |Diretório base: $dir
+                   |Última pasta: $ultimaPasta
+                   |Possível falha de processamento ou ingestão.
+                   |""".stripMargin
 
               logFn(
                 s"""
@@ -120,6 +163,14 @@ object UltimaPastaHDFS {
 
           case None =>
 
+            val detalhes =
+              s"""
+                 |[NENHUMA PASTA ENCONTRADA]
+                 |Diretório base: $dir
+                 |""".stripMargin
+
+            alertasDetalhados += detalhes
+
             logFn(
               s"""
                  |⚠️ ALERTA:
@@ -133,6 +184,15 @@ object UltimaPastaHDFS {
 
         case e: Exception =>
 
+          val detalheErro =
+            s"""
+               |[ERRO AO PROCESSAR DIRETÓRIO]
+               |Diretório base: $dir
+               |Erro: ${e.getMessage}
+               |""".stripMargin
+
+          alertasDetalhados += detalheErro
+
           logFn(
             s"""
                |❌ ERRO ao processar diretório
@@ -143,17 +203,17 @@ object UltimaPastaHDFS {
       }
     }
 
+    // ===================================================
+    // RELATÓRIO FINAL
+    // ===================================================
     logFn("")
     logFn("===================================================")
     logFn("RELATÓRIO CONSOLIDADO DE ÚLTIMAS PASTAS POR DATA")
     logFn("===================================================")
 
     if (resumoPorData.isEmpty) {
-
       logFn("Nenhuma pasta encontrada para consolidação.")
-
     } else {
-
       resumoPorData.toSeq
         .sortBy(_._1)
         .reverse
@@ -165,6 +225,20 @@ object UltimaPastaHDFS {
 
           logFn(s"$data -> $quantidadePastas $textoPastas")
         }
+    }
+
+    // ===================================================
+    // DETALHES DOS ALERTAS
+    // ===================================================
+    if (alertasDetalhados.nonEmpty) {
+      logFn("")
+      logFn("DETALHES DOS ALERTAS")
+      logFn("---------------------------------------------------")
+
+      alertasDetalhados.foreach { alerta =>
+        logFn(alerta.trim)
+        logFn("")
+      }
     }
 
     logFn("===================================================")
