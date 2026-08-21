@@ -7,7 +7,7 @@ import java.util.Properties
 object A_RelatorioTotalizacaoUnificado {
 
   val ANO = "2026"
-  val MES = "05"
+  val MES = "07"
   val DATA_INICIO = s"01/$MES/$ANO"
   val DATA_FIM = s"31/$MES/$ANO"
 
