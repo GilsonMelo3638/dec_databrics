@@ -248,12 +248,12 @@ object MDFeCancelamento extends DocumentProcessorEventos {
 
 
 // Exemplo de como executar (agora sem parâmetros para usar o mês anterior):
-//
+
 //CTeEvento.main(Array())      // Usa mês anterior automaticamente
 //BPeEvento.main(Array())      // Usa mês anterior automaticamente
 //MDFeEvento.main(Array())      // Usa mês anterior automaticamente
 //NF3eEvento.main(Array())      // Usa mês anterior automaticamente
-NFComEvento.main(Array())     // Usa mês anterior automaticamente
+//NFComEvento.main(Array())     // Usa mês anterior automaticamente
 //NFeEvento.main(Array())       // Usa mês anterior automaticamente
 //NFeCancelamento.main(Array())       // Usa mês anterior automaticamente
 //NFCeCancelamento.main(Array())       // Usa mês anterior automaticamente
