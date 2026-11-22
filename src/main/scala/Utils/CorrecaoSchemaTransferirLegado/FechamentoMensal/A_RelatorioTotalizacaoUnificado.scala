@@ -7,9 +7,9 @@ import java.util.Properties
 object A_RelatorioTotalizacaoUnificado {
 
   val ANO = "2026"
-  val MES = "09"
+  val MES = "10"
   val DATA_INICIO = s"01/$MES/$ANO"
-  val DATA_FIM = s"30/$MES/$ANO"
+  val DATA_FIM = s"31/$MES/$ANO"
 
   val BASE_PATH = "/datalake/bronze/sources/dbms/dec/diario"
 

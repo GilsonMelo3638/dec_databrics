@@ -1,6 +1,6 @@
 package Utils.InferenciaSchema.Mapeamento.IndividualIncremental
 
-import Schemas.BPeSchema
+import Schemas.BPeTASchema
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types._
@@ -46,8 +46,8 @@ object BPeMap {
       val tag = s"${documento}Proc"
 
       val ano = "2026"
-      val mesInicio = 5
-      val mesFim = 6
+      val mesInicio = 10
+      val mesFim = 11
 
       var dfAcumulado: DataFrame = null
 
@@ -164,7 +164,7 @@ object BPeMap {
 
       val schemaOficial =
         flattenSchema(
-          BPeSchema.createSchema()
+          BPeTASchema.createSchema()
         ).toSet
 
       val camposNaoMapeados =

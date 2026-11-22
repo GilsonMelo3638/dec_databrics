@@ -49,8 +49,8 @@ object BPeTA {
     }.toList
 
     anoMesList.foreach { anoMes =>
-      //   val parquetPath = "/datalake/bronze/sources/dbms/legado/dec/bpe_diario/"
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/bpe/year=2026/"
+      //  val parquetPath = "/datalake/bronze/sources/dbms/legado/dec/bpe_diario/"
+       val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/bpe/year=2026/month=11"
 
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
@@ -99,7 +99,7 @@ object BPeTA {
         .option("compression", "lz4")
         .option("parquet.block.size", 500 * 1024 * 1024) // 500 MB
         .partitionBy("chave_particao") // Garante a separação por partição
-        .save("/datalake/prata/sources/dbms/dec/bpe/BPeTA")
+        .save("/datalake/prata/sources/dbms/dec/bpe/BPeTA2")
 
       // Registrar o horário de término da gravação
       val saveEndTime = LocalDateTime.now()

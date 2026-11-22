@@ -1,7 +1,7 @@
 package DecDiarioProcessor.Principal
 
 import Processors.BPeProcessor
-import Schemas.BPeSchema
+import Schemas.BPeTASchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
@@ -21,7 +21,7 @@ object Bpe {
     import spark.implicits._
 
     // Obter o esquema da classe BPeSchema
-    val schema = BPeSchema.createSchema()
+    val schema = BPeTASchema.createSchema()
 
     // Gerar a lista dos últimos 10 dias no formato YYYYMMDD, começando do dia anterior
     val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")

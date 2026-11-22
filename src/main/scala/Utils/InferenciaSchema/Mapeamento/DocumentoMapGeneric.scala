@@ -461,8 +461,8 @@ ${toAddSchema(xmlDF.schema, 1)}
 
     try {
       val ano = "2026"
-      val mesInicio = 5
-      val mesFim = 6
+      val mesInicio = 10
+      val mesFim = 11
 
       globalLogger.log(
         s"🎬 INÍCIO DO PROCESSAMENTO - ${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))}"
@@ -569,7 +569,7 @@ ${toAddSchema(xmlDF.schema, 1)}
           "bpe",
           "bpe",
           "bpeProc",
-          BPeSchema.createSchema(),
+          BPeTASchema.createSchema(),
           ano,
           mesInicio,
           mesFim,

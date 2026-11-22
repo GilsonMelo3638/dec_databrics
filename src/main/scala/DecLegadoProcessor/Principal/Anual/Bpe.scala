@@ -23,7 +23,7 @@
 package DecLegadoProcessor.Principal.Anual
 
 import Processors.BPeProcessor
-import Schemas.BPeSchema
+import Schemas.BPeTASchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
@@ -41,7 +41,7 @@ object Bpe {
     import spark.implicits._
 
     // Obter o esquema da classe CTeOSSchema
-    val schema = BPeSchema.createSchema()    // Lista de anos com base nas variáveis externas
+    val schema = BPeTASchema.createSchema()    // Lista de anos com base nas variáveis externas
     val anoList = (anoInicio to anoFim).map(_.toString).toList
 
     anoList.foreach { ano =>
