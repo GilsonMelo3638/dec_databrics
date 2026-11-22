@@ -1,6 +1,6 @@
 package Utils.InferenciaSchema.Mapeamento.IndividualIncremental
 
-import Schemas.BPeTASchema
+import Schemas.BPeSchema
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types._
@@ -164,7 +164,7 @@ object BPeMap {
 
       val schemaOficial =
         flattenSchema(
-          BPeTASchema.createSchema()
+          BPeSchema.createSchema()
         ).toSet
 
       val camposNaoMapeados =

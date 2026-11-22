@@ -569,7 +569,7 @@ ${toAddSchema(xmlDF.schema, 1)}
           "bpe",
           "bpe",
           "bpeProc",
-          BPeTASchema.createSchema(),
+          BPeSchema.createSchema(),
           ano,
           mesInicio,
           mesFim,

@@ -294,7 +294,7 @@ object BPeProcessor
 
   override def createSchema()
   : org.apache.spark.sql.types.StructType =
-    Schemas.BPeTASchema.createSchema()
+    Schemas.BPeSchema.createSchema()
 
   override def generateSelectedDF(
                                    parsedDF: org.apache.spark.sql.DataFrame

@@ -23,7 +23,7 @@
 package DecLegadoProcessor.Principal.Legado
 
 import Processors.BPeProcessor
-import Schemas.BPeTASchema
+import Schemas.BPeSchema
 import com.databricks.spark.xml.functions.from_xml
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
@@ -42,7 +42,7 @@ object Bpe {
     import spark.implicits._
 
     // Obter o esquema da classe CTeOSSchema
-    val schema = BPeTASchema.createSchema()    // Lista de anos com base nas variáveis externas
+    val schema = BPeSchema.createSchema()    // Lista de anos com base nas variáveis externas
     // Lista de meses com base nas variáveis externas
     val anoMesList = (mesInicio to mesFim).map { month =>
       f"$ano${month}%02d"
