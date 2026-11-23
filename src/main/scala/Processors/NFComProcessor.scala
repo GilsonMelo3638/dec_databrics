@@ -159,6 +159,13 @@ object NFComProcessor {
       $"parsed.NFCom.infNFCom.infAdic.infAdFisco".as("infadic_infadfisco"),
       $"parsed.NFCom.infNFCom.infAdic.infCpl".as("infadic_infcpl"),
 
+      // Campos de pgtoVinc
+      $"parsed.NFCom.infNFCom.pgtoVinc.pgto.CNPJBasePSP".as("pgtovinc_pgto_cnpjbasepsp"),
+      $"parsed.NFCom.infNFCom.pgtoVinc.pgto.CNPJReceb".as("pgtovinc_pgto_cnpjreceb"),
+      $"parsed.NFCom.infNFCom.pgtoVinc.pgto._idTransacao".as("pgtovinc_pgto_idtransacao"),
+      $"parsed.NFCom.infNFCom.pgtoVinc.pgto._nPag".as("pgtovinc_pgto_npag"),
+      $"parsed.NFCom.infNFCom.pgtoVinc.pgto.tpMeioPgto".as("pgtovinc_pgto_tpmeiopgto"),
+
       // Campos de total
       // IBSCBSTot
       $"parsed.NFCom.infNFCom.total.IBSCBSTot.gCBS.vCBS".as("ibscbstot_gcbs_vcbs"),

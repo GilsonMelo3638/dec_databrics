@@ -51,8 +51,8 @@ object NFCom {
     }.toList
 
     anoMesList.foreach { anoMes =>
-      //      val parquetPath = s"/datalake/bronze/sources/dbms/legado/dec/nfcom_diario"
-      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/nfcom/year=2026/month=06"
+      //   val parquetPath = s"/datalake/bronze/sources/dbms/legado/dec/nfcom_diario"
+      val parquetPath = s"/datalake/bronze/sources/dbms/dec/diario/nfcom/year=2026/month=11"
       // Registrar o horário de início da iteração
       val startTime = LocalDateTime.now()
       println(s"Início da iteração para $ano: $startTime")

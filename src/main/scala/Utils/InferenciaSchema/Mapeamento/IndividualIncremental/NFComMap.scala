@@ -43,8 +43,8 @@ object NFComMap {
       val tag = s"${documento}Proc"
       val ano = "2026"
 
-      val mesInicio = 5
-      val mesFim = 6
+      val mesInicio = 10
+      val mesFim = 11
 
       var dfAcumulado: DataFrame = null
 
