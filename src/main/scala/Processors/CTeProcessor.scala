@@ -202,6 +202,9 @@ object CTeProcessor {
       $"parsed.CTe.infCte.imp.IBSCBS.CST".as("ibscbs_cst"),
       $"parsed.CTe.infCte.imp.IBSCBS.cClassTrib".as("ibscbs_cclasstrib"),
 
+      $"parsed.CTe.infCte.imp.IBSCBS.gIBSCBS.gCBS.gALCZFMCBS.pAliqEfetRegCBS".as("galczfmcb_paliqefetregcbs"),
+      $"parsed.CTe.infCte.imp.IBSCBS.gIBSCBS.gCBS.gALCZFMCBS.vTribRegCBS".as("galczfmcb_vtribregcbs"),
+
       $"parsed.CTe.infCte.imp.IBSCBS.gIBSCBS.gCBS.gDevTrib.vDevTrib".as("gdevtrib_vdevtrib"),
       $"parsed.CTe.infCte.imp.IBSCBS.gIBSCBS.gCBS.gRed.pAliqEfet".as("gred_paliqefet"),
       $"parsed.CTe.infCte.imp.IBSCBS.gIBSCBS.gCBS.gRed.pRedAliq".as("gred_predaliq"),
@@ -309,6 +312,13 @@ object CTeProcessor {
       $"parsed.CTe.infCte.infRespTec.idCSRT".as("infRespTec_idCSRT"),
       $"parsed.CTe.infCte.infRespTec.xContato".as("infRespTec_xContato"),
       $"parsed.CTe.infCte.infSolicNFF.xSolic".as("infSolicNFF_xSolic"),
+
+      $"parsed.CTe.infCte.pgtoVinc.pgto.CNPJBasePSP".as("pgtovinc_cnpjbasepsp"),
+      $"parsed.CTe.infCte.pgtoVinc.pgto.CNPJReceb".as("pgtovinc_cnpjreceb"),
+      $"parsed.CTe.infCte.pgtoVinc.pgto._idTransacao".as("pgtovinc_idtransacao"),
+      $"parsed.CTe.infCte.pgtoVinc.pgto._nPag".as("pgtovinc_npag"),
+      $"parsed.CTe.infCte.pgtoVinc.pgto.tpMeioPgto".as("pgtovinc_tpmeiopgto"),
+
       $"parsed.CTe.infCte.receb.CNPJ".as("receb_CNPJ"),
       $"parsed.CTe.infCte.receb.CPF".as("receb_CPF"),
       $"parsed.CTe.infCte.receb.IE".as("receb_IE"),

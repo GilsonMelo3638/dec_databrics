@@ -41,8 +41,8 @@ object CTeMap {
       val documento = "cte"
       val tag = s"${documento}Proc"
       val ano = "2026"
-      val mesInicio = 3
-      val mesFim = 4
+      val mesInicio = 10
+      val mesFim = 11
 
       var dfAcumulado: DataFrame = null
       var totalGeral: Long = 0
